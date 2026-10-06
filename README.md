@@ -1,6 +1,7 @@
 # The Alabama Collective — Mobile Scoring Platform (MSP)
 
-[![CI/CD GitHub Pages Deployment](https://github.com/the-alabama-collective/mobile-scoring-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/the-alabama-collective/mobile-scoring-platform/actions/workflows/deploy.yml)
+[![CI/CD GitHub Pages Deployment](https://github.com/alabama-collective/mobile-scoring-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/alabama-collective/mobile-scoring-platform/actions/workflows/deploy.yml)
+[![Live Site](https://img.shields.io/badge/Live%20Deployment-GitHub%20Pages-gold.svg)](https://alabama-collective.github.io/mobile-scoring-platform/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.3-61dafb.svg)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.1-646cff.svg)](https://vitejs.dev/)
@@ -8,6 +9,7 @@
 [![PWA](https://img.shields.io/badge/PWA-Ready-orange.svg)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 [![Tests Passing](https://img.shields.io/badge/Acceptance%20Tests-13%2F13%20Passing-success.svg)](./src/test/)
 
+> **Live Deployment:** **[https://alabama-collective.github.io/mobile-scoring-platform/](https://alabama-collective.github.io/mobile-scoring-platform/)**  
 > **Event Launch:** Magic City Classic Business Pitch Competition (MCC-BP 2026)  
 > **Date & Venue:** October 29, 2026 • Topgolf Birmingham, Signature Room  
 > **Host Organization:** The Alabama Collective (TAC)  
@@ -81,7 +83,7 @@ Other teammates and automated AI coding agents (such as Claude Code) can install
 ### Installation Steps
 ```bash
 # 1. Clone the repository
-git clone https://github.com/the-alabama-collective/mobile-scoring-platform.git
+git clone https://github.com/alabama-collective/mobile-scoring-platform.git
 cd mobile-scoring-platform
 
 # 2. Install dependencies cleanly
