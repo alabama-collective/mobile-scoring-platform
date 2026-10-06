@@ -1,0 +1,38 @@
+/* 4px base grid. Section rhythm is generous — TAC layouts breathe. */
+:root{
+  --space-0:0px;
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-8:32px;
+  --space-10:40px;
+  --space-12:48px;
+  --space-16:64px;
+  --space-20:80px;
+  --space-24:96px;
+  --space-32:128px;
+
+  --gutter:var(--space-6);
+  --section-y:var(--space-24);
+  --section-y-tight:var(--space-16);
+  --container-max:1200px;
+  --container-narrow:760px;
+  --measure:66ch;
+
+  /* Radii — TAC is squared-off. Buttons and cards are near-square; only the
+     submark and avatars go fully round. */
+  --radius-none:0px;
+  --radius-xs:2px;
+  --radius-sm:4px;
+  --radius-md:6px;
+  --radius-lg:10px;
+  --radius-pill:999px;
+  --radius-circle:50%;
+
+  --border-width-hair:1px;
+  --border-width-thick:2px;
+  --rule-accent-width:4px;
+}

@@ -1,0 +1,78 @@
+/* TAC color system. Print brand board + website palette, verbatim from TAC_Brand_Kit.pdf. */
+:root{
+  /* --- Base ramp: ink (brand board #171717 / RGB 33,35,41) --- */
+  --tac-ink-900:#171717;
+  --tac-ink-800:#212329;
+  --tac-ink-700:#2A2B44;
+  --tac-ink-600:#3A3C58;
+  --tac-ink-500:#565873;
+  --tac-ink-400:#7C7E93;
+  --tac-ink-300:#A9AAB8;
+
+  /* --- Base ramp: gold --- */
+  --tac-gold-900:#8A5C12;
+  --tac-gold-800:#AA721A;
+  --tac-gold-700:#AD8D40;
+  --tac-gold-600:#C09A4E;
+  --tac-gold-500:#CAAE74;
+  --tac-gold-400:#DCC79B;
+  --tac-gold-300:#EFE3CA;
+
+  /* --- Base ramp: stone (warm neutral, website secondary #D3CDC6) --- */
+  --tac-stone-100:#FFFFFF;
+  --tac-stone-200:#F7F5F3;
+  --tac-stone-300:#EBE7E3;
+  --tac-stone-400:#D3CDC6;
+  --tac-stone-500:#B6AEA5;
+  --tac-stone-600:#8C837A;
+
+  /* --- Event / program sub-brand accents (HBCU Innovation Experience) --- */
+  --tac-circuit-cyan:#38B6FF;
+  --tac-circuit-blue:#1B3A8C;
+  --tac-circuit-magenta:#F045C8;
+  --tac-circuit-violet:#5B2B8E;
+
+  /* --- Semantic: surfaces --- */
+  --surface-page:var(--tac-stone-100);
+  --surface-page-alt:var(--tac-stone-200);
+  --surface-card:var(--tac-stone-100);
+  --surface-card-muted:var(--tac-stone-300);
+  --surface-inverse:var(--tac-ink-700);
+  --surface-inverse-deep:var(--tac-ink-900);
+  --surface-band:var(--tac-stone-400);
+  --surface-overlay:rgba(23,23,23,.62);
+
+  /* --- Semantic: text --- */
+  --text-heading:var(--tac-ink-900);
+  --text-body:var(--tac-ink-800);
+  --text-muted:var(--tac-ink-500);
+  --text-on-inverse:var(--tac-stone-100);
+  --text-on-inverse-muted:var(--tac-stone-400);
+  --text-accent:var(--tac-gold-800);
+  --text-link:var(--tac-gold-800);
+  --text-link-hover:var(--tac-gold-900);
+
+  /* --- Semantic: interactive --- */
+  --action-primary:var(--tac-gold-800);
+  --action-primary-hover:var(--tac-gold-900);
+  --action-primary-text:var(--tac-stone-100);
+  --action-secondary:var(--tac-ink-700);
+  --action-secondary-hover:var(--tac-ink-900);
+  --action-secondary-text:var(--tac-stone-100);
+  --action-ghost-border:var(--tac-ink-700);
+  --action-disabled:var(--tac-stone-400);
+  --action-disabled-text:var(--tac-stone-600);
+  --focus-ring:var(--tac-gold-700);
+
+  /* --- Semantic: lines --- */
+  --border-hairline:var(--tac-stone-300);
+  --border-strong:var(--tac-stone-500);
+  --border-inverse:rgba(255,255,255,.18);
+  --rule-accent:var(--tac-gold-700);
+
+  /* --- Semantic: status --- */
+  --status-success:#2E7D4F;
+  --status-warning:var(--tac-gold-800);
+  --status-danger:#A32A21;
+  --status-info:var(--tac-ink-700);
+}

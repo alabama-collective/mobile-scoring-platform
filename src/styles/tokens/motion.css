@@ -1,0 +1,19 @@
+/* Restrained motion: fades and short slides. No bounce, no spring, no parallax tricks. */
+:root{
+  --duration-fast:120ms; /* @kind other */
+  --duration-base:200ms; /* @kind other */
+  --duration-slow:400ms; /* @kind other */
+  --duration-reveal:600ms; /* @kind other */
+  --ease-standard:cubic-bezier(.4,0,.2,1); /* @kind other */
+  --ease-out:cubic-bezier(0,0,.2,1); /* @kind other */
+  --ease-in:cubic-bezier(.4,0,1,1); /* @kind other */
+  --transition-base:all var(--duration-base) var(--ease-standard);
+}
+@media (prefers-reduced-motion:reduce){
+  :root{
+    --duration-fast:0ms; /* @kind other */
+    --duration-base:0ms; /* @kind other */
+    --duration-slow:0ms; /* @kind other */
+    --duration-reveal:0ms; /* @kind other */
+  }
+}

@@ -1,0 +1,11 @@
+/* Minimal element defaults so consumers inherit brand type + link colors for free. */
+body{font-family:var(--type-body-family);font-weight:var(--type-body-weight);font-size:var(--type-body-size);line-height:var(--type-body-leading);color:var(--text-body);background:var(--surface-page);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,h5,h6{color:var(--text-heading);margin:0}
+h1{font-family:var(--font-display);font-weight:var(--weight-bold);font-size:var(--size-5xl);line-height:var(--leading-tight);letter-spacing:var(--tracking-tight)}
+h2{font-family:var(--font-display);font-weight:var(--weight-bold);font-size:var(--size-3xl);line-height:var(--leading-snug)}
+h3{font-family:var(--font-body);font-weight:var(--weight-semibold);font-size:var(--size-2xl);line-height:var(--leading-snug)}
+h4{font-family:var(--font-body);font-weight:var(--weight-semibold);font-size:var(--size-xl);line-height:var(--leading-snug)}
+h5,h6{font-family:var(--font-display);font-weight:var(--weight-semibold);font-size:var(--size-2xs);letter-spacing:var(--tracking-widest);text-transform:uppercase;color:var(--text-accent)}
+a{color:var(--text-link);text-decoration:none;transition:color var(--duration-base) var(--ease-standard)}
+a:hover{color:var(--text-link-hover);text-decoration:underline;text-underline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}

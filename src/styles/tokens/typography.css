@@ -1,0 +1,72 @@
+/* Montserrat = PRIMARY (display/headings, all-caps lockups). Open Sans = SECONDARY (subheads, body). */
+:root{
+  --font-display:'Montserrat',Helvetica,Arial,sans-serif;
+  --font-body:'Open Sans','Segoe UI',Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --weight-light:300;
+  --weight-regular:400;
+  --weight-medium:500;
+  --weight-semibold:600;
+  --weight-bold:700;
+  --weight-black:800;
+
+  /* Sizes — 1.25 major-third-ish ramp anchored at 16px body */
+  --size-3xs:11px;
+  --size-2xs:12px;
+  --size-xs:13px;
+  --size-sm:14px;
+  --size-md:16px;
+  --size-lg:18px;
+  --size-xl:21px;
+  --size-2xl:26px;
+  --size-3xl:32px;
+  --size-4xl:40px;
+  --size-5xl:52px;
+  --size-6xl:68px;
+  --size-7xl:88px;
+
+  --leading-tight:1.05;
+  --leading-snug:1.2;
+  --leading-normal:1.5;
+  --leading-relaxed:1.7;
+
+  --tracking-tight:-0.02em;
+  --tracking-normal:0;
+  --tracking-wide:0.06em;
+  --tracking-wider:0.14em;
+  --tracking-widest:0.28em;
+
+  /* Semantic type roles */
+  --type-hero-family:var(--font-display);
+  --type-hero-weight:var(--weight-black);
+  --type-hero-size:var(--size-6xl);
+  --type-hero-tracking:var(--tracking-tight);
+
+  --type-display-family:var(--font-display);
+  --type-display-weight:var(--weight-bold);
+  --type-display-size:var(--size-4xl);
+
+  --type-heading-family:var(--font-body);
+  --type-heading-weight:var(--weight-semibold);
+  --type-heading-size:var(--size-2xl);
+
+  --type-subheading-family:var(--font-body);
+  --type-subheading-weight:var(--weight-regular);
+  --type-subheading-size:var(--size-lg);
+
+  --type-body-family:var(--font-body);
+  --type-body-weight:var(--weight-light);
+  --type-body-size:var(--size-md);
+  --type-body-leading:var(--leading-relaxed);
+
+  --type-eyebrow-family:var(--font-display);
+  --type-eyebrow-weight:var(--weight-semibold);
+  --type-eyebrow-size:var(--size-2xs);
+  --type-eyebrow-tracking:var(--tracking-widest);
+
+  --type-label-family:var(--font-display);
+  --type-label-weight:var(--weight-semibold);
+  --type-label-size:var(--size-sm);
+  --type-label-tracking:var(--tracking-wide);
+}

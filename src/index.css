@@ -1,0 +1,64 @@
+@import './styles/fonts.css';
+@import './styles/tokens/colors.css';
+@import './styles/tokens/spacing.css';
+@import './styles/tokens/elevation.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-body, 'Open Sans', sans-serif);
+  font-weight: 300;
+  line-height: 1.6;
+  background-color: #171717;
+  color: #FFFFFF;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+}
+
+.font-display {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* 4px Gold Brand Rule */
+.gold-rule {
+  height: 4px;
+  background: linear-gradient(90deg, #CAAE74 0%, #AA721A 100%);
+  width: 100%;
+}
+
+.gold-rule-left {
+  position: relative;
+}
+.gold-rule-left::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  background: #AD8D40;
+  margin-top: 8px;
+}
+
+/* Custom scrollbars for clean presentation */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #171717;
+}
+::-webkit-scrollbar-thumb {
+  background: #3A3C58;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #AD8D40;
+}
