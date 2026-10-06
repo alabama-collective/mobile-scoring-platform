@@ -1,6 +1,41 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Criterion, Rubric, Round } from '../types';
 import { Plus, Trash2, Lock, ShieldAlert, Sliders, Info, HelpCircle } from 'lucide-react';
+
+// Single-line-style title field that wraps long titles instead of clipping them.
+const CriterionTitleInput: React.FC<{
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}> = ({ value, disabled, onChange }) => {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      disabled={disabled}
+      value={value}
+      // Titles are one line of text; strip newlines from typing or pasting
+      onChange={(e) => onChange(e.target.value.replace(/[\r\n]+/g, ' '))}
+      onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+      className="flex-1 min-w-0 resize-none overflow-hidden leading-snug font-display font-semibold text-sm sm:text-base text-tac-stone-100 bg-transparent border-b border-transparent hover:border-tac-ink-600 focus:border-tac-gold-700 focus:outline-none transition-colors px-1"
+      placeholder="Criterion title"
+    />
+  );
+};
 
 interface RubricBuilderProps {
   round: Round;
@@ -113,18 +148,15 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
               key={criterion.id}
               className="bg-tac-ink-900/90 rounded-sm border border-tac-ink-700/80 hover:border-tac-gold-700/50 p-4 transition-all duration-150"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center space-x-2">
-                  <span className="w-6 h-6 rounded-xs bg-tac-ink-800 text-tac-gold-400 font-mono text-xs flex items-center justify-center font-bold">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex items-start space-x-2 flex-1 min-w-0">
+                  <span className="w-6 h-6 shrink-0 rounded-xs bg-tac-ink-800 text-tac-gold-400 font-mono text-xs flex items-center justify-center font-bold">
                     0{index + 1}
                   </span>
-                  <input
-                    type="text"
+                  <CriterionTitleInput
                     disabled={isLocked}
                     value={criterion.title}
-                    onChange={(e) => handleUpdateCriterion(criterion.id, { title: e.target.value })}
-                    className="font-display font-semibold text-sm sm:text-base text-tac-stone-100 bg-transparent border-b border-transparent hover:border-tac-ink-600 focus:border-tac-gold-700 focus:outline-none transition-colors px-1"
-                    placeholder="Criterion title"
+                    onChange={(title) => handleUpdateCriterion(criterion.id, { title })}
                   />
                 </div>
 
