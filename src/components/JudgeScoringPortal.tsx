@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Competition, Round, JudgeScoreSubmission } from '../types';
 import { storageService } from '../services/storageService';
+import { JudgeBandStrip } from './JudgeBandStrip';
 import {
   CheckCircle2,
   Award,
@@ -511,27 +512,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                 <p className="italic text-tac-stone-300 leading-relaxed">{criterion.description}</p>
               </div>
 
-              {/* Compact Scale Anchors (MSP-12) */}
-              {criterion.scaleAnchors && (
-                <div className="grid grid-cols-5 gap-1 text-[9px] pt-0.5">
-                  {criterion.scaleAnchors.map((anchor) => {
-                    const isSelectedTier = currentScore >= parseInt(anchor.range.split('–')[0]);
-                    return (
-                      <div
-                        key={anchor.range}
-                        className={`p-1 rounded-xs border text-center transition-colors ${
-                          isSelectedTier
-                            ? 'bg-tac-gold-950/80 border-tac-gold-700 text-tac-gold-300 font-bold'
-                            : 'bg-tac-ink-950/40 border-tac-ink-800 text-tac-stone-500'
-                        }`}
-                      >
-                        <div>{anchor.range}</div>
-                        <div className="truncate">{anchor.label}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {/* Point definitions: tap a band to see what it means (MSP-12) */}
+              <JudgeBandStrip criterionId={criterion.id} bands={criterion.scaleAnchors} score={currentScore} />
             </div>
           );
         })}

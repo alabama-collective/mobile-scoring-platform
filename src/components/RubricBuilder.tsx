@@ -1,6 +1,54 @@
 import React, { useState } from 'react';
 import { Criterion, Rubric, Round } from '../types';
-import { Plus, Trash2, Lock, ShieldAlert, Sliders, Info, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, Lock, ShieldAlert, Sliders, Info } from 'lucide-react';
+import { useFitToContent } from './useFitToContent';
+import { PointDefinitionsEditor } from './PointDefinitionsEditor';
+import { defaultBands } from '../services/scoringBands';
+
+// Single-line-style title field that wraps long titles instead of clipping them.
+const CriterionTitleInput: React.FC<{
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}> = ({ value, disabled, onChange }) => {
+  const ref = useFitToContent(value);
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      disabled={disabled}
+      value={value}
+      // Titles are one line of text; strip newlines from typing or pasting
+      onChange={(e) => onChange(e.target.value.replace(/[\r\n]+/g, ' '))}
+      onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+      className="flex-1 min-w-0 resize-none overflow-hidden leading-snug font-display font-semibold text-sm sm:text-base text-tac-stone-100 bg-transparent border-b border-transparent hover:border-tac-ink-600 focus:border-tac-gold-700 focus:outline-none transition-colors px-1"
+      placeholder="Criterion title"
+    />
+  );
+};
+
+// Judge guidance ("What You're Listening For") box that always shows all of its text.
+const GuidanceInput: React.FC<{
+  value: string;
+  disabled?: boolean;
+  placeholder: string;
+  onChange: (value: string) => void;
+}> = ({ value, disabled, placeholder, onChange }) => {
+  const ref = useFitToContent(value);
+
+  return (
+    <textarea
+      ref={ref}
+      rows={2}
+      disabled={disabled}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full resize-none overflow-hidden text-xs leading-relaxed text-tac-stone-300 bg-tac-ink-950/60 border border-tac-ink-700 rounded-xs p-2 focus:border-tac-gold-700 focus:outline-none transition-colors"
+      placeholder={placeholder}
+    />
+  );
+};
 
 interface RubricBuilderProps {
   round: Round;
@@ -22,11 +70,14 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
     e.preventDefault();
     if (!newTitle.trim()) return;
 
+    const maxPoints = Number(newMaxPoints) > 0 ? Number(newMaxPoints) : 10;
     const newCriterion: Criterion = {
       id: `crit-${Date.now()}`,
       title: newTitle.trim(),
       description: newDescription.trim() || "Evaluate pitch clarity and delivery quality.",
-      maxPoints: Number(newMaxPoints) > 0 ? Number(newMaxPoints) : 10,
+      maxPoints,
+      // MSP-12: start with five even bands so judges always see point definitions
+      scaleAnchors: defaultBands(maxPoints),
     };
 
     onUpdateRubric({
@@ -113,18 +164,15 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
               key={criterion.id}
               className="bg-tac-ink-900/90 rounded-sm border border-tac-ink-700/80 hover:border-tac-gold-700/50 p-4 transition-all duration-150"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center space-x-2">
-                  <span className="w-6 h-6 rounded-xs bg-tac-ink-800 text-tac-gold-400 font-mono text-xs flex items-center justify-center font-bold">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex items-start space-x-2 flex-1 min-w-0">
+                  <span className="w-6 h-6 shrink-0 rounded-xs bg-tac-ink-800 text-tac-gold-400 font-mono text-xs flex items-center justify-center font-bold">
                     0{index + 1}
                   </span>
-                  <input
-                    type="text"
+                  <CriterionTitleInput
                     disabled={isLocked}
                     value={criterion.title}
-                    onChange={(e) => handleUpdateCriterion(criterion.id, { title: e.target.value })}
-                    className="font-display font-semibold text-sm sm:text-base text-tac-stone-100 bg-transparent border-b border-transparent hover:border-tac-ink-600 focus:border-tac-gold-700 focus:outline-none transition-colors px-1"
-                    placeholder="Criterion title"
+                    onChange={(title) => handleUpdateCriterion(criterion.id, { title })}
                   />
                 </div>
 
@@ -167,35 +215,22 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
                   <Info className="w-3.5 h-3.5 text-tac-gold-500" />
                   <span>Inline Guidance ("What You're Listening For"):</span>
                 </div>
-                <textarea
+                <GuidanceInput
                   disabled={isLocked}
-                  rows={2}
                   value={criterion.description}
-                  onChange={(e) =>
-                    handleUpdateCriterion(criterion.id, { description: e.target.value })
-                  }
-                  className="w-full text-xs text-tac-stone-300 bg-tac-ink-950/60 border border-tac-ink-700 rounded-xs p-2 focus:border-tac-gold-700 focus:outline-none transition-colors"
+                  onChange={(description) => handleUpdateCriterion(criterion.id, { description })}
                   placeholder="Guidance for judges on what to listen for and evaluate..."
                 />
               </div>
 
-              {/* Anchor guide preview if present */}
-              {criterion.scaleAnchors && criterion.scaleAnchors.length > 0 && (
-                <div className="mt-2 text-[11px] text-tac-stone-400 bg-tac-ink-950/40 p-2 rounded-xs border border-tac-ink-800">
-                  <span className="font-semibold text-tac-stone-300 flex items-center space-x-1 mb-1">
-                    <HelpCircle className="w-3 h-3 text-tac-gold-500" />
-                    <span>Official Scoring Anchor Scale:</span>
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-1.5 text-[10px]">
-                    {criterion.scaleAnchors.map((anchor) => (
-                      <div key={anchor.range} className="bg-tac-ink-900/80 p-1.5 rounded-xs border border-tac-ink-800">
-                        <span className="font-bold text-tac-gold-400">{anchor.range} ({anchor.label}):</span>{' '}
-                        <span className="text-tac-stone-400">{anchor.description}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Point definitions: what each score band means (MSP-12) */}
+              <PointDefinitionsEditor
+                bands={criterion.scaleAnchors}
+                maxPoints={criterion.maxPoints}
+                isLocked={isLocked}
+                criterionTitle={criterion.title}
+                onChange={(scaleAnchors) => handleUpdateCriterion(criterion.id, { scaleAnchors })}
+              />
             </div>
           ))
         )}
@@ -249,12 +284,10 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
                 <label className="text-[11px] text-tac-stone-400 uppercase tracking-wider block mb-1">
                   Inline Guidance ("What You're Listening For")
                 </label>
-                <textarea
-                  rows={2}
+                <GuidanceInput
                   value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
+                  onChange={setNewDescription}
                   placeholder="Explain what judges should evaluate (e.g. Can this idea realistically work and scale over time?)"
-                  className="w-full bg-tac-ink-950 border border-tac-ink-700 rounded-xs p-2 text-xs text-tac-stone-200 focus:border-tac-gold-700 focus:outline-none"
                 />
               </div>
               <div className="flex justify-end space-x-2 pt-2">
