@@ -10,6 +10,16 @@ interface HeaderProps {
   liveSubmissionsCount?: number;
 }
 
+// Tabs stack icon over a short label on phones and tablets, sit inline from
+// md, and show their full names from lg. The full name is always the
+// accessible name (aria-label), so screen readers and tests are unaffected.
+const tabClass = (active: boolean) =>
+  `relative flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-1.5 min-w-[3.25rem] px-1.5 md:px-3 py-1 md:py-2 rounded-xs text-[10px] md:text-sm font-medium leading-tight transition-colors ${
+    active
+      ? 'bg-tac-gold-800 text-white font-semibold shadow-tac-sm'
+      : 'text-tac-stone-300 hover:text-white hover:bg-tac-ink-800'
+  }`;
+
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
@@ -23,23 +33,28 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Top Gold Accent Bar */}
       <div className="h-1 bg-gradient-to-r from-tac-gold-500 via-tac-gold-800 to-tac-gold-600 w-full" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Brand Identity */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xs bg-tac-ink-800 border border-tac-gold-700/60 flex items-center justify-center text-tac-gold-500 shadow-inner">
+      {/* Height stays h-16 / sm:h-20: the judge screen's sticky team banner sits directly below it */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
+          {/* Brand Identity: "TAC" on phones, full name from sm */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xs bg-tac-ink-800 border border-tac-gold-700/60 flex items-center justify-center text-tac-gold-500 shadow-inner">
               <Sparkles className="w-5 h-5 text-tac-gold-500" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-display font-bold text-sm sm:text-base tracking-widest text-tac-stone-100 uppercase">
-                  The Alabama Collective
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-display font-bold text-sm sm:text-base tracking-widest text-tac-stone-100 uppercase whitespace-nowrap"
+                  aria-label="The Alabama Collective"
+                >
+                  <span className="sm:hidden" aria-hidden="true">TAC</span>
+                  <span className="hidden sm:inline" aria-hidden="true">The Alabama Collective</span>
                 </span>
-                <span className="bg-tac-gold-800/30 text-tac-gold-400 border border-tac-gold-700/50 text-[10px] font-semibold uppercase px-2 py-0.5 rounded-xs tracking-wider">
+                <span className="hidden lg:inline bg-tac-gold-800/30 text-tac-gold-400 border border-tac-gold-700/50 text-[10px] font-semibold uppercase px-2 py-0.5 rounded-xs tracking-wider whitespace-nowrap">
                   Full Platform
                 </span>
               </div>
-              <p className="text-xs text-tac-stone-400 font-light truncate max-w-[180px] sm:max-w-md">
+              <p className="hidden sm:block text-xs text-tac-stone-400 font-light truncate max-w-md">
                 {competitionName}
               </p>
             </div>
@@ -54,31 +69,29 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Navigation / Role Switcher */}
-          <nav className="flex space-x-1 sm:space-x-1.5">
+          <nav className="flex shrink-0 gap-0.5 sm:gap-1">
             <button
               onClick={() => setActiveTab('admin')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xs text-xs sm:text-sm font-medium transition-colors ${
-                activeTab === 'admin'
-                  ? 'bg-tac-gold-800 text-white font-semibold shadow-tac-sm'
-                  : 'text-tac-stone-300 hover:text-white hover:bg-tac-ink-800'
-              }`}
+              aria-label="Coordinator Admin"
+              className={tabClass(activeTab === 'admin')}
             >
               <ShieldCheck className="w-4 h-4 text-tac-gold-400" />
-              <span className="hidden sm:inline">Coordinator</span> Admin
+              <span className="whitespace-nowrap">
+                <span className="hidden lg:inline">Coordinator </span>Admin
+              </span>
             </button>
 
             <button
               onClick={() => setActiveTab('live')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xs text-xs sm:text-sm font-medium transition-colors relative ${
-                activeTab === 'live'
-                  ? 'bg-tac-gold-800 text-white font-semibold shadow-tac-sm'
-                  : 'text-tac-stone-300 hover:text-white hover:bg-tac-ink-800'
-              }`}
+              aria-label={liveSubmissionsCount > 0 ? `Live Results (${liveSubmissionsCount} submitted)` : 'Live Results'}
+              className={tabClass(activeTab === 'live')}
             >
               <BarChart3 className="w-4 h-4 text-tac-gold-400" />
-              <span>Live Results</span>
+              <span className="whitespace-nowrap">
+                <span className="hidden lg:inline">Live </span>Results
+              </span>
               {liveSubmissionsCount > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 bg-green-500 text-black text-[10px] font-black rounded-full">
+                <span className="absolute -top-1 -right-1 md:static md:ml-1 px-1.5 py-0.2 bg-green-500 text-black text-[10px] font-black rounded-full">
                   {liveSubmissionsCount}
                 </span>
               )}
@@ -86,26 +99,22 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('judge')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xs text-xs sm:text-sm font-medium transition-colors ${
-                activeTab === 'judge'
-                  ? 'bg-tac-gold-800 text-white font-semibold shadow-tac-sm'
-                  : 'text-tac-stone-300 hover:text-white hover:bg-tac-ink-800'
-              }`}
+              aria-label="Judge Scoring"
+              className={tabClass(activeTab === 'judge')}
             >
               <Smartphone className="w-4 h-4 text-tac-circuit-cyan" />
-              <span>Judge <span className="hidden sm:inline">Scoring</span></span>
+              <span className="whitespace-nowrap">
+                Judge<span className="hidden lg:inline"> Scoring</span>
+              </span>
             </button>
 
             <button
               onClick={() => setActiveTab('templates')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xs text-xs sm:text-sm font-medium transition-colors ${
-                activeTab === 'templates'
-                  ? 'bg-tac-gold-800 text-white font-semibold shadow-tac-sm'
-                  : 'text-tac-stone-300 hover:text-white hover:bg-tac-ink-800'
-              }`}
+              aria-label="Templates"
+              className={tabClass(activeTab === 'templates')}
             >
               <FolderGit2 className="w-4 h-4 text-tac-gold-500" />
-              <span className="hidden md:inline">Templates</span>
+              <span className="whitespace-nowrap">Templates</span>
             </button>
           </nav>
         </div>
