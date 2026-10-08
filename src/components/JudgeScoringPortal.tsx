@@ -188,14 +188,14 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   return (
     <div className="max-w-xl mx-auto space-y-3.5 pb-20">
       {/* Top Bar: Judge Identity Selector & Submissions Pill (MSP-29) */}
-      <div className="bg-tac-ink-800 rounded-sm border border-tac-ink-700 p-3 flex items-center justify-between shadow-tac-xs">
-        <div className="flex items-center space-x-2">
-          <UserCheck className="w-4 h-4 text-tac-gold-500" />
+      <div className="bg-tac-ink-800 rounded-sm border border-tac-ink-700 p-3 flex flex-wrap items-center justify-between gap-2 shadow-tac-xs">
+        <div className="flex items-center space-x-2 min-w-0 flex-1">
+          <UserCheck className="w-4 h-4 shrink-0 text-tac-gold-500" />
           <span className="text-xs text-tac-stone-400">Judge:</span>
           <select
             value={currentJudge?.id}
             onChange={(e) => handleJudgeChange(e.target.value)}
-            className="bg-tac-ink-950 border border-tac-ink-600 text-tac-gold-400 font-semibold text-xs rounded-xs px-2 py-1 focus:outline-none focus:border-tac-gold-700"
+            className="min-w-0 max-w-full bg-tac-ink-950 border border-tac-ink-600 text-tac-gold-400 font-semibold text-xs rounded-xs px-2 py-1 focus:outline-none focus:border-tac-gold-700"
           >
             {judges.map((j) => (
               <option key={j.id} value={j.id}>
@@ -208,7 +208,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         {/* My Submissions Counter button (MSP-24) */}
         <button
           onClick={() => setViewingHistory(!viewingHistory)}
-          className="flex items-center space-x-1 px-2.5 py-1 bg-tac-ink-900 hover:bg-tac-ink-700 text-tac-stone-300 text-xs rounded-xs border border-tac-ink-700 transition-colors"
+          className="flex shrink-0 items-center space-x-1 px-2.5 py-1 bg-tac-ink-900 hover:bg-tac-ink-700 text-tac-stone-300 text-xs rounded-xs border border-tac-ink-700 transition-colors"
           title="View and revise past submissions (MSP-24)"
         >
           <History className="w-3.5 h-3.5 text-tac-gold-400" />
@@ -331,8 +331,9 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         </div>
       </div>
 
-      {/* Sticky Team Header (MSP-21: Large Type Visible Without Scrolling) */}
-      <div className="sticky top-16 sm:top-20 z-40 bg-tac-ink-950 border-2 border-tac-gold-700/80 rounded-sm p-3.5 shadow-tac-lg text-center space-y-1">
+      {/* Sticky Team Header (MSP-21: Large Type Visible Without Scrolling).
+          Offset = app header height: 4px gold bar + h-16/h-20 + 1px border. */}
+      <div className="sticky top-[69px] sm:top-[85px] z-40 bg-tac-ink-950 border-2 border-tac-gold-700/80 rounded-sm p-3.5 shadow-tac-lg text-center space-y-1">
         <div className="flex items-center justify-between text-[11px] text-tac-stone-400">
           <span className="uppercase tracking-widest text-tac-gold-500 font-bold">
             {activeRound.name}
