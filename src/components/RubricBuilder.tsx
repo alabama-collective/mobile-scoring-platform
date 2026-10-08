@@ -1,27 +1,9 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Criterion, Rubric, Round } from '../types';
-import { Plus, Trash2, Lock, ShieldAlert, Sliders, Info, HelpCircle } from 'lucide-react';
-
-// Grows a textarea to fit its text so nothing is hidden, whatever the
-// font size, zoom level or window width.
-const useFitToContent = (value: string) => {
-  const ref = useRef<HTMLTextAreaElement>(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const fit = () => {
-      const border = el.offsetHeight - el.clientHeight;
-      el.style.height = 'auto';
-      el.style.height = `${el.scrollHeight + border}px`;
-    };
-    fit();
-    window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
-  }, [value]);
-
-  return ref;
-};
+import { Plus, Trash2, Lock, ShieldAlert, Sliders, Info } from 'lucide-react';
+import { useFitToContent } from './useFitToContent';
+import { PointDefinitionsEditor } from './PointDefinitionsEditor';
+import { defaultBands } from '../services/scoringBands';
 
 // Single-line-style title field that wraps long titles instead of clipping them.
 const CriterionTitleInput: React.FC<{
@@ -88,11 +70,14 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
     e.preventDefault();
     if (!newTitle.trim()) return;
 
+    const maxPoints = Number(newMaxPoints) > 0 ? Number(newMaxPoints) : 10;
     const newCriterion: Criterion = {
       id: `crit-${Date.now()}`,
       title: newTitle.trim(),
       description: newDescription.trim() || "Evaluate pitch clarity and delivery quality.",
-      maxPoints: Number(newMaxPoints) > 0 ? Number(newMaxPoints) : 10,
+      maxPoints,
+      // MSP-12: start with five even bands so judges always see point definitions
+      scaleAnchors: defaultBands(maxPoints),
     };
 
     onUpdateRubric({
@@ -238,23 +223,14 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
                 />
               </div>
 
-              {/* Anchor guide preview if present */}
-              {criterion.scaleAnchors && criterion.scaleAnchors.length > 0 && (
-                <div className="mt-2 text-[11px] text-tac-stone-400 bg-tac-ink-950/40 p-2 rounded-xs border border-tac-ink-800">
-                  <span className="font-semibold text-tac-stone-300 flex items-center space-x-1 mb-1">
-                    <HelpCircle className="w-3 h-3 text-tac-gold-500" />
-                    <span>Official Scoring Anchor Scale:</span>
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-1.5 text-[10px]">
-                    {criterion.scaleAnchors.map((anchor) => (
-                      <div key={anchor.range} className="bg-tac-ink-900/80 p-1.5 rounded-xs border border-tac-ink-800">
-                        <span className="font-bold text-tac-gold-400">{anchor.range} ({anchor.label}):</span>{' '}
-                        <span className="text-tac-stone-400">{anchor.description}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Point definitions: what each score band means (MSP-12) */}
+              <PointDefinitionsEditor
+                bands={criterion.scaleAnchors}
+                maxPoints={criterion.maxPoints}
+                isLocked={isLocked}
+                criterionTitle={criterion.title}
+                onChange={(scaleAnchors) => handleUpdateCriterion(criterion.id, { scaleAnchors })}
+              />
             </div>
           ))
         )}
