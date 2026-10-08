@@ -33,7 +33,8 @@ const MeaningInput: React.FC<{ value: string; label: string; onChange: (v: strin
 
 const digitsOnly = (v: string) => v.replace(/\D/g, '');
 
-// MSP-12: staff define what each score band means; judges tap a band to read it.
+// MSP-12: staff define what each score band means; judges see every meaning
+// under the criterion on the scoring screen.
 export const PointDefinitionsEditor: React.FC<PointDefinitionsEditorProps> = ({
   bands,
   maxPoints,
@@ -102,7 +103,7 @@ export const PointDefinitionsEditor: React.FC<PointDefinitionsEditorProps> = ({
     <div className="mt-2 text-[11px] text-tac-stone-400 bg-tac-ink-950/40 p-2 rounded-xs border border-tac-ink-800 space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-1">
         {header}
-        <span className="text-[10px] text-tac-stone-500">Judges tap a band to read its meaning.</span>
+        <span className="text-[10px] text-tac-stone-500">Judges see these under the criterion while scoring.</span>
       </div>
 
       <div className="space-y-1.5">

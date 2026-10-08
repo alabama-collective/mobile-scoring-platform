@@ -512,8 +512,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                 <p className="italic text-tac-stone-300 leading-relaxed">{criterion.description}</p>
               </div>
 
-              {/* Point definitions: tap a band to see what it means (MSP-12) */}
-              <JudgeBandStrip criterionId={criterion.id} bands={criterion.scaleAnchors} score={currentScore} />
+              {/* Point definitions, always visible (MSP-12) */}
+              <JudgeBandStrip bands={criterion.scaleAnchors} score={currentScore} />
             </div>
           );
         })}
