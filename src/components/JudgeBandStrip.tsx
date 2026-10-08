@@ -32,7 +32,7 @@ export const JudgeBandStrip: React.FC<JudgeBandStripProps> = ({ bands, score }) 
             <span className={`font-bold whitespace-nowrap ${isScoreBand ? 'text-tac-gold-300' : 'text-tac-stone-300'}`}>
               {band.range} {band.label}
             </span>
-            <span>{band.description || '—'}</span>
+            <span>{band.description || 'No meaning written yet'}</span>
           </li>
         );
       })}
