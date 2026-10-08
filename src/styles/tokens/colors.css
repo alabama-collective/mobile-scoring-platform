@@ -1,6 +1,7 @@
 /* TAC color system. Print brand board + website palette, verbatim from TAC_Brand_Kit.pdf. */
 :root{
   /* --- Base ramp: ink (brand board #171717 / RGB 33,35,41) --- */
+  --tac-ink-950:#0F0F0F;
   --tac-ink-900:#171717;
   --tac-ink-800:#212329;
   --tac-ink-700:#2A2B44;
