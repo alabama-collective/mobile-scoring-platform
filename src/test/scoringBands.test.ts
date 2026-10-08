@@ -5,6 +5,7 @@ import {
   defaultBands,
   formatBandRange,
   parseBandRange,
+  rescaleBands,
   splitBandRange,
 } from '../services/scoringBands';
 import { OFFICIAL_SCALE_ANCHORS } from '../data/seedData';
@@ -52,6 +53,40 @@ describe('MSP-12 point definition bands', () => {
     for (const max of [3, 7, 10, 15, 20, 25, 30, 100]) {
       expect(bandIssues(defaultBands(max), max)).toEqual([]);
     }
+  });
+
+  it('keeps an even split even when the maximum changes, keeping names and meanings', () => {
+    const at15 = rescaleBands(OFFICIAL_SCALE_ANCHORS, 10, 15);
+    expect(at15.map((b) => b.range)).toEqual(['13–15', '10–12', '7–9', '4–6', '1–3']);
+    expect(at15.map((b) => b.label)).toEqual(OFFICIAL_SCALE_ANCHORS.map((b) => b.label));
+    expect(at15[1].description).toBe('Solid, with a gap or two.');
+    expect(rescaleBands(at15, 15, 10).map((b) => b.range)).toEqual(OFFICIAL_SCALE_ANCHORS.map((b) => b.range));
+  });
+
+  it('scales custom bands in proportion and keeps them touching', () => {
+    const iaeh = [
+      { range: '25–30', label: 'Exceptional', description: '' },
+      { range: '18–24', label: 'Strong', description: '' },
+      { range: '10–17', label: 'Developing', description: '' },
+      { range: '1–9', label: 'Nascent', description: '' },
+    ];
+    const at20 = rescaleBands(iaeh, 30, 20);
+    expect(at20.map((b) => b.range)).toEqual(['17–20', '12–16', '7–11', '1–6']);
+    expect(bandIssues(at20, 20).filter((i) => !i.includes('no meaning'))).toEqual([]);
+    expect(rescaleBands(iaeh, 30, 60).map((b) => b.range)).toEqual(['49–60', '35–48', '19–34', '1–18']);
+  });
+
+  it('every maximum from 5 to 100 rescales an even split with no gaps or overlaps', () => {
+    for (let max = 5; max <= 100; max++) {
+      const issues = bandIssues(rescaleBands(OFFICIAL_SCALE_ANCHORS, 10, max), max);
+      expect(issues, `max ${max}`).toEqual([]);
+    }
+  });
+
+  it('leaves bands alone when the maximum is unchanged or a range is half-typed', () => {
+    expect(rescaleBands(OFFICIAL_SCALE_ANCHORS, 10, 10)).toBe(OFFICIAL_SCALE_ANCHORS);
+    const halfTyped = [{ range: '–8', label: 'Strong', description: '' }];
+    expect(rescaleBands(halfTyped, 10, 20)).toBe(halfTyped);
   });
 
   it('explains gaps, overlaps and out-of-range bands in plain language', () => {
