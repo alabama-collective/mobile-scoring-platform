@@ -153,7 +153,7 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
             {isLocked ? (
               <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xs text-xs font-semibold bg-red-950/80 text-red-400 border border-red-800/80">
                 <Lock className="w-3.5 h-3.5" />
-                <span>Live — Locked (Read Only)</span>
+                <span>Live: Locked (Read Only)</span>
               </span>
             ) : (
               <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xs text-xs font-medium bg-tac-ink-700 text-tac-stone-300 border border-tac-ink-600">
