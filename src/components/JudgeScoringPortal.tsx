@@ -141,6 +141,13 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     setScores((prev) => ({ ...prev, [criterionId]: val }));
   };
 
+  // Typed entry: keep digits only and hold the score within 0..maxPoints
+  const handleScoreTyped = (criterionId: string, raw: string, maxPoints: number) => {
+    const digits = raw.replace(/\D/g, '');
+    const val = digits === '' ? 0 : Math.min(maxPoints, parseInt(digits, 10));
+    handleScoreDirect(criterionId, val);
+  };
+
   const rawTotal = activeRound.rubric.criteria.reduce(
     (acc, c) => acc + (scores[c.id] ?? 0),
     0
@@ -464,9 +471,25 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                   </button>
 
                   <div className="w-12 text-center">
-                    <span className="font-display font-black text-base text-tac-gold-400 block">
-                      {currentScore}
-                    </span>
+                    {/* Typed entry (MSP-10). Text + numeric keypad rather than type="number",
+                        which changes value on scroll-wheel and shows spinners. */}
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={currentScore}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => handleScoreTyped(criterion.id, e.target.value, criterion.maxPoints)}
+                      onKeyDown={(e) => {
+                        // Enter (phone "Go") must not submit the whole score sheet
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      aria-label={`Score for ${criterion.title}, 0 to ${criterion.maxPoints}`}
+                      className="w-full font-display font-black text-base text-tac-gold-400 text-center bg-transparent border-b border-tac-ink-600 hover:border-tac-gold-700 focus:border-tac-gold-500 focus:outline-none rounded-none p-0 leading-tight"
+                    />
                     <span className="text-[9px] text-tac-stone-500 uppercase block -mt-0.5">
                       /{criterion.maxPoints}
                     </span>
