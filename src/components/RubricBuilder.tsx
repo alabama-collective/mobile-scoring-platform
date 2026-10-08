@@ -1,9 +1,47 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Criterion, Rubric, Round } from '../types';
 import { Plus, Trash2, Lock, ShieldAlert, Sliders, Info } from 'lucide-react';
 import { useFitToContent } from './useFitToContent';
 import { PointDefinitionsEditor } from './PointDefinitionsEditor';
-import { defaultBands } from '../services/scoringBands';
+import { defaultBands, rescaleBands } from '../services/scoringBands';
+
+// Max points box (MSP-10). Changing it moves the point definition bands to the
+// new range (MSP-12). Each change rescales from the bands as they were when the
+// box was focused, so typing "25" (briefly "2") or stepping 10 → 11 → 12 never
+// distorts them.
+const MaxPointsInput: React.FC<{
+  criterion: Criterion;
+  disabled: boolean;
+  onChange: (changes: Partial<Criterion>) => void;
+}> = ({ criterion, disabled, onChange }) => {
+  const base = useRef<Pick<Criterion, 'maxPoints' | 'scaleAnchors'> | null>(null);
+
+  return (
+    <input
+      type="number"
+      min={1}
+      max={100}
+      disabled={disabled}
+      value={criterion.maxPoints}
+      onFocus={() => {
+        base.current = { maxPoints: criterion.maxPoints, scaleAnchors: criterion.scaleAnchors };
+      }}
+      onBlur={() => {
+        base.current = null;
+      }}
+      onChange={(e) => {
+        const maxPoints = Math.max(1, parseInt(e.target.value) || 1);
+        const from = base.current ?? { maxPoints: criterion.maxPoints, scaleAnchors: criterion.scaleAnchors };
+        onChange({
+          maxPoints,
+          scaleAnchors: from.scaleAnchors && rescaleBands(from.scaleAnchors, from.maxPoints, maxPoints),
+        });
+      }}
+      aria-label={`${criterion.title}: maximum points`}
+      className="w-14 bg-tac-ink-900 border border-tac-ink-600 text-tac-gold-400 text-center text-xs font-bold py-0.5 rounded-xs focus:border-tac-gold-700 focus:outline-none"
+    />
+  );
+};
 
 // Single-line-style title field that wraps long titles instead of clipping them.
 const CriterionTitleInput: React.FC<{
@@ -181,18 +219,10 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
                   <div className="flex items-center space-x-1.5 bg-tac-ink-800 px-2.5 py-1 rounded-xs border border-tac-ink-700">
                     <Sliders className="w-3.5 h-3.5 text-tac-gold-500" />
                     <label className="text-xs text-tac-stone-400">Max:</label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
+                    <MaxPointsInput
+                      criterion={criterion}
                       disabled={isLocked}
-                      value={criterion.maxPoints}
-                      onChange={(e) =>
-                        handleUpdateCriterion(criterion.id, {
-                          maxPoints: Math.max(1, parseInt(e.target.value) || 1),
-                        })
-                      }
-                      className="w-14 bg-tac-ink-900 border border-tac-ink-600 text-tac-gold-400 text-center text-xs font-bold py-0.5 rounded-xs focus:border-tac-gold-700 focus:outline-none"
+                      onChange={(changes) => handleUpdateCriterion(criterion.id, changes)}
                     />
                     <span className="text-xs text-tac-stone-400">pts</span>
                   </div>

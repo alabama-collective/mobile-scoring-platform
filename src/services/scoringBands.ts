@@ -66,6 +66,38 @@ export const defaultBands = (maxPoints: number): ScoringScaleAnchor[] => {
   return bands;
 };
 
+// Move bands to a new maximum, keeping names and meanings. Bands that are the
+// standard even split stay an even split (10 → 15: 9–10 … 1–2 becomes
+// 13–15 … 1–3); any other bands scale in proportion, so bands that touched
+// stay touching (IA-EH 30 → 20: 25–30, 18–24, 10–17, 1–9 becomes
+// 17–20, 12–16, 7–11, 1–6). Incomplete ranges are left as they are.
+export const rescaleBands = (
+  bands: ScoringScaleAnchor[],
+  oldMax: number,
+  newMax: number
+): ScoringScaleAnchor[] => {
+  if (oldMax === newMax || oldMax < 1 || newMax < 1 || bands.length === 0) return bands;
+  const ranges = bands.map((b) => parseBandRange(b.range));
+  if (ranges.some((r) => r === null)) return bands;
+
+  const even = defaultBands(oldMax).map((b) => parseBandRange(b.range));
+  const isEvenSplit =
+    even.length === ranges.length && ranges.every((r, i) => r!.min === even[i]!.min && r!.max === even[i]!.max);
+  if (isEvenSplit) {
+    const next = defaultBands(newMax);
+    if (next.length === bands.length) return bands.map((b, i) => ({ ...b, range: next[i].range }));
+  }
+
+  // A boundary between k and k+1 moves to between scale(k) and scale(k)+1
+  const scale = (score: number) => Math.round((score * newMax) / oldMax);
+  return bands.map((band, i) => {
+    const r = ranges[i]!;
+    const min = r.min <= 1 ? r.min : scale(r.min - 1) + 1;
+    const max = r.max >= oldMax ? newMax : scale(r.max);
+    return { ...band, range: formatBandRange(min, max) };
+  });
+};
+
 const describeScores = (scores: number[]): string => {
   const parts: string[] = [];
   let start = scores[0];
