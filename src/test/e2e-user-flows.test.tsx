@@ -24,7 +24,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
 
     // Verify rubric locks
     await waitFor(() => {
-      expect(screen.getByText(/Live — Locked/i)).toBeInTheDocument();
+      expect(screen.getByText(/Live: Locked/i)).toBeInTheDocument();
     });
 
     // 3. Switch to "Judge Scoring" Tab (MSP-21, MSP-22, MSP-27, MSP-29)
