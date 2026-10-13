@@ -50,7 +50,7 @@ export const App: React.FC = () => {
   };
 
   const handleCloneRound1 = () => {
-    const cloned = storageService.duplicateRound('round-1', 'Round 2: Pitch Finale (Clone)');
+    const cloned = storageService.copyRound1ToRound2();
     if (cloned) {
       const refreshed = storageService.getCompetition();
       setCompetition(refreshed);

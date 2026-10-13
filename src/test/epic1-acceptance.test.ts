@@ -113,6 +113,36 @@ describe('Epic 1 Acceptance Criteria Verification Suite', () => {
     expect(reloaded.rounds.some((r) => r.id === 'round-breakout-1')).toBe(true);
   });
 
+  // MSP-01 / MSP-11: a loaded template never brings back old status or scores
+  it('MSP-11: Loading a saved setup starts fresh draft rounds with no old scores', () => {
+    const comp = storageService.getCompetition();
+    const round1 = comp.rounds[0];
+    storageService.setRoundStatus(round1.id, 'live');
+    storageService.submitJudgeScore({
+      judgeId: comp.judges[0].id,
+      judgeName: comp.judges[0].name,
+      teamId: comp.teams[0].id,
+      roundId: round1.id,
+      scores: { [round1.rubric.criteria[0].id]: 9 },
+    });
+    storageService.finalizeResults(round1.id, 'Sample Staff');
+    const saved = storageService.saveTemplate({ name: 'Past setup', description: '', rounds: storageService.getCompetition().rounds });
+
+    const loaded = storageService.applyTemplateToCompetition(saved.id)!;
+    for (const r of loaded.rounds) {
+      expect(r.status).toBe('draft');
+      expect(r.isLocked).toBe(false);
+      expect(r.isResultsFinalized).toBeUndefined();
+      expect(r.id).not.toBe(round1.id);
+    }
+    expect(loaded.rounds.map((r) => r.name)).toEqual(comp.rounds.map((r) => r.name));
+    expect(loaded.rounds[0].rubric.criteria.map((c) => c.title)).toEqual(round1.rubric.criteria.map((c) => c.title));
+    // The past score is kept, but filed under the old round, so the new setup has none
+    const newRoundIds = new Set(loaded.rounds.map((r) => r.id));
+    expect(storageService.getAllSubmissions().length).toBe(1);
+    expect(storageService.getAllSubmissions().filter((s) => newRoundIds.has(s.roundId)).length).toBe(0);
+  });
+
   // MSP-32: Publish rubric and lock it when the round opens
   it('MSP-32: Locks the rubric when round status transitions to LIVE', () => {
     const comp = storageService.getCompetition();
@@ -144,6 +174,55 @@ describe('Epic 1 Acceptance Criteria Verification Suite', () => {
     // Once the round is closed, templates can be loaded again
     storageService.setRoundStatus(round1.id, 'completed');
     expect(storageService.applyTemplateToCompetition(other.id)).not.toBeNull();
+  });
+
+  // MSP-33: the path the "Round 2 from Round 1" button uses
+  describe('MSP-33: Round 2 from Round 1 (button path)', () => {
+    const titles = (roundId: string) =>
+      storageService.getCompetition().rounds.find((r) => r.id === roundId)!.rubric.criteria.map((c) => c.title);
+
+    it('replaces an existing draft Round 2 with an independent copy of Round 1', () => {
+      const { round1, round2 } = storageService.findRound1And2(storageService.getCompetition().rounds);
+      const copy = storageService.copyRound1ToRound2();
+      expect(copy?.id).toBe(round2!.id); // same Round 2, now a copy
+      expect(copy?.name).toBe(round2!.name);
+      expect(titles(round2!.id)).toEqual(titles(round1!.id));
+      expect(storageService.getCompetition().rounds.length).toBe(2);
+
+      // Editing Round 2 leaves Round 1 alone, and the reverse
+      const r1Before = titles(round1!.id);
+      const comp = storageService.getCompetition();
+      comp.rounds.find((r) => r.id === round2!.id)!.rubric.criteria[0].title = 'Finale only';
+      storageService.saveCompetition(comp);
+      expect(titles(round1!.id)).toEqual(r1Before);
+      const comp2 = storageService.getCompetition();
+      comp2.rounds.find((r) => r.id === round1!.id)!.rubric.criteria[1].title = 'Round 1 only';
+      storageService.saveCompetition(comp2);
+      expect(titles(round2!.id)[1]).toBe(r1Before[1]);
+      expect(titles(round2!.id)[0]).toBe('Finale only');
+    });
+
+    it('creates Round 2 when the competition has only Round 1, whatever its ID', () => {
+      const ia = storageService.getTemplates().find((t) => t.rounds.length === 1)!;
+      storageService.applyTemplateToCompetition(ia.id);
+      const only = storageService.getCompetition().rounds[0];
+      expect(only.id).not.toBe('round-1');
+      const copy = storageService.copyRound1ToRound2();
+      expect(copy).not.toBeNull();
+      expect(copy?.name).toBe('Round 2: Pitch Finale');
+      expect(storageService.getCompetition().rounds.map((r) => r.id)).toEqual([only.id, copy!.id]);
+      expect(titles(copy!.id)).toEqual(titles(only.id));
+    });
+
+    it('never overwrites a Round 2 that has been opened', () => {
+      const { round2 } = storageService.findRound1And2(storageService.getCompetition().rounds);
+      const before = titles(round2!.id);
+      storageService.setRoundStatus(round2!.id, 'live');
+      expect(storageService.copyRound1ToRound2()).toBeNull();
+      storageService.setRoundStatus(round2!.id, 'draft'); // still locked once opened
+      expect(storageService.copyRound1ToRound2()).toBeNull();
+      expect(titles(round2!.id)).toEqual(before);
+    });
   });
 
   // MSP-33: Set up Round 2 from Round 1 without retyping (independent clone)

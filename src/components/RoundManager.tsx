@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Round, RoundStatus } from '../types';
+import { storageService } from '../services/storageService';
 import { Play, Copy, CheckCircle2, Lock, Tag } from 'lucide-react';
 
 interface RoundManagerProps {
@@ -20,8 +21,21 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
   onUpdateBoothCategories,
 }) => {
   const activeRound = rounds.find((r) => r.id === activeRoundId) || rounds[0];
-  const round1 = rounds.find((r) => r.roundType === 'booth') || rounds[0];
-  const hasRound2 = rounds.some((r) => r.roundType === 'finale' && r.id !== round1?.id);
+  const { round1, round2 } = storageService.findRound1And2(rounds);
+  // MSP-33: a Round 2 that has been opened is never overwritten.
+  const round2Locked = !!round2 && (round2.status !== 'draft' || round2.isLocked);
+
+  const handleCopyRound1 = () => {
+    if (round2 && round2Locked) return;
+    if (
+      round2 &&
+      !window.confirm(
+        `Replace "${round2.name}" with a copy of "${round1?.name}"? Round 2's current criteria will be replaced. Round 1 does not change.`
+      )
+    )
+      return;
+    onCloneRound1ToRound2();
+  };
 
   const [newCategoryInput, setNewCategoryInput] = useState('');
 
@@ -64,15 +78,21 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
         </div>
 
         {/* Round 1 -> Round 2 Cloner (MSP-33) */}
-        {!hasRound2 && round1 && (
+        {round1 && round1 !== round2 && (
+          <div className="flex flex-col items-start sm:items-end gap-1">
           <button
-            onClick={onCloneRound1ToRound2}
-            className="flex items-center space-x-2 px-3.5 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
-            title="Create independent Round 2 duplicate from Round 1"
+            onClick={handleCopyRound1}
+            disabled={round2Locked}
+            className="flex items-center space-x-2 px-3.5 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            title={round2 ? 'Replace Round 2 with an independent copy of Round 1' : 'Create Round 2 as an independent copy of Round 1'}
           >
             <Copy className="w-4 h-4 text-tac-gold-300" />
-            <span>Create Round 2 from Round 1 (MSP-33)</span>
+            <span>{round2 ? 'Replace Round 2 with a copy of Round 1' : 'Create Round 2 from Round 1'}</span>
           </button>
+          {round2Locked && (
+            <span className="text-[11px] text-tac-stone-400">Round 2 has been opened, so it cannot be replaced.</span>
+          )}
+          </div>
         )}
       </div>
 
