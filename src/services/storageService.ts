@@ -178,6 +178,8 @@ class StorageService {
     if (!template) return null;
 
     const comp = this.getCompetition();
+    // MSP-32: a live round's rubric is locked, so a template cannot replace it.
+    if (comp.rounds.some((r) => r.status === 'live')) return null;
     // Loaded rounds start fresh: new IDs (scores are filed by round ID, so a
     // past competition's scores never appear in the new setup), editable
     // drafts, and no finalized results carried over from the past.
