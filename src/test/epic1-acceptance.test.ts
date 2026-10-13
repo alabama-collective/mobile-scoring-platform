@@ -113,6 +113,36 @@ describe('Epic 1 Acceptance Criteria Verification Suite', () => {
     expect(reloaded.rounds.some((r) => r.id === 'round-breakout-1')).toBe(true);
   });
 
+  // MSP-01 / MSP-11: a loaded template never brings back old status or scores
+  it('MSP-11: Loading a saved setup starts fresh draft rounds with no old scores', () => {
+    const comp = storageService.getCompetition();
+    const round1 = comp.rounds[0];
+    storageService.setRoundStatus(round1.id, 'live');
+    storageService.submitJudgeScore({
+      judgeId: comp.judges[0].id,
+      judgeName: comp.judges[0].name,
+      teamId: comp.teams[0].id,
+      roundId: round1.id,
+      scores: { [round1.rubric.criteria[0].id]: 9 },
+    });
+    storageService.finalizeResults(round1.id, 'Sample Staff');
+    const saved = storageService.saveTemplate({ name: 'Past setup', description: '', rounds: storageService.getCompetition().rounds });
+
+    const loaded = storageService.applyTemplateToCompetition(saved.id)!;
+    for (const r of loaded.rounds) {
+      expect(r.status).toBe('draft');
+      expect(r.isLocked).toBe(false);
+      expect(r.isResultsFinalized).toBeUndefined();
+      expect(r.id).not.toBe(round1.id);
+    }
+    expect(loaded.rounds.map((r) => r.name)).toEqual(comp.rounds.map((r) => r.name));
+    expect(loaded.rounds[0].rubric.criteria.map((c) => c.title)).toEqual(round1.rubric.criteria.map((c) => c.title));
+    // The past score is kept, but filed under the old round, so the new setup has none
+    const newRoundIds = new Set(loaded.rounds.map((r) => r.id));
+    expect(storageService.getAllSubmissions().length).toBe(1);
+    expect(storageService.getAllSubmissions().filter((s) => newRoundIds.has(s.roundId)).length).toBe(0);
+  });
+
   // MSP-32: Publish rubric and lock it when the round opens
   it('MSP-32: Locks the rubric when round status transitions to LIVE', () => {
     const comp = storageService.getCompetition();
