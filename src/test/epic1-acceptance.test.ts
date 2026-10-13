@@ -158,6 +158,55 @@ describe('Epic 1 Acceptance Criteria Verification Suite', () => {
     expect(updatedRound?.isLocked).toBe(true); // Locked upon opening
   });
 
+  // MSP-33: the path the "Round 2 from Round 1" button uses
+  describe('MSP-33: Round 2 from Round 1 (button path)', () => {
+    const titles = (roundId: string) =>
+      storageService.getCompetition().rounds.find((r) => r.id === roundId)!.rubric.criteria.map((c) => c.title);
+
+    it('replaces an existing draft Round 2 with an independent copy of Round 1', () => {
+      const { round1, round2 } = storageService.findRound1And2(storageService.getCompetition().rounds);
+      const copy = storageService.copyRound1ToRound2();
+      expect(copy?.id).toBe(round2!.id); // same Round 2, now a copy
+      expect(copy?.name).toBe(round2!.name);
+      expect(titles(round2!.id)).toEqual(titles(round1!.id));
+      expect(storageService.getCompetition().rounds.length).toBe(2);
+
+      // Editing Round 2 leaves Round 1 alone, and the reverse
+      const r1Before = titles(round1!.id);
+      const comp = storageService.getCompetition();
+      comp.rounds.find((r) => r.id === round2!.id)!.rubric.criteria[0].title = 'Finale only';
+      storageService.saveCompetition(comp);
+      expect(titles(round1!.id)).toEqual(r1Before);
+      const comp2 = storageService.getCompetition();
+      comp2.rounds.find((r) => r.id === round1!.id)!.rubric.criteria[1].title = 'Round 1 only';
+      storageService.saveCompetition(comp2);
+      expect(titles(round2!.id)[1]).toBe(r1Before[1]);
+      expect(titles(round2!.id)[0]).toBe('Finale only');
+    });
+
+    it('creates Round 2 when the competition has only Round 1, whatever its ID', () => {
+      const ia = storageService.getTemplates().find((t) => t.rounds.length === 1)!;
+      storageService.applyTemplateToCompetition(ia.id);
+      const only = storageService.getCompetition().rounds[0];
+      expect(only.id).not.toBe('round-1');
+      const copy = storageService.copyRound1ToRound2();
+      expect(copy).not.toBeNull();
+      expect(copy?.name).toBe('Round 2: Pitch Finale');
+      expect(storageService.getCompetition().rounds.map((r) => r.id)).toEqual([only.id, copy!.id]);
+      expect(titles(copy!.id)).toEqual(titles(only.id));
+    });
+
+    it('never overwrites a Round 2 that has been opened', () => {
+      const { round2 } = storageService.findRound1And2(storageService.getCompetition().rounds);
+      const before = titles(round2!.id);
+      storageService.setRoundStatus(round2!.id, 'live');
+      expect(storageService.copyRound1ToRound2()).toBeNull();
+      storageService.setRoundStatus(round2!.id, 'draft'); // still locked once opened
+      expect(storageService.copyRound1ToRound2()).toBeNull();
+      expect(titles(round2!.id)).toEqual(before);
+    });
+  });
+
   // MSP-33: Set up Round 2 from Round 1 without retyping (independent clone)
   it('MSP-33: Creates an independent duplicate of Round 1 for Round 2 without mutating Round 1', () => {
     const initialComp = storageService.getCompetition();
