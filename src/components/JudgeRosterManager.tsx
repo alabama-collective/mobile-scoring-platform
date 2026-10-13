@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Competition } from '../types';
 import { storageService } from '../services/storageService';
-import { QrCode, UserPlus, Trash2, Smartphone, Copy, Check } from 'lucide-react';
+import { Users, UserPlus, Trash2, Smartphone, Copy, Check } from 'lucide-react';
 
 interface JudgeRosterManagerProps {
   competition: Competition;
@@ -53,13 +53,13 @@ export const JudgeRosterManager: React.FC<JudgeRosterManagerProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-tac-ink-700">
         <div>
           <div className="flex items-center space-x-2">
-            <QrCode className="w-5 h-5 text-tac-gold-500" />
+            <Users className="w-5 h-5 text-tac-gold-500" />
             <h2 className="font-display font-bold text-base sm:text-lg text-white uppercase tracking-wide">
-              Judge Roster & QR Code Access (MSP-03, MSP-29)
+              Judge Roster
             </h2>
           </div>
           <p className="text-xs text-tac-stone-400 mt-1">
-            Single shareable QR code routing volunteer judges directly to the live scoring sheet in any browser.
+            Copy the judge link to share it. It opens the scoring screen in any browser.
           </p>
         </div>
 
@@ -83,51 +83,10 @@ export const JudgeRosterManager: React.FC<JudgeRosterManagerProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Single Official QR Code Display (MSP-03) */}
-        <div className="bg-tac-ink-900 p-5 rounded-sm border border-tac-ink-700 flex flex-col items-center text-center space-y-3">
-          <span className="text-[10px] font-bold text-tac-gold-400 uppercase tracking-widest">
-            Single Event QR Code (MSP-03)
-          </span>
-
-          {/* Render High-Fidelity SVG QR Representation */}
-          <div className="w-44 h-44 bg-white p-3 rounded-xs shadow-tac-md flex flex-col items-center justify-center">
-            {/* SVG QR Code Pattern */}
-            <svg viewBox="0 0 100 100" className="w-full h-full text-tac-ink-900 fill-current">
-              <rect x="5" y="5" width="28" height="28" fill="#171717" />
-              <rect x="8" y="8" width="22" height="22" fill="#FFFFFF" />
-              <rect x="12" y="12" width="14" height="14" fill="#171717" />
-
-              <rect x="67" y="5" width="28" height="28" fill="#171717" />
-              <rect x="70" y="8" width="22" height="22" fill="#FFFFFF" />
-              <rect x="74" y="12" width="14" height="14" fill="#171717" />
-
-              <rect x="5" y="67" width="28" height="28" fill="#171717" />
-              <rect x="8" y="70" width="22" height="22" fill="#FFFFFF" />
-              <rect x="12" y="74" width="14" height="14" fill="#171717" />
-
-              {/* Data modules */}
-              <rect x="38" y="8" width="8" height="8" fill="#171717" />
-              <rect x="50" y="15" width="6" height="6" fill="#171717" />
-              <rect x="38" y="24" width="10" height="6" fill="#171717" />
-              <rect x="12" y="40" width="6" height="10" fill="#171717" />
-              <rect x="25" y="44" width="8" height="8" fill="#171717" />
-              <rect x="40" y="40" width="20" height="20" fill="#AA721A" />
-              <rect x="68" y="42" width="8" height="8" fill="#171717" />
-              <rect x="82" y="50" width="8" height="8" fill="#171717" />
-              <rect x="42" y="68" width="12" height="6" fill="#171717" />
-              <rect x="60" y="70" width="8" height="8" fill="#171717" />
-              <rect x="75" y="75" width="15" height="15" fill="#171717" />
-            </svg>
-          </div>
-
-          <p className="text-[11px] text-tac-stone-400">
-            Print or project on event day. Always resolves to the currently <strong>LIVE</strong> round form.
-          </p>
-        </div>
-
+      {/* No QR code here: TAC makes its own from the app address (Steph, Oct 12). */}
+      <div>
         {/* Judge Roster Management (MSP-05, MSP-19) */}
-        <div className="md:col-span-2 space-y-4">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-display font-semibold text-xs text-tac-stone-200 uppercase tracking-wide">
               Registered Judges Roster ({competition.judges.length})
