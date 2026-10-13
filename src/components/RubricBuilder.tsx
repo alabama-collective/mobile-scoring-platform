@@ -330,7 +330,7 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs shadow-tac-sm transition-colors"
+                  className="px-4 py-1.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-colors"
                 >
                   Save Criterion
                 </button>

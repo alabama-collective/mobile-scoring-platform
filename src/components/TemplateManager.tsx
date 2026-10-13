@@ -73,7 +73,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
           <button
             onClick={() => setShowSaveModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
+            className="flex items-center space-x-2 px-4 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
           >
             <Save className="w-4 h-4 text-tac-gold-300" />
             <span>Save Current Setup as Template</span>
@@ -151,7 +151,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs transition-colors"
+                  className="px-4 py-1.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs transition-colors"
                 >
                   Save Template
                 </button>
@@ -245,7 +245,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
                 <button
                   onClick={() => handleApply(template)}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs shadow-tac-sm transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-colors"
                 >
                   <Check className="w-3.5 h-3.5 text-tac-gold-300" />
                   <span>Load Template</span>

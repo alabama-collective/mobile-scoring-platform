@@ -256,7 +256,7 @@ export const JudgeScoringPreview: React.FC<JudgeScoringPreviewProps> = ({
 
             <button
               type="submit"
-              className="px-6 py-2.5 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-display font-bold text-xs uppercase tracking-wider rounded-xs shadow-tac-md transition-all"
+              className="px-6 py-2.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-display font-bold text-xs uppercase tracking-wider rounded-xs shadow-tac-md transition-all"
             >
               Submit Score
             </button>

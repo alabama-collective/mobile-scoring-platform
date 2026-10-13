@@ -1,5 +1,7 @@
 import React from 'react';
-import { ShieldCheck, Smartphone, FolderGit2, Sparkles, Award, BarChart3 } from 'lucide-react';
+import { ShieldCheck, Smartphone, FolderGit2, Award, BarChart3 } from 'lucide-react';
+
+const BRAND = `${import.meta.env.BASE_URL}brand/`;
 
 interface HeaderProps {
   activeTab: 'admin' | 'live' | 'judge' | 'templates';
@@ -16,9 +18,13 @@ interface HeaderProps {
 const tabClass = (active: boolean) =>
   `relative flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-1.5 min-w-[3.25rem] px-1.5 md:px-3 py-1 md:py-2 rounded-xs text-[10px] md:text-sm font-medium leading-tight transition-colors ${
     active
-      ? 'bg-tac-gold-800 text-white font-semibold shadow-tac-sm'
+      ? 'bg-tac-gold-700 text-tac-ink-900 font-semibold shadow-tac-sm'
       : 'text-tac-stone-300 hover:text-white hover:bg-tac-ink-800'
   }`;
+
+// Charcoal on the gold active tab; the tab's own accent color otherwise.
+const iconClass = (active: boolean, accent = 'text-tac-gold-400') =>
+  `w-4 h-4 ${active ? 'text-tac-ink-900' : accent}`;
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
@@ -36,28 +42,25 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Height stays h-16 / sm:h-20: the judge screen's sticky team banner sits directly below it */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
-          {/* Brand Identity: "TAC" on phones, full name from sm */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xs bg-tac-ink-800 border border-tac-gold-700/60 flex items-center justify-center text-tac-gold-500 shadow-inner">
-              <Sparkles className="w-5 h-5 text-tac-gold-500" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span
-                  className="font-display font-bold text-sm sm:text-base tracking-widest text-tac-stone-100 uppercase whitespace-nowrap"
-                  aria-label="The Alabama Collective"
-                >
-                  <span className="sm:hidden" aria-hidden="true">TAC</span>
-                  <span className="hidden sm:inline" aria-hidden="true">The Alabama Collective</span>
-                </span>
-                <span className="hidden lg:inline bg-tac-gold-800/30 text-tac-gold-400 border border-tac-gold-700/50 text-[10px] font-semibold uppercase px-2 py-0.5 rounded-xs tracking-wider whitespace-nowrap">
-                  Full Platform
-                </span>
-              </div>
-              <p className="hidden sm:block text-xs text-tac-stone-400 font-light truncate max-w-md">
-                {competitionName}
-              </p>
-            </div>
+          {/* Brand: the light logo on the charcoal header (never stretched: height
+              set, width auto). Phones and the judge screen show only the round
+              icon, kept small; the full logo shows from sm on staff screens. */}
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src={`${BRAND}tac-submark.png`}
+              alt="The Alabama Collective"
+              className={`h-9 w-9 shrink-0 ${activeTab === 'judge' ? '' : 'sm:hidden'}`}
+            />
+            {activeTab !== 'judge' && (
+              <img
+                src={`${BRAND}tac-logo-light.png`}
+                alt="The Alabama Collective"
+                className="hidden sm:block h-9 lg:h-10 w-auto shrink-0"
+              />
+            )}
+            <p className="hidden xl:block text-xs text-tac-stone-400 font-light truncate max-w-[14rem] border-l border-tac-ink-700 pl-3">
+              {competitionName}
+            </p>
           </div>
 
           {/* Regional Bonus Banner */}
@@ -75,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Coordinator Admin"
               className={tabClass(activeTab === 'admin')}
             >
-              <ShieldCheck className="w-4 h-4 text-tac-gold-400" />
+              <ShieldCheck className={iconClass(activeTab === 'admin')} />
               <span className="whitespace-nowrap">
                 <span className="hidden lg:inline">Coordinator </span>Admin
               </span>
@@ -86,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label={liveSubmissionsCount > 0 ? `Live Results (${liveSubmissionsCount} submitted)` : 'Live Results'}
               className={tabClass(activeTab === 'live')}
             >
-              <BarChart3 className="w-4 h-4 text-tac-gold-400" />
+              <BarChart3 className={iconClass(activeTab === 'live')} />
               <span className="whitespace-nowrap">
                 <span className="hidden lg:inline">Live </span>Results
               </span>
@@ -102,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Judge Scoring"
               className={tabClass(activeTab === 'judge')}
             >
-              <Smartphone className="w-4 h-4 text-tac-circuit-cyan" />
+              <Smartphone className={iconClass(activeTab === 'judge', 'text-tac-circuit-cyan')} />
               <span className="whitespace-nowrap">
                 Judge<span className="hidden lg:inline"> Scoring</span>
               </span>
@@ -113,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Templates"
               className={tabClass(activeTab === 'templates')}
             >
-              <FolderGit2 className="w-4 h-4 text-tac-gold-500" />
+              <FolderGit2 className={iconClass(activeTab === 'templates', 'text-tac-gold-500')} />
               <span className="whitespace-nowrap">Templates</span>
             </button>
           </nav>

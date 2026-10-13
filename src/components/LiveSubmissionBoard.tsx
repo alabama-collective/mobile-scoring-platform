@@ -92,7 +92,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             ) : (
               <button
                 onClick={() => setShowFinalizeModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-bold text-xs rounded-xs shadow-tac-sm transition-all"
+                className="flex items-center space-x-2 px-4 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-bold text-xs rounded-xs shadow-tac-sm transition-all"
               >
                 <CheckCheck className="w-4 h-4 text-tac-gold-300" />
                 <span>Review & Confirm Results (MSP-34)</span>
@@ -291,7 +291,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                   >
                     <td className="py-2.5 px-3 text-center font-display font-black text-sm">
                       {isLeader ? (
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-xs bg-tac-gold-800 text-white shadow-tac-sm">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-xs bg-tac-gold-700 text-tac-ink-900 shadow-tac-sm">
                           1
                         </span>
                       ) : (
@@ -512,7 +512,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <button
                   type="submit"
                   onClick={handleFinalize}
-                  className="px-4 py-2 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-bold text-xs rounded-xs shadow-tac-sm transition-colors"
+                  className="px-4 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-bold text-xs rounded-xs shadow-tac-sm transition-colors"
                 >
                   Confirm Official Results
                 </button>
