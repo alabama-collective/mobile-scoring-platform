@@ -12,7 +12,7 @@ import {
 } from '@firebase/rules-unit-testing';
 import { deleteDoc, doc, getDoc, getDocs, collection, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
-const STAFF = { email: 'staff@tac-scoring.invalid', firebase: { sign_in_provider: 'password' } };
+const STAFF = { email: 'staff@example.com', firebase: { sign_in_provider: 'password' } };
 const COMP = 'competitions/main';
 
 let env: RulesTestEnvironment;

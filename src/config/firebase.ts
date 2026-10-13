@@ -19,9 +19,10 @@ export const firebaseConfig = {
 // The one competition document everything hangs off.
 export const COMPETITION_DOC_ID = 'main';
 
-// The staff passcode is the password of this Firebase sign in. The address is
-// not a real mailbox (.invalid can never be registered). See docs/HANDOVER.md.
-export const STAFF_EMAIL = 'staff@tac-scoring.invalid';
+// The staff passcode is the password of this Firebase sign in, set up by TAC
+// in the Firebase console. The address is a placeholder, not a mailbox. The
+// passcode itself never goes in the repo.
+export const STAFF_EMAIL = 'staff@example.com';
 
 const useEmulator = import.meta.env.VITE_FIREBASE_EMULATOR === '1';
 

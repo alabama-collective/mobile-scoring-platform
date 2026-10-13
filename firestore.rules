@@ -19,7 +19,7 @@ service cloud.firestore {
 
     function isStaff() {
       return signedIn()
-        && request.auth.token.email == 'staff@tac-scoring.invalid'
+        && request.auth.token.email == 'staff@example.com'
         && request.auth.token.firebase.sign_in_provider == 'password';
     }
 
