@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Competition, Rubric, RoundStatus, RubricTemplate } from './types';
-import { storageService } from './services/storageService';
+import { storageService, DATA_CHANGED_EVENT } from './services/storageService';
+import { useCloudState, staffSignOut } from './services/cloud';
+import { StaffSignIn } from './components/StaffSignIn';
 import { Header } from './components/Header';
 import { RoundManager } from './components/RoundManager';
 import { RubricBuilder } from './components/RubricBuilder';
@@ -9,7 +11,7 @@ import { TemplateManager } from './components/TemplateManager';
 import { JudgeScoringPortal } from './components/JudgeScoringPortal';
 import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
-import { RotateCcw, Calendar, MapPin, User } from 'lucide-react';
+import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [competition, setCompetition] = useState<Competition>(() => storageService.getCompetition());
@@ -21,6 +23,21 @@ export const App: React.FC = () => {
     return liveRound ? liveRound.id : comp.rounds[0]?.id || 'round-1';
   });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const cloud = useCloudState();
+
+  // MSP-45: another device changed the shared data, so re-read the local copy.
+  useEffect(() => {
+    const onChanged = () => {
+      setCompetition(storageService.getCompetition());
+      setTemplates(storageService.getTemplates());
+      setRefreshTrigger((prev) => prev + 1);
+    };
+    window.addEventListener(DATA_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(DATA_CHANGED_EVENT, onChanged);
+  }, []);
+
+  // Staff screens need the staff passcode once the shared database is on.
+  const needsStaff = cloud.enabled && !cloud.isStaff;
 
   // Direct QR Code URL routing (MSP-03, MSP-29)
   useEffect(() => {
@@ -165,7 +182,36 @@ export const App: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center space-x-2 self-start md:self-auto">
+          <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+            {cloud.enabled && (
+              <span
+                role="status"
+                className={`px-2.5 py-1 rounded-xs text-[11px] font-semibold border ${
+                  cloud.error
+                    ? 'bg-red-950/80 text-red-300 border-red-800'
+                    : cloud.connected
+                    ? 'bg-green-950/80 text-green-300 border-green-800'
+                    : 'bg-tac-gold-950/80 text-tac-gold-300 border-tac-gold-800'
+                }`}
+              >
+                {cloud.error
+                  ? cloud.error
+                  : cloud.connected
+                  ? 'Shared: up to date'
+                  : 'Offline: changes send when back online'}
+              </span>
+            )}
+            {cloud.isStaff && (
+              <button
+                onClick={() => void staffSignOut()}
+                className="flex items-center space-x-1 px-3 py-1.5 bg-tac-ink-900 hover:bg-tac-ink-700 text-tac-stone-400 hover:text-tac-stone-200 text-xs rounded-xs border border-tac-ink-700 transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Staff sign out</span>
+              </button>
+            )}
+            {/* Resetting would overwrite the shared copy for every device, so only offer it on this-device-only mode. */}
+            {!cloud.enabled && (
             <button
               onClick={handleResetDefaults}
               className="flex items-center space-x-1 px-3 py-1.5 bg-tac-ink-900 hover:bg-tac-ink-700 text-tac-stone-400 hover:text-tac-stone-200 text-xs rounded-xs border border-tac-ink-700 transition-colors"
@@ -174,11 +220,14 @@ export const App: React.FC = () => {
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Defaults</span>
             </button>
+            )}
           </div>
         </div>
 
+        {needsStaff && activeTab !== 'judge' && <StaffSignIn />}
+
         {/* Tab 1: Coordinator Admin (Epic 1 + Roster Management) */}
-        {activeTab === 'admin' && (
+        {activeTab === 'admin' && !needsStaff && (
           <div className="space-y-6 animate-fade-in">
             {/* Round Management & Cloner */}
             <RoundManager
@@ -214,7 +263,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Tab 2: Live Submission & Results Board (Epic 3: MSP-05, MSP-06, MSP-19, MSP-34) */}
-        {activeTab === 'live' && activeRound && (
+        {activeTab === 'live' && activeRound && !needsStaff && (
           <div className="animate-fade-in">
             <LiveSubmissionBoard
               key={refreshTrigger}
@@ -238,7 +287,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Tab 4: Template Management Engine (MSP-01) */}
-        {activeTab === 'templates' && (
+        {activeTab === 'templates' && !needsStaff && (
           <div className="animate-fade-in">
             <TemplateManager
               templates={templates}

@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// MSP-45: who may read and change what in the shared database.
+// These rules are the real protection. Hiding a button on the screen is not.
+//
+// - Staff: signed in with the staff passcode (the staff Firebase sign in).
+//   Only staff may change the competition: rounds, rubrics, judges, teams,
+//   booths, timers and uploads all live in the competition document.
+// - Judges: an automatic anonymous sign in on their phone. They may read the
+//   competition, and save or change only their own scores while the round is
+//   live. They cannot delete scores or read other judges' scores.
+// - Everyone else, and anything not listed here: refused.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isStaff() {
+      return signedIn()
+        && request.auth.token.email == 'staff@tac-scoring.invalid'
+        && request.auth.token.firebase.sign_in_provider == 'password';
+    }
+
+    match /competitions/{compId} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+
+      // Judge email addresses: staff only.
+      match /private/{docId} {
+        allow read, write: if isStaff();
+      }
+
+      match /submissions/{subId} {
+        function roundIsLive(roundId) {
+          let comp = get(/databases/$(database)/documents/competitions/$(compId)).data;
+          return comp.liveRounds.get(roundId, false) == true;
+        }
+
+        // One record per round, team and judge: the record's ID must match its contents.
+        function wellFormed() {
+          let d = request.resource.data;
+          return d.keys().hasAll(['id', 'judgeId', 'judgeName', 'teamId', 'roundId', 'scores', 'rawTotal', 'submittedAt', 'uid'])
+            && d.keys().hasOnly(['id', 'judgeId', 'judgeName', 'teamId', 'roundId', 'scores', 'rawTotal',
+                                 'feedbackWorkedWell', 'feedbackCouldImprove', 'submittedAt', 'updatedAt', 'uid', 'savedAt'])
+            && d.id == subId
+            && subId == d.roundId + '__' + d.teamId + '__' + d.judgeId
+            && d.scores is map
+            && d.rawTotal is number;
+        }
+
+        function judgeMaySave() {
+          return signedIn()
+            && wellFormed()
+            && request.resource.data.uid == request.auth.uid
+            && roundIsLive(request.resource.data.roundId);
+        }
+
+        allow read: if isStaff() || (signedIn() && resource.data.uid == request.auth.uid);
+        allow create: if isStaff() || judgeMaySave();
+        allow update: if isStaff() || (judgeMaySave() && resource.data.uid == request.auth.uid);
+        allow delete: if isStaff();
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

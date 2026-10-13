@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Competition, Round, JudgeScoreSubmission } from '../types';
+import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
 import {
@@ -181,6 +182,10 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     setIsEditing(true);
     if (onScoreSubmitted) onScoreSubmitted();
   };
+
+  // MSP-45: whether this phone's last saved score has reached the shared database.
+  const cloud = useCloudState();
+  const sendState = submissionReceipt ? cloud.sends[submissionReceipt.id] : undefined;
 
   const mySubmissions = storageService
     .getAllSubmissions()
@@ -412,6 +417,13 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
             Recorded <strong>{submissionReceipt.rawTotal} / {maxPossible} points</strong> for{' '}
             <strong>{selectedTeam.name}</strong>.
           </p>
+          {cloud.enabled && sendState && (
+            <p role="status" className={sendState === 'failed' ? 'text-red-300 font-semibold' : 'text-green-300'}>
+              {sendState === 'sending' && 'Saved on this phone, sending to staff. It sends by itself when there is signal.'}
+              {sendState === 'sent' && 'Sent to staff.'}
+              {sendState === 'failed' && 'Not sent: the database refused this score. Show this screen to staff.'}
+            </p>
+          )}
 
           {/* One-Tap Auto Advance to Next Team */}
           {nextTeam && (
