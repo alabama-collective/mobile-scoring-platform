@@ -128,6 +128,24 @@ describe('Epic 1 Acceptance Criteria Verification Suite', () => {
     expect(updatedRound?.isLocked).toBe(true); // Locked upon opening
   });
 
+  it('MSP-32: A template cannot replace a live rubric', () => {
+    const comp = storageService.getCompetition();
+    const round1 = comp.rounds[0];
+    const liveTitles = round1.rubric.criteria.map((c) => c.title);
+    storageService.setRoundStatus(round1.id, 'live');
+
+    const other = storageService.getTemplates().find((t) => t.id !== undefined && t.rounds[0]?.id !== round1.id)!;
+    expect(storageService.applyTemplateToCompetition(other.id)).toBeNull();
+
+    const after = storageService.getCompetition().rounds.find((r) => r.id === round1.id);
+    expect(after?.status).toBe('live');
+    expect(after?.rubric.criteria.map((c) => c.title)).toEqual(liveTitles);
+
+    // Once the round is closed, templates can be loaded again
+    storageService.setRoundStatus(round1.id, 'completed');
+    expect(storageService.applyTemplateToCompetition(other.id)).not.toBeNull();
+  });
+
   // MSP-33: Set up Round 2 from Round 1 without retyping (independent clone)
   it('MSP-33: Creates an independent duplicate of Round 1 for Round 2 without mutating Round 1', () => {
     const initialComp = storageService.getCompetition();

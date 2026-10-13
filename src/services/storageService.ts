@@ -150,6 +150,8 @@ class StorageService {
     if (!template) return null;
 
     const comp = this.getCompetition();
+    // MSP-32: a live round's rubric is locked, so a template cannot replace it.
+    if (comp.rounds.some((r) => r.status === 'live')) return null;
     comp.rounds = JSON.parse(JSON.stringify(template.rounds));
     this.saveCompetition(comp);
     return comp;
