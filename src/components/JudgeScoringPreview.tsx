@@ -14,7 +14,7 @@ export const JudgeScoringPreview: React.FC<JudgeScoringPreviewProps> = ({
   winningRegion,
 }) => {
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teams[0]?.id || '');
-  const [judgeName, setJudgeName] = useState<string>('Justice Payne');
+  const [judgeName, setJudgeName] = useState<string>('Jordan Lake');
   const [scores, setScores] = useState<Record<string, number>>({});
   const [feedbackWorked, setFeedbackWorked] = useState('');
   const [feedbackImprove, setFeedbackImprove] = useState('');

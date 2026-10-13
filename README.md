@@ -13,7 +13,6 @@
 > **Event Launch:** Magic City Classic Business Pitch Competition (MCC-BP 2026)  
 > **Date & Venue:** October 29, 2026 • Topgolf Birmingham, Signature Room  
 > **Host Organization:** The Alabama Collective (TAC)  
-> **Event Director:** Steph Baggage (202-468-8204)  
 > **Production Status:** 100% Complete & Verified Across All 3 Epics (`MSP-01` through `MSP-35`)
 
 ---

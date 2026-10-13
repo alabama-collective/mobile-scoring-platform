@@ -30,7 +30,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   const allSubmissions = storageService.getAllSubmissions().filter((s) => s.roundId === activeRound.id);
 
   const [selectedAuditTeam, setSelectedAuditTeam] = useState<TeamScoreSummary | null>(null);
-  const [signerName, setSignerName] = useState('Steph Baggage');
+  const [signerName, setSignerName] = useState('Avery Quinn');
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
 
   // Calculate high-level progress (MSP-05)

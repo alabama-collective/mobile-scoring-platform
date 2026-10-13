@@ -41,7 +41,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     fireEvent.click(qaTimerBtn);
     expect(screen.getByText('3:00')).toBeInTheDocument();
 
-    // 5. Submit a Score as Justice Payne
+    // 5. Submit a Score as Jordan Lake
     // Click quick preset buttons for criteria
     const quick10Buttons = screen.getAllByRole('button', { name: '10' });
     expect(quick10Buttons.length).toBeGreaterThan(0);
@@ -72,7 +72,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
       expect(screen.getByText(/Judge Submission Matrix by Team/i)).toBeInTheDocument();
     });
 
-    // Verify AgroPulse Sensors has Justice Payne's score recorded
+    // Verify AgroPulse Sensors has Jordan Lake's score recorded
     expect(screen.getAllByText('AgroPulse Sensors').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Missing/i).length).toBeGreaterThan(0); // Shows missing judges
 
@@ -83,7 +83,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     // Verify Audit Modal details
     await waitFor(() => {
       expect(screen.getByText(/Audit Trail & Score Breakdown/i)).toBeInTheDocument();
-      expect(screen.getByText(/Judge: Justice Payne/i)).toBeInTheDocument();
+      expect(screen.getByText(/Judge: Jordan Lake/i)).toBeInTheDocument();
       expect(screen.getByText(/Incredible customer validation and demo/i)).toBeInTheDocument();
     });
 
@@ -103,7 +103,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     // Verify Finalized badge appears
     await waitFor(() => {
       expect(screen.getByText(/Confirmed Final by/i)).toBeInTheDocument();
-      expect(screen.getAllByText(/Steph Baggage/i).length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByText(/Avery Quinn/i).length).toBeGreaterThanOrEqual(2);
     });
 
     // 11. Test Regional Bonus Panel (MSP-35)

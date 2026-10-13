@@ -47,10 +47,10 @@ export const OFFICIAL_CRITERIA: Criterion[] = [
 ];
 
 export const INITIAL_JUDGES: Judge[] = [
-  { id: 'judge-1', name: 'Justice Payne', email: 'justice.payne@hbcu.edu', boothAssigned: 'CleanTech & Urban' },
-  { id: 'judge-2', name: 'Marcus Keeper', email: 'marcus.keeper@venture.org', boothAssigned: 'HealthTech & Bio' },
-  { id: 'judge-3', name: 'Samantha Cole', email: 'samantha@investalabama.com', boothAssigned: 'FinTech & EdTech' },
-  { id: 'judge-4', name: 'Dr. Anthony Lee', email: 'anthony.lee@talladega.edu', boothAssigned: 'Consumer & Lifestyle' },
+  { id: 'judge-1', name: 'Jordan Lake', email: 'jordan.lake@example.com', boothAssigned: 'CleanTech & Urban' },
+  { id: 'judge-2', name: 'Morgan Hill', email: 'morgan.hill@example.com', boothAssigned: 'HealthTech & Bio' },
+  { id: 'judge-3', name: 'Casey Brooks', email: 'casey.brooks@example.com', boothAssigned: 'FinTech & EdTech' },
+  { id: 'judge-4', name: 'Dr. Riley Stone', email: 'riley.stone@example.com', boothAssigned: 'Consumer & Lifestyle' },
 ];
 
 export const INITIAL_COMPETITION: Competition = {
@@ -58,7 +58,7 @@ export const INITIAL_COMPETITION: Competition = {
   name: 'HBCU Business Pitch Competition (MCC-BP 2026)',
   date: 'Thursday, October 29, 2026',
   location: 'Topgolf Birmingham, Signature Room',
-  programDirector: 'Steph Baggage (202-468-8204)',
+  programDirector: 'Avery Quinn',
   regions: ['North Alabama', 'Central Alabama', 'Black Belt', 'Gulf Coast'],
   winningRegion: undefined,
   bonusPointsApplied: false,

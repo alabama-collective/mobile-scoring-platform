@@ -183,10 +183,10 @@ describe('Epic 2 & Epic 3 Acceptance Criteria Verification Suite', () => {
     const round = comp.rounds[0];
     expect(round.isResultsFinalized).toBeFalsy();
 
-    const finalizedRound = storageService.finalizeResults(round.id, 'Steph Baggage');
+    const finalizedRound = storageService.finalizeResults(round.id, 'Avery Quinn');
     expect(finalizedRound).not.toBeNull();
     expect(finalizedRound?.isResultsFinalized).toBe(true);
-    expect(finalizedRound?.finalizedBy).toBe('Steph Baggage');
+    expect(finalizedRound?.finalizedBy).toBe('Avery Quinn');
     expect(finalizedRound?.finalizedAt).toBeDefined();
     expect(finalizedRound?.status).toBe('completed');
 
@@ -194,6 +194,6 @@ describe('Epic 2 & Epic 3 Acceptance Criteria Verification Suite', () => {
     const updatedComp = storageService.getCompetition();
     const savedRound = updatedComp.rounds.find((r) => r.id === round.id);
     expect(savedRound?.isResultsFinalized).toBe(true);
-    expect(savedRound?.finalizedBy).toBe('Steph Baggage');
+    expect(savedRound?.finalizedBy).toBe('Avery Quinn');
   });
 });

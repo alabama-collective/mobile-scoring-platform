@@ -9,7 +9,7 @@ The **Mobile Scoring Platform (MSP)** is a mobile-first Progressive Web Applicat
 * **Primary Launch Event:** Magic City Classic Business Pitch (MCC-BP 2026) on **Thursday, October 29, 2026** at Topgolf Birmingham (Signature Room).
 * **Core Value Proposition:**
   1. Volunteer judges score pitches independently on any device (phone, tablet, laptop) without installing an app, receiving instant submission confirmation.
-  2. Event coordinators (Tally Marks / Steph Baggage) track live submissions in real time, immediately seeing which judges have or haven't submitted without calling out across the room.
+  2. Event coordinators (Tally Marks / Avery Quinn) track live submissions in real time, immediately seeing which judges have or haven't submitted without calling out across the room.
   3. Automatic tabulations and audit trails eliminate manual recount delays and ensure the announced winners are 100% accurate.
 
 ---
@@ -20,7 +20,7 @@ Every component and rule in this codebase directly traces to one of four authori
 
 | Source Document | Summary of Content | Applied Components & Code Areas |
 | :--- | :--- | :--- |
-| **1. Sprint Review Deck**<br>*(Rhonoya Anderson, Fall 2026 Technical Internship)* | User discovery, operational pain points, persona profiles (Tally Marks, Justice Payne), and the MVP Canvas. Defined the critical gap: *"knowing which judge has NOT submitted."* | • Roles & user journeys<br>• Coordinator vs. Judge separation<br>• Event metadata and timeline constraints |
+| **1. Sprint Review Deck**<br>*(Rhonoya Anderson, Fall 2026 Technical Internship)* | User discovery, operational pain points, persona profiles (Tally Marks, Jordan Lake), and the MVP Canvas. Defined the critical gap: *"knowing which judge has NOT submitted."* | • Roles & user journeys<br>• Coordinator vs. Judge separation<br>• Event metadata and timeline constraints |
 | **2. Product Backlog & Epic Breakdown**<br>*(TAC Fall 2026 Technical Internship CSV)* | Master backlog of 34 scoring stories, sprint calendar, Given-When-Then acceptance criteria, and epic boundaries: E1 (Rubric setup), E2 (Judge scoring), E3 (Live results). | • Story ID traceability (`MSP-01` through `MSP-35`)<br>• Gate conditions and validation test suites ([`src/test/epic1-acceptance.test.ts`](src/test/epic1-acceptance.test.ts) & [`src/test/epic2-epic3-acceptance.test.ts`](src/test/epic2-epic3-acceptance.test.ts)) |
 | **3. Official Judges Instruction Packet**<br>*(Printed packet for MCC-BP Oct 29, 2026)* | Format (3 min pitch, 3 min Q&A), five official categories (10 pts each, 50 pts total), 5-tier scoring scale anchors (9–10 Exceptional, 7–8 Strong, etc.), qualitative feedback prompts, and event director info. | • Default competition seed ([`src/data/seedData.ts`](src/data/seedData.ts))<br>• Inline listening prompts in [`RubricBuilder.tsx`](src/components/RubricBuilder.tsx)<br>• Qualitative feedback capture in [`JudgeScoringPortal.tsx`](src/components/JudgeScoringPortal.tsx) |
 | **4. The Alabama Collective Design System**<br>*(Foundations, Tokens & Assets in `the-alabama-collective-design-system`)* | Official brand rules: Ink ground (`#171717`), Action gold (`#AA721A`), Brand accent (`#AD8D40`), Stone hairlines (`#EBE7E3`), 4px gold rules, squared-off controls (0–6px radii), Montserrat & Open Sans typography. | • Tailwind theme ([`tailwind.config.js`](tailwind.config.js))<br>• Webfonts bundled in [`public/fonts/`](public/fonts/)<br>• Base styling in [`src/index.css`](src/index.css) and component UI |
@@ -35,7 +35,7 @@ Every component and rule in this codebase directly traces to one of four authori
 
 ### Step 2: PO Clarifications & Resolved Requirements
 1. **`MSP-35` Regional Bonus:** When a region wins the Gift Classic competition, +5 bonus points are automatically applied to their Round 1 scores for all competing teams from that region.
-2. **`MSP-31` No-Code Administration:** The PWA must provide an in-app Coordinator UI allowing staff (Tally Marks / Steph) to create/edit competitions, categories, point scales, and save/load reusable templates without touching code or calling a developer.
+2. **`MSP-31` No-Code Administration:** The PWA must provide an in-app Coordinator UI allowing staff (Tally Marks / Avery Quinn) to create/edit competitions, categories, point scales, and save/load reusable templates without touching code or calling a developer.
 3. **`MSP-32` Lifecycle & Locking:** "Open" means "Live" (the active pitch window). Transitioning a round to `Live` locks the rubric into read-only mode to prevent altering the scoring basis while judges are scoring.
 4. **Round 1 vs. Round 2 Format:** Round 1 consists of morning Pitch Booths divided by booth categories; Round 2 is the stage finale for booth winners.
 
