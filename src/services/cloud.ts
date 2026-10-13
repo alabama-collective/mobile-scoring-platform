@@ -38,6 +38,7 @@ import {
 } from 'firebase/firestore';
 import { cloudSettings, isCloudConfigured, COMPETITION_DOC_ID, STAFF_EMAIL } from '../config/firebase';
 import { storageService } from './storageService';
+import { INITIAL_COMPETITION } from '../data/seedData';
 import type { Competition, JudgeScoreSubmission } from '../types';
 
 export type SendState = 'sending' | 'sent' | 'failed';
@@ -209,8 +210,12 @@ const listen = (u: User) => {
           remoteCompetition = snap.data().competition as Competition;
           applyCompetition();
         } else if (staff && !snap.metadata.fromCache) {
-          // First staff sign in on an empty database: share this laptop's setup.
-          void pushCompetition(storageService.getCompetition());
+          // First staff sign in on an empty database: start from the app's
+          // clean defaults, never from whatever an old browser still holds
+          // (it could be out of date, or hold details since removed).
+          const fresh: Competition = JSON.parse(JSON.stringify(INITIAL_COMPETITION));
+          storageService.applyRemoteCompetition(fresh);
+          void pushCompetition(fresh);
         }
       },
       (e) => setState({ error: plainMessage(e) })
