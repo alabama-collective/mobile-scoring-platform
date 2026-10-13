@@ -22,7 +22,7 @@ export const App: React.FC = () => {
   });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Direct QR Code URL routing (MSP-03, MSP-29)
+  // Direct judge link routing: #/judge opens the scoring screen (MSP-03, MSP-29)
   useEffect(() => {
     if (window.location.hash === '#/judge' || window.location.search.includes('mode=judge')) {
       setActiveTab('judge');
@@ -198,7 +198,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {/* Judge Roster & Single Event QR Code (MSP-03, MSP-29) */}
+            {/* Judge Roster (MSP-05, MSP-19) */}
             <JudgeRosterManager
               competition={competition}
               onUpdateCompetition={setCompetition}
