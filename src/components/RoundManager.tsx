@@ -67,7 +67,7 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
         {!hasRound2 && round1 && (
           <button
             onClick={onCloneRound1ToRound2}
-            className="flex items-center space-x-2 px-3.5 py-2 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
+            className="flex items-center space-x-2 px-3.5 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
             title="Create independent Round 2 duplicate from Round 1"
           >
             <Copy className="w-4 h-4 text-tac-gold-300" />

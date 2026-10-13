@@ -150,7 +150,22 @@ class StorageService {
     if (!template) return null;
 
     const comp = this.getCompetition();
-    comp.rounds = JSON.parse(JSON.stringify(template.rounds));
+    // Loaded rounds start fresh: new IDs (scores are filed by round ID, so a
+    // past competition's scores never appear in the new setup), editable
+    // drafts, and no finalized results carried over from the past.
+    const stamp = Date.now();
+    comp.rounds = (JSON.parse(JSON.stringify(template.rounds)) as Round[]).map((r, i) => {
+      const id = `round-${stamp}-${i + 1}`;
+      return {
+        id,
+        name: r.name,
+        roundType: r.roundType,
+        status: 'draft',
+        isLocked: false,
+        rubric: { ...r.rubric, id: `rubric-${id}` },
+        ...(r.boothCategories ? { boothCategories: r.boothCategories } : {}),
+      };
+    });
     this.saveCompetition(comp);
     return comp;
   }

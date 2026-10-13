@@ -75,7 +75,7 @@ export const JudgeRosterManager: React.FC<JudgeRosterManagerProps> = ({
 
           <button
             onClick={onSwitchToJudgeView}
-            className="flex items-center space-x-1.5 px-3 py-2 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
+            className="flex items-center space-x-1.5 px-3 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
           >
             <Smartphone className="w-3.5 h-3.5 text-tac-gold-300" />
             <span>Launch Judge View</span>
@@ -165,7 +165,7 @@ export const JudgeRosterManager: React.FC<JudgeRosterManagerProps> = ({
               />
               <button
                 type="submit"
-                className="px-3 py-1.5 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-bold text-xs rounded-xs shrink-0 flex items-center space-x-1"
+                className="px-3 py-1.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-bold text-xs rounded-xs shrink-0 flex items-center space-x-1"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Add</span>
