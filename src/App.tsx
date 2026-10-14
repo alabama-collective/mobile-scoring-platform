@@ -39,7 +39,7 @@ export const App: React.FC = () => {
   // Staff screens need the staff passcode once the shared database is on.
   const needsStaff = cloud.enabled && !cloud.isStaff;
 
-  // Direct QR Code URL routing (MSP-03, MSP-29)
+  // Direct judge link routing: #/judge opens the scoring screen (MSP-03, MSP-29)
   useEffect(() => {
     if (window.location.hash === '#/judge' || window.location.search.includes('mode=judge')) {
       setActiveTab('judge');
@@ -67,7 +67,7 @@ export const App: React.FC = () => {
   };
 
   const handleCloneRound1 = () => {
-    const cloned = storageService.duplicateRound('round-1', 'Round 2: Pitch Finale (Clone)');
+    const cloned = storageService.copyRound1ToRound2();
     if (cloned) {
       const refreshed = storageService.getCompetition();
       setCompetition(refreshed);
@@ -247,7 +247,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {/* Judge Roster & Single Event QR Code (MSP-03, MSP-29) */}
+            {/* Judge Roster (MSP-05, MSP-19) */}
             <JudgeRosterManager
               competition={competition}
               onUpdateCompetition={setCompetition}

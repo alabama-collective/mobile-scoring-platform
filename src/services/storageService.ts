@@ -125,34 +125,62 @@ class StorageService {
     return true;
   }
 
+  // A fully independent copy: new criterion IDs and deep-copied point
+  // definitions, so editing either round never changes the other.
+  private cloneRound(source: Round, id: string, name: string): Round {
+    const criteria: Criterion[] = source.rubric.criteria.map((c) => ({
+      ...c,
+      id: `crit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      scaleAnchors: c.scaleAnchors ? JSON.parse(JSON.stringify(c.scaleAnchors)) : undefined,
+    }));
+    return {
+      id,
+      name,
+      roundType: 'finale',
+      status: 'draft',
+      isLocked: false,
+      rubric: { id: `rubric-${id}`, name: `${name} Rubric`, criteria },
+    };
+  }
+
   duplicateRound(sourceRoundId: string, newRoundName: string): Round | null {
     const comp = this.getCompetition();
     const sourceRound = comp.rounds.find((r) => r.id === sourceRoundId);
     if (!sourceRound) return null;
 
-    const newRoundId = `round-${Date.now()}`;
-    const clonedCriteria: Criterion[] = sourceRound.rubric.criteria.map((c) => ({
-      ...c,
-      id: `crit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      scaleAnchors: c.scaleAnchors ? JSON.parse(JSON.stringify(c.scaleAnchors)) : undefined,
-    }));
-
-    const clonedRound: Round = {
-      id: newRoundId,
-      name: newRoundName,
-      roundType: 'finale',
-      status: 'draft',
-      isLocked: false,
-      rubric: {
-        id: `rubric-${newRoundId}`,
-        name: `${newRoundName} Rubric`,
-        criteria: clonedCriteria,
-      },
-    };
-
+    const clonedRound = this.cloneRound(sourceRound, `round-${Date.now()}`, newRoundName);
     comp.rounds.push(clonedRound);
     this.saveCompetition(comp);
     return clonedRound;
+  }
+
+  // MSP-33: Round 1 is the booth round (or the first round); Round 2 is any
+  // other finale round.
+  findRound1And2(rounds: Round[]): { round1?: Round; round2?: Round } {
+    const round1 = rounds.find((r) => r.roundType === 'booth') || rounds[0];
+    const round2 = rounds.find((r) => r.roundType === 'finale' && r.id !== round1?.id);
+    return { round1, round2 };
+  }
+
+  // MSP-33: create Round 2 as a copy of Round 1, or replace an existing
+  // Round 2 that is still an editable draft. A Round 2 that has been opened
+  // is never overwritten.
+  copyRound1ToRound2(): Round | null {
+    const comp = this.getCompetition();
+    const { round1, round2 } = this.findRound1And2(comp.rounds);
+    if (!round1) return null;
+    if (round2 && (round2.status !== 'draft' || round2.isLocked)) return null;
+
+    if (round2) {
+      const replacement = this.cloneRound(round1, round2.id, round2.name);
+      comp.rounds = comp.rounds.map((r) => (r.id === round2.id ? replacement : r));
+      this.saveCompetition(comp);
+      return replacement;
+    }
+    const created = this.cloneRound(round1, `round-${Date.now()}`, 'Round 2: Pitch Finale');
+    comp.rounds.push(created);
+    this.saveCompetition(comp);
+    return created;
   }
 
   setRoundStatus(roundId: string, status: 'draft' | 'live' | 'completed'): Competition {
@@ -191,7 +219,24 @@ class StorageService {
     if (!template) return null;
 
     const comp = this.getCompetition();
-    comp.rounds = JSON.parse(JSON.stringify(template.rounds));
+    // MSP-32: a live round's rubric is locked, so a template cannot replace it.
+    if (comp.rounds.some((r) => r.status === 'live')) return null;
+    // Loaded rounds start fresh: new IDs (scores are filed by round ID, so a
+    // past competition's scores never appear in the new setup), editable
+    // drafts, and no finalized results carried over from the past.
+    const stamp = Date.now();
+    comp.rounds = (JSON.parse(JSON.stringify(template.rounds)) as Round[]).map((r, i) => {
+      const id = `round-${stamp}-${i + 1}`;
+      return {
+        id,
+        name: r.name,
+        roundType: r.roundType,
+        status: 'draft',
+        isLocked: false,
+        rubric: { ...r.rubric, id: `rubric-${id}` },
+        ...(r.boothCategories ? { boothCategories: r.boothCategories } : {}),
+      };
+    });
     this.saveCompetition(comp);
     return comp;
   }

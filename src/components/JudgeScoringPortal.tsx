@@ -291,7 +291,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
             <button
               onClick={() => handleTimerReset('pitch')}
               className={`text-[10px] font-bold px-1.5 py-0.5 rounded-xs uppercase tracking-wider transition-colors ${
-                timerPhase === 'pitch' ? 'bg-tac-gold-800 text-white' : 'text-tac-stone-400 hover:text-white'
+                timerPhase === 'pitch' ? 'bg-tac-gold-700 text-tac-ink-900' : 'text-tac-stone-400 hover:text-white'
               }`}
             >
               3m Pitch
@@ -299,7 +299,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
             <button
               onClick={() => handleTimerReset('qa')}
               className={`text-[10px] font-bold px-1.5 py-0.5 rounded-xs uppercase tracking-wider transition-colors ${
-                timerPhase === 'qa' ? 'bg-tac-gold-800 text-white' : 'text-tac-stone-400 hover:text-white'
+                timerPhase === 'qa' ? 'bg-tac-gold-700 text-tac-ink-900' : 'text-tac-stone-400 hover:text-white'
               }`}
             >
               3m Q&amp;A
@@ -320,7 +320,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
             className={`p-1.5 rounded-xs text-xs font-bold transition-colors ${
               isTimerActive
                 ? 'bg-amber-950 border border-amber-700 text-amber-300'
-                : 'bg-tac-gold-800 hover:bg-tac-gold-900 text-white shadow-tac-xs'
+                : 'bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 shadow-tac-xs'
             }`}
             title={isTimerActive ? 'Pause' : 'Start'}
           >
@@ -385,7 +385,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                 onClick={() => setSelectedTeamId(t.id)}
                 className={`px-2.5 py-1 text-xs rounded-xs font-semibold whitespace-nowrap transition-colors flex items-center space-x-1 shrink-0 ${
                   isSelected
-                    ? 'bg-tac-gold-800 text-white shadow-tac-xs'
+                    ? 'bg-tac-gold-700 text-tac-ink-900 shadow-tac-xs'
                     : hasScored
                     ? 'bg-tac-ink-900 text-green-400 border border-green-800/60'
                     : 'bg-tac-ink-900 text-tac-stone-400 hover:text-white'
@@ -432,7 +432,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedTeamId(nextTeam.id)}
-                className="flex items-center space-x-1.5 px-3 py-1.5 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-bold text-xs rounded-xs shadow-tac-xs transition-colors"
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-bold text-xs rounded-xs shadow-tac-xs transition-colors"
               >
                 <span>Score Next: {nextTeam.name}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -513,7 +513,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                     type="button"
                     onClick={() => handleScoreAdjust(criterion.id, 1, criterion.maxPoints)}
                     disabled={currentScore >= criterion.maxPoints}
-                    className="w-8 h-8 rounded-xs bg-tac-gold-800 hover:bg-tac-gold-900 disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors active:scale-95 shadow-tac-xs"
+                    className="w-8 h-8 rounded-xs bg-tac-gold-700 hover:bg-tac-gold-600 disabled:opacity-30 disabled:cursor-not-allowed text-tac-ink-900 flex items-center justify-center transition-colors active:scale-95 shadow-tac-xs"
                     aria-label="Increase score"
                   >
                     <Plus className="w-4 h-4" />
@@ -531,7 +531,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                     onClick={() => handleScoreDirect(criterion.id, pt)}
                     className={`flex-1 py-1 text-[11px] font-bold rounded-xs border transition-colors ${
                       currentScore === pt
-                        ? 'bg-tac-gold-800 border-tac-gold-600 text-white'
+                        ? 'bg-tac-gold-700 border-tac-gold-600 text-tac-ink-900'
                         : 'bg-tac-ink-950 border-tac-ink-800 text-tac-stone-400 hover:text-white'
                     }`}
                   >
@@ -611,7 +611,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
           <button
             type="submit"
-            className="flex items-center space-x-2 px-6 py-3 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-display font-bold text-xs uppercase tracking-wider rounded-xs shadow-tac-md transition-all active:scale-95"
+            className="flex items-center space-x-2 px-6 py-3 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-display font-bold text-xs uppercase tracking-wider rounded-xs shadow-tac-md transition-all active:scale-95"
           >
             <Send className="w-3.5 h-3.5" />
             <span>{isEditing ? 'Update Score' : 'Submit Score'}</span>

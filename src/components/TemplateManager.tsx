@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RubricTemplate, Competition } from '../types';
-import { FolderGit2, Save, Download, Check, Trash2, Layers } from 'lucide-react';
+import { FolderGit2, Save, Download, Check, Trash2, Layers, Lock } from 'lucide-react';
 
 interface TemplateManagerProps {
   templates: RubricTemplate[];
@@ -22,6 +22,10 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [appliedNotification, setAppliedNotification] = useState<string | null>(null);
 
+  // MSP-32: loading a template replaces every round's rubric, so it waits
+  // until no round is live.
+  const liveRound = activeCompetition.rounds.find((r) => r.status === 'live');
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!templateName.trim()) return;
@@ -33,6 +37,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
   };
 
   const handleApply = (template: RubricTemplate) => {
+    if (liveRound) return;
     const confirm = window.confirm(
       `Load template "${template.name}"? This will configure rounds and criteria from this template for the active competition.`
     );
@@ -73,7 +78,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
           <button
             onClick={() => setShowSaveModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
+            className="flex items-center space-x-2 px-4 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-all"
           >
             <Save className="w-4 h-4 text-tac-gold-300" />
             <span>Save Current Setup as Template</span>
@@ -85,6 +90,16 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
             <Check className="w-4 h-4 text-green-400" />
             <span>
               Successfully loaded template <strong>"{appliedNotification}"</strong> into active competition!
+            </span>
+          </div>
+        )}
+
+        {liveRound && (
+          <div role="status" className="mt-4 p-3 bg-red-950/40 border-l-4 border-red-600 rounded-xs text-red-200 text-xs flex items-start space-x-2">
+            <Lock className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <span>
+              <strong>Templates cannot be loaded while {liveRound.name} is live.</strong> Loading one would
+              replace the rubric judges are scoring with. Close the round first (MSP-32).
             </span>
           </div>
         )}
@@ -151,7 +166,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs transition-colors"
+                  className="px-4 py-1.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs transition-colors"
                 >
                   Save Template
                 </button>
@@ -245,7 +260,9 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
                 <button
                   onClick={() => handleApply(template)}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-tac-gold-800 hover:bg-tac-gold-900 text-white font-semibold text-xs rounded-xs shadow-tac-sm transition-colors"
+                  disabled={!!liveRound}
+                  title={liveRound ? `Close ${liveRound.name} before loading a template` : undefined}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs shadow-tac-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Check className="w-3.5 h-3.5 text-tac-gold-300" />
                   <span>Load Template</span>
