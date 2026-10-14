@@ -4,7 +4,7 @@ import { staffSignIn } from '../services/cloud';
 
 // MSP-45: staff screens need the staff passcode once the shared database is on.
 // MSP-46 moves this behind the "Staff" button on the start screen.
-export const StaffSignIn: React.FC = () => {
+export const StaffSignIn: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [passcode, setPasscode] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -53,6 +53,11 @@ export const StaffSignIn: React.FC = () => {
       >
         {busy ? 'Signing in…' : 'Sign in'}
       </button>
+      {onBack && (
+        <button type="button" onClick={onBack} className="w-full text-xs text-tac-stone-400 hover:text-white">
+          Back
+        </button>
+      )}
     </form>
   );
 };

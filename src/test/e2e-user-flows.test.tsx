@@ -12,6 +12,9 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
   it('Executes the entire user journey: setup, judge scoring, live matrix tracking, and staff final confirmation', async () => {
     render(<App />);
 
+    // 0. The start screen (MSP-46): staff tap Staff
+    fireEvent.click(screen.getByRole('button', { name: /^Staff$/ }));
+
     // 1. Verify Coordinator Admin View loaded by default
     expect(screen.getByRole('button', { name: /Admin/i })).toBeInTheDocument();
     expect(screen.getAllByText('Round 1: Pitch Booths').length).toBeGreaterThan(0);

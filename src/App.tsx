@@ -3,6 +3,8 @@ import { Competition, Rubric, RoundStatus, RubricTemplate } from './types';
 import { storageService, DATA_CHANGED_EVENT } from './services/storageService';
 import { useCloudState, staffSignOut } from './services/cloud';
 import { StaffSignIn } from './components/StaffSignIn';
+import { StartScreen } from './components/StartScreen';
+import { JudgeHeader, JudgingNotStarted, JudgeNamePicker, RoundPicker } from './components/JudgeShell';
 import { Header } from './components/Header';
 import { RoundManager } from './components/RoundManager';
 import { RubricBuilder } from './components/RubricBuilder';
@@ -13,7 +15,52 @@ import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
 import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
+type Mode = 'start' | 'judge' | 'staff';
+const MODE_KEY = 'tac_mode_v1';
+const JUDGE_KEY = 'tac_current_judge_id';
+const JUDGE_ROUND_KEY = 'tac_judge_round_v1';
+const read = (k: string) => {
+  try {
+    return localStorage.getItem(k);
+  } catch {
+    return null;
+  }
+};
+const write = (k: string, v: string | null) => {
+  try {
+    if (v === null) localStorage.removeItem(k);
+    else localStorage.setItem(k, v);
+  } catch {
+    /* storage blocked: the choice just is not remembered */
+  }
+};
+
+// MSP-46: #/judge goes straight to the judge flow, #/staff to staff. Otherwise
+// a phone comes back to where it was (a judge stays a judge after a refresh).
+const initialMode = (): Mode => {
+  const hash = typeof window !== 'undefined' ? window.location.hash : '';
+  if (hash === '#/judge' || (typeof window !== 'undefined' && window.location.search.includes('mode=judge'))) return 'judge';
+  if (hash === '#/staff') return 'staff';
+  const saved = read(MODE_KEY);
+  return saved === 'judge' || saved === 'staff' ? saved : 'start';
+};
+
 export const App: React.FC = () => {
+  const [mode, setModeState] = useState<Mode>(initialMode);
+  const setMode = (m: Mode) => {
+    setModeState(m);
+    write(MODE_KEY, m === 'start' ? null : m);
+  };
+  const [judgeId, setJudgeIdState] = useState<string | null>(() => read(JUDGE_KEY));
+  const setJudgeId = (id: string | null) => {
+    setJudgeIdState(id);
+    write(JUDGE_KEY, id);
+  };
+  const [judgeRoundId, setJudgeRoundIdState] = useState<string | null>(() => read(JUDGE_ROUND_KEY));
+  const setJudgeRoundId = (id: string | null) => {
+    setJudgeRoundIdState(id);
+    write(JUDGE_ROUND_KEY, id);
+  };
   const [competition, setCompetition] = useState<Competition>(() => storageService.getCompetition());
   const [templates, setTemplates] = useState<RubricTemplate[]>(() => storageService.getTemplates());
   const [activeTab, setActiveTab] = useState<'admin' | 'live' | 'judge' | 'templates'>('admin');
@@ -39,12 +86,6 @@ export const App: React.FC = () => {
   // Staff screens need the staff passcode once the shared database is on.
   const needsStaff = cloud.enabled && !cloud.isStaff;
 
-  // Direct judge link routing: #/judge opens the scoring screen (MSP-03, MSP-29)
-  useEffect(() => {
-    if (window.location.hash === '#/judge' || window.location.search.includes('mode=judge')) {
-      setActiveTab('judge');
-    }
-  }, []);
 
   const updateCompetition = (updated: Competition) => {
     setCompetition(updated);
@@ -140,6 +181,44 @@ export const App: React.FC = () => {
     .getAllSubmissions()
     .filter((s) => s.roundId === activeRound?.id);
 
+  // ---- MSP-46: start screen -------------------------------------------------
+  if (mode === 'start') {
+    return <StartScreen competitionName={competition.name} onJudge={() => setMode('judge')} onStaff={() => setMode('staff')} />;
+  }
+
+  // ---- MSP-46 / MSP-03: judge flow. Always the live round, never a draft. ----
+  if (mode === 'judge') {
+    const liveRounds = competition.rounds.filter((r) => r.status === 'live');
+    const judgeRound =
+      liveRounds.length === 1 ? liveRounds[0] : liveRounds.find((r) => r.id === judgeRoundId) || null;
+    const judge = competition.judges.find((j) => j.id === judgeId);
+    let body: React.ReactNode;
+    if (!judge) body = <JudgeNamePicker judges={competition.judges} onPick={(id) => setJudgeId(id)} />;
+    else if (liveRounds.length === 0) body = <JudgingNotStarted competition={competition} />;
+    else if (!judgeRound) body = <RoundPicker rounds={liveRounds} onPick={(id) => setJudgeRoundId(id)} />;
+    else
+      body = (
+        <JudgeScoringPortal
+          key={`${judgeRound.id}-${judge.id}`}
+          competition={competition}
+          activeRound={judgeRound}
+          lockedJudgeId={judge.id}
+          onScoreSubmitted={() => setRefreshTrigger((prev) => prev + 1)}
+        />
+      );
+    return (
+      <div className="min-h-screen bg-tac-ink-900 text-tac-stone-100 flex flex-col font-body">
+        <JudgeHeader judge={judge} onNotYou={judge ? () => setJudgeId(null) : undefined} />
+        <main className="flex-1 w-full mx-auto px-4 py-5 space-y-4">{body}</main>
+        <footer className="py-6 text-center">
+          <button onClick={() => setMode('start')} className="text-xs text-tac-stone-500 hover:text-tac-stone-300 underline underline-offset-2">
+            Staff? Go to the start screen
+          </button>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-tac-ink-900 text-tac-stone-100 flex flex-col font-body selection:bg-tac-gold-800 selection:text-white">
       {/* Top Header Navigation */}
@@ -203,7 +282,10 @@ export const App: React.FC = () => {
             )}
             {cloud.isStaff && (
               <button
-                onClick={() => void staffSignOut()}
+                onClick={() => {
+                  void staffSignOut();
+                  setMode('start');
+                }}
                 className="flex items-center space-x-1 px-3 py-1.5 bg-tac-ink-900 hover:bg-tac-ink-700 text-tac-stone-400 hover:text-tac-stone-200 text-xs rounded-xs border border-tac-ink-700 transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -224,7 +306,7 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {needsStaff && activeTab !== 'judge' && <StaffSignIn />}
+        {needsStaff && activeTab !== 'judge' && <StaffSignIn onBack={() => setMode('start')} />}
 
         {/* Tab 1: Coordinator Admin (Epic 1 + Roster Management) */}
         {activeTab === 'admin' && !needsStaff && (
