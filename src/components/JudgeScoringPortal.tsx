@@ -207,7 +207,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     ? { tone: 'bad', text: 'Not saved. Show this screen to staff.' }
     : cloud.enabled && sendState === 'sending'
     ? { tone: 'wait', text: 'Saved on this phone, sending...' }
-    : { tone: 'ok', text: cloud.enabled ? `Sent to staff: ${submissionReceipt.rawTotal}/${maxPossible} for ${selectedTeam.name}` : `Saved: ${submissionReceipt.rawTotal}/${maxPossible} for ${selectedTeam.name}` };
+    : { tone: 'ok', text: `${cloud.enabled ? 'Sent to staff' : 'Saved'}: ${submissionReceipt.rawTotal}/${maxPossible}` };
 
   // MSP-22: jump from the scorecard to a criterion
   const jumpTo = (criterionId: string) =>

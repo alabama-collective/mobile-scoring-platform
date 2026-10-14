@@ -60,7 +60,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
       expect(screen.getByText(/^Score saved$/i)).toBeInTheDocument();
     });
     // The confirmation also shows in the bottom bar, where the judge tapped
-    expect(screen.getByRole('status', { name: '' }).textContent).toMatch(/Saved: \d+\/50 for AgroPulse Sensors/);
+    expect(screen.getByRole('status', { name: '' }).textContent).toMatch(/Saved: \d+\/50/);
 
     // 7. Verify Auto-Advance to Next Team is available
     expect(screen.getByText(/Score Next: HealthConnect Mobile/i)).toBeInTheDocument();
