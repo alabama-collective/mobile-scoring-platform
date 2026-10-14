@@ -38,11 +38,9 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     expect(screen.getByText(/AgroPulse Sensors/i)).toBeInTheDocument();
     expect(screen.getAllByText(/What You're Listening For:/i).length).toBe(5);
 
-    // 4. Test Pitch Timer controls (MSP-25)
-    expect(screen.getByText('3:00')).toBeInTheDocument();
-    const qaTimerBtn = screen.getByRole('button', { name: /3m Q&A/i });
-    fireEvent.click(qaTimerBtn);
-    expect(screen.getByText('3:00')).toBeInTheDocument();
+    // 4. No timer on the judge screen: a staff room timer runs the pilot (MSP-52)
+    expect(screen.queryByText('3:00')).toBeNull();
+    expect(screen.queryByRole('button', { name: /3m Q&A/i })).toBeNull();
 
     // 5. Submit a Score as Jordan Lake
     // Click quick preset buttons for criteria
