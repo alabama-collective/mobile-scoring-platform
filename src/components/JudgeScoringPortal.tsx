@@ -245,7 +245,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         >
           <History className="w-3.5 h-3.5 text-tac-gold-400" />
           <span>
-            My Submissions ({mySubmissions.length}/{teams.length})
+            My scores ({mySubmissions.length}/{teams.length})
           </span>
         </button>
       </div>
