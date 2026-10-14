@@ -58,13 +58,13 @@ export const Header: React.FC<HeaderProps> = ({
                 className="hidden sm:block h-9 lg:h-10 w-auto shrink-0"
               />
             )}
-            {/* The full name uses whatever room the header has and wraps to a
-                second line rather than being cut off. On phones there is no room
+            {/* The full name uses whatever room the header has and wraps (up to three
+                lines, which fit the header) rather than being cut off. On phones there is no room
                 beside the tabs, so the name shows in full in the event card
                 directly below the header. */}
             <p
               title={competitionName}
-              className="hidden md:block flex-1 min-w-0 text-xs leading-snug text-tac-stone-400 font-light line-clamp-2 border-l border-tac-ink-700 pl-3"
+              className="hidden md:line-clamp-3 flex-1 min-w-0 text-xs leading-snug text-tac-stone-400 font-light border-l border-tac-ink-700 pl-3"
             >
               {competitionName}
             </p>
