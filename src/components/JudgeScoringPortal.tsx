@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Competition, Round, JudgeScoreSubmission } from '../types';
 import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
@@ -10,10 +10,6 @@ import {
   Send,
   MessageSquare,
   History,
-  Clock,
-  Play,
-  Pause,
-  RotateCcw,
   ArrowRight,
   AlertTriangle,
   Plus,
@@ -63,49 +59,6 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   // "sent" apart from "changed since you sent it".
   const [submittedScores, setSubmittedScores] = useState<Record<string, number> | null>(null);
 
-  // Pitch & Q&A Timer State (Printed packet: 3 min pitch + 3 min Q&A)
-  const [timerPhase, setTimerPhase] = useState<'pitch' | 'qa'>('pitch');
-  const [timerSeconds, setTimerSeconds] = useState(180); // 3 minutes = 180s
-  const [isTimerActive, setIsTimerActive] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Timer Tick Effect
-  useEffect(() => {
-    if (isTimerActive && timerSeconds > 0) {
-      timerRef.current = setInterval(() => {
-        setTimerSeconds((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current as NodeJS.Timeout);
-            setIsTimerActive(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isTimerActive, timerSeconds]);
-
-  const handleTimerToggle = () => {
-    setIsTimerActive(!isTimerActive);
-  };
-
-  const handleTimerReset = (phase: 'pitch' | 'qa') => {
-    setIsTimerActive(false);
-    setTimerPhase(phase);
-    setTimerSeconds(180);
-  };
-
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
   // Load existing submission if judge already scored this team (MSP-24)
   useEffect(() => {
     if (!currentJudge || !selectedTeam || !activeRound) return;
@@ -133,8 +86,6 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
       setSubmittedScores(null);
       setIsEditing(false);
     }
-    // Reset timer when switching teams
-    handleTimerReset('pitch');
   }, [selectedTeamId, effectiveJudgeId, activeRound.id]);
 
   const handleJudgeChange = (id: string) => {
@@ -315,60 +266,6 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
           </div>
         </div>
       )}
-
-      {/* Built-in Pitch & Q&A Stopwatch Widget (Printed packet format: 3 min pitch + 3 min Q&A) */}
-      <div className="bg-tac-ink-950 border border-tac-ink-700 rounded-sm p-3 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Clock className={`w-4 h-4 ${isTimerActive ? 'text-tac-gold-400 animate-pulse' : 'text-tac-stone-400'}`} />
-          <div className="flex items-center space-x-1 bg-tac-ink-900 px-2 py-0.5 rounded-xs border border-tac-ink-800">
-            <button
-              onClick={() => handleTimerReset('pitch')}
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-xs uppercase tracking-wider transition-colors ${
-                timerPhase === 'pitch' ? 'bg-tac-gold-700 text-tac-ink-900' : 'text-tac-stone-400 hover:text-white'
-              }`}
-            >
-              3m Pitch
-            </button>
-            <button
-              onClick={() => handleTimerReset('qa')}
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-xs uppercase tracking-wider transition-colors ${
-                timerPhase === 'qa' ? 'bg-tac-gold-700 text-tac-ink-900' : 'text-tac-stone-400 hover:text-white'
-              }`}
-            >
-              3m Q&amp;A
-            </button>
-          </div>
-        </div>
-
-        {/* Timer Digits and Controls */}
-        <div className="flex items-center space-x-2">
-          <span className={`font-mono font-bold text-sm tracking-widest ${
-            timerSeconds < 30 ? 'text-red-400 animate-pulse' : 'text-tac-gold-400'
-          }`}>
-            {formatTime(timerSeconds)}
-          </span>
-
-          <button
-            onClick={handleTimerToggle}
-            className={`p-1.5 rounded-xs text-xs font-bold transition-colors ${
-              isTimerActive
-                ? 'bg-amber-950 border border-amber-700 text-amber-300'
-                : 'bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 shadow-tac-xs'
-            }`}
-            title={isTimerActive ? 'Pause' : 'Start'}
-          >
-            {isTimerActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-          </button>
-
-          <button
-            onClick={() => handleTimerReset(timerPhase)}
-            className="p-1.5 bg-tac-ink-900 hover:bg-tac-ink-800 border border-tac-ink-700 text-tac-stone-400 hover:text-white rounded-xs"
-            title="Reset timer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
 
       {/* Sticky Team Header (MSP-21: Large Type Visible Without Scrolling).
           Offset = app header height: 4px gold bar + h-16/h-20 + 1px border. */}
