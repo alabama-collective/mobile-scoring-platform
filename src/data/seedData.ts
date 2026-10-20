@@ -128,7 +128,7 @@ export const INITIAL_COMPETITION: Competition = {
       name: 'Bham Solar Grid',
       region: 'Central Alabama',
       boothCategory: 'CleanTech & Urban',
-      founderNames: 'Kobe Bryant Jr.',
+      founderNames: 'Malcolm Reed',
       bonusPoints: 0,
     },
   ],
