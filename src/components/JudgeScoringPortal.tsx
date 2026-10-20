@@ -24,12 +24,16 @@ interface JudgeScoringPortalProps {
   competition: Competition;
   activeRound: Round;
   onScoreSubmitted?: () => void;
+  // MSP-46: set when the judge picked their name on the start screen flow.
+  // The name then shows in the judge header, not as a dropdown here.
+  lockedJudgeId?: string;
 }
 
 export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   competition,
   activeRound,
   onScoreSubmitted,
+  lockedJudgeId,
 }) => {
   const judges = competition.judges;
   const teams = competition.teams;
@@ -39,7 +43,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     return localStorage.getItem('tac_current_judge_id') || judges[0]?.id || '';
   });
 
-  const currentJudge = judges.find((j) => j.id === selectedJudgeId) || judges[0];
+  const effectiveJudgeId = lockedJudgeId ?? selectedJudgeId;
+  const currentJudge = judges.find((j) => j.id === effectiveJudgeId) || judges[0];
 
   // Active Team state (MSP-21)
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teams[0]?.id || '');
@@ -130,7 +135,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     }
     // Reset timer when switching teams
     handleTimerReset('pitch');
-  }, [selectedTeamId, selectedJudgeId, activeRound.id]);
+  }, [selectedTeamId, effectiveJudgeId, activeRound.id]);
 
   const handleJudgeChange = (id: string) => {
     setSelectedJudgeId(id);
@@ -221,6 +226,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     <div className="max-w-xl mx-auto space-y-3.5 pb-20">
       {/* Top Bar: Judge Identity Selector & Submissions Pill (MSP-29) */}
       <div className="bg-tac-ink-800 rounded-sm border border-tac-ink-700 p-3 flex flex-wrap items-center justify-between gap-2 shadow-tac-xs">
+        {lockedJudgeId === undefined && (
         <div className="flex items-center space-x-2 min-w-0 flex-1">
           <UserCheck className="w-4 h-4 shrink-0 text-tac-gold-500" />
           <span className="text-xs text-tac-stone-400">Judge:</span>
@@ -236,6 +242,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
             ))}
           </select>
         </div>
+        )}
 
         {/* My Submissions Counter button (MSP-24) */}
         <button
