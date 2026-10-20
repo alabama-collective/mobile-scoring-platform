@@ -116,7 +116,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     fireEvent.click(adminTabBtn);
 
     // Select the South Region as winning region (AgroPulse's school is in it)
-    const regionSelect = screen.getByDisplayValue(/No Winning Region Designated/i);
+    const regionSelect = screen.getByDisplayValue(/^None$/);
     fireEvent.change(regionSelect, { target: { value: 'South Region' } });
 
     expect(screen.getByText(/Bonus Active:/i)).toBeInTheDocument();

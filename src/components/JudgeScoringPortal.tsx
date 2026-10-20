@@ -325,7 +325,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         {isWinningRegion && (
           <div className="mt-1 inline-flex items-center space-x-1 bg-tac-gold-950 text-tac-gold-300 border border-tac-gold-700/60 px-2.5 py-0.5 rounded-xs text-[11px]">
             <Award className="w-3 h-3 text-tac-gold-500" />
-            <span>Gift Classic Bonus: <strong>+5 points added to Round 1</strong></span>
+            <span>Give Classic bonus ({competition.winningRegion}): <strong>+5 points added once by staff</strong></span>
           </div>
         )}
 

@@ -117,7 +117,7 @@ export const JudgeScoringPreview: React.FC<JudgeScoringPreviewProps> = ({
           {isWinningRegion && (
             <div className="mt-2 inline-flex items-center space-x-1.5 bg-tac-gold-950 border border-tac-gold-700 text-tac-gold-300 text-xs px-3 py-1 rounded-xs">
               <Award className="w-3.5 h-3.5 text-tac-gold-500" />
-              <span>Gift Classic Winning Region Bonus: <strong>+5 Points Applied</strong></span>
+              <span>Give Classic Winning Region Bonus: <strong>+5 Points Applied</strong></span>
             </div>
           )}
         </div>

@@ -351,7 +351,7 @@ export const App: React.FC = () => {
             {/* Team editor (MSP-43) */}
             <TeamEditor competition={competition} onUpdateCompetition={setCompetition} />
 
-            {/* Gift Classic Regional Bonus Panel (MSP-35) */}
+            {/* Give Classic Regional Bonus Panel (MSP-35) */}
             <RegionalBonusPanel
               competition={competition}
               onSelectWinningRegion={handleSelectWinningRegion}

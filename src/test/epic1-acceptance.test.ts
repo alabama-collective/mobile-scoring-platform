@@ -262,7 +262,7 @@ describe('Epic 1 Acceptance Criteria Verification Suite', () => {
     expect(freshRound2?.rubric.criteria.length).toBe(initialRound1CriteriaCount + 1);
   });
 
-  // MSP-35: 5 bonus points for teams from the winning region in Gift Classic
+  // MSP-35: 5 bonus points for teams from the winning region in Give Classic
   it('MSP-35: Adds exactly 5 bonus points to Round 1 teams from the winning region', () => {
     const comp = storageService.getCompetition();
     expect(comp.teams.length).toBeGreaterThan(0);

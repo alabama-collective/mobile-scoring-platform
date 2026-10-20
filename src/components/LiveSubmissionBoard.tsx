@@ -27,6 +27,8 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   activeRound,
   onFinalizeRound,
 }) => {
+  // Story E: the Give Classic bonus is Round 1 only. In the finale it appears nowhere.
+  const isBooth = activeRound.roundType === 'booth';
   // MSP-48: Round 1 judges for Round 1, the finale judge list for the finale.
   const judges = judgesForRound(competition, activeRound);
   const summaries = storageService.getTeamScoreSummaries(activeRound.id);
@@ -296,7 +298,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <th className="py-2.5 px-3">Team Name</th>
                 <th className="py-2.5 px-2">Booth / Track</th>
                 <th className="py-2.5 px-2 text-center">Judges' total</th>
-                <th className="py-2.5 px-2 text-center">Regional Bonus</th>
+                {isBooth && <th className="py-2.5 px-2 text-center">Give Classic bonus</th>}
                 <th className="py-2.5 px-3 text-right">Final Score</th>
                 <th className="py-2.5 px-3 text-center">Audit</th>
               </tr>
@@ -314,7 +316,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                   <React.Fragment key={summary.team.id}>
                   {newBooth && (
                     <tr className="bg-tac-ink-950">
-                      <td colSpan={7} className="py-2 px-3 text-[11px] font-bold uppercase tracking-widest text-tac-gold-500">
+                      <td colSpan={isBooth ? 7 : 6} className="py-2 px-3 text-[11px] font-bold uppercase tracking-widest text-tac-gold-500">
                         {summary.team.boothCategory || 'No booth'}
                       </td>
                     </tr>
@@ -355,18 +357,29 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                         {summary.submissionCount} of {summary.totalSubmissionsRequired} judges
                       </span>
                     </td>
+                    {isBooth && (
                     <td className="py-2.5 px-2 text-center">
                       {summary.regionalBonus > 0 ? (
-                        <span className="inline-flex items-center space-x-1 text-tac-gold-400 font-bold bg-tac-gold-950 px-2 py-0.5 rounded-xs border border-tac-gold-800 text-[11px]">
+                        <span
+                          className="inline-flex items-center space-x-1 text-tac-gold-400 font-bold bg-tac-gold-950 px-2 py-0.5 rounded-xs border border-tac-gold-800 text-[11px]"
+                          title={`+${summary.regionalBonus} Give Classic bonus (${competition.winningRegion})`}
+                        >
                           <Award className="w-3 h-3 text-tac-gold-500" />
-                          <span>+5 pts</span>
+                          <span>+{summary.regionalBonus} pts</span>
                         </span>
                       ) : (
                         <span className="text-tac-stone-500 font-mono">0 pts</span>
                       )}
                     </td>
+                    )}
                     <td className="py-2.5 px-3 text-right font-display font-black text-base text-tac-gold-400">
                       {summary.finalScore}
+                      {/* MSP-42: the bonus shows on the score, with its region */}
+                      {summary.regionalBonus > 0 && (
+                        <span className="block text-[10px] font-body font-semibold text-tac-gold-500">
+                          +{summary.regionalBonus} Give Classic bonus ({competition.winningRegion})
+                        </span>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 text-center">
                       <button
@@ -412,8 +425,8 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
               <div>
                 <span className="text-tac-stone-400 block">Calculation Method:</span>
                 <span className="text-tac-stone-200">
-                  Sum of {selectedAuditTeam.judgeScores.length} judges' scores ({selectedAuditTeam.judgesTotal} pts) +{' '}
-                  {selectedAuditTeam.regionalBonus} Give Classic bonus
+                  Sum of {selectedAuditTeam.judgeScores.length} judges' scores ({selectedAuditTeam.judgesTotal} pts)
+                  {isBooth && ` + ${selectedAuditTeam.regionalBonus} Give Classic bonus`}
                 </span>
               </div>
               <div className="text-right">
@@ -423,6 +436,17 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 </span>
               </div>
             </div>
+
+            {/* MSP-42: the bonus is its own line, separate from the judges' scores */}
+            {isBooth && selectedAuditTeam.regionalBonus > 0 && (
+              <div className="bg-tac-gold-950/40 p-3 rounded-xs border border-tac-gold-800 text-xs flex items-center justify-between">
+                <span className="flex items-center space-x-1.5 text-tac-gold-300 font-semibold">
+                  <Award className="w-3.5 h-3.5 text-tac-gold-500" />
+                  <span>Give Classic bonus ({competition.winningRegion})</span>
+                </span>
+                <span className="font-bold text-tac-gold-400">+{selectedAuditTeam.regionalBonus} pts</span>
+              </div>
+            )}
 
             {/* Individual Judge Scores breakdown (MSP-19) */}
             <div className="space-y-3">
@@ -547,7 +571,9 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 ) : (
                   <p>• Winner: <strong>{summaries[0]?.team.name}</strong> ({summaries[0]?.finalScore} pts)</p>
                 )}
-                <p>• Regional bonus applied: <strong>{competition.bonusPointsApplied ? competition.winningRegion : 'None'}</strong></p>
+                {isBooth && (
+                  <p>• Give Classic bonus: <strong>{competition.bonusPointsApplied ? competition.winningRegion : 'None'}</strong></p>
+                )}
               </div>
 
               <div className="flex justify-end space-x-2 pt-2">
