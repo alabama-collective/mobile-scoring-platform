@@ -50,10 +50,30 @@ describe('MSP-42 and E: Give Classic bonus', () => {
     scoreTeam('AgroPulse Sensors', 0, 'Jordan Lake');
     openStaff();
     fireEvent.click(screen.getByRole('button', { name: /Live Results/ }));
-    expect(screen.getAllByText('+5 Give Classic bonus (South Region)').length).toBe(3); // AgroPulse, HealthConnect, Gulf Coast
+    // Only AgroPulse has a score. HealthConnect and Gulf Coast are South too,
+    // but an unscored team shows no bonus yet.
+    expect(screen.getAllByText('+5 Give Classic bonus (South Region)').length).toBe(1);
     const row = screen.getAllByRole('button', { name: /Audit/ }).find((b) => b.closest('tr')?.textContent?.includes('AgroPulse Sensors'))!;
     fireEvent.click(row);
     expect(screen.getByText('Give Classic bonus (South Region)')).toBeInTheDocument();
+  });
+
+  it('a team with no scores yet gets no bonus, so it never shows a score of 5', () => {
+    storageService.setWinningRegionBonus('South Region');
+    const r1 = storageService.getCompetition().rounds[0];
+    const hc = storageService.getTeamScoreSummaries(r1.id).find((s) => s.team.name === 'HealthConnect Mobile')!;
+    expect(hc.regionalBonus).toBe(0);
+    expect(hc.finalScore).toBe(0);
+  });
+
+  it("the judge's total is their own score out of 50, without the bonus", () => {
+    storageService.setWinningRegionBonus('South Region');
+    storageService.setRoundStatus(storageService.getCompetition().rounds[0].id, 'live');
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /I'm a judge/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Morgan Hill' })); // HealthConnect, South
+    expect(screen.getByText('/ 50 pts')).toBeInTheDocument();
+    expect(screen.queryByText('(+5 bonus)')).toBeNull();
   });
 
   it('E: in the finale the bonus appears nowhere and is not applied', () => {
