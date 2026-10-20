@@ -1,19 +1,19 @@
 // Firebase settings for the shared database (MSP-45).
 //
 // These values come from the Firebase console (Project settings, Your apps,
-// scoring-web). They are designed to be public: they only say which project
+// scoring-app). They are designed to be public: they only say which project
 // to talk to. What anyone may read or change is decided by firestore.rules.
 //
 // While `projectId` is empty the app runs on this device only, exactly as it
 // did before MSP-45. For local testing, run `npm run dev:cloud`, which points
 // the app at the Firebase emulator instead of the real project.
 export const firebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyChisiORLgWuKonQaDOSK4Ry0Bgq9E0DqA',
+  authDomain: 'tac-mobile-scoring.firebaseapp.com',
+  projectId: 'tac-mobile-scoring',
+  storageBucket: 'tac-mobile-scoring.firebasestorage.app',
+  messagingSenderId: '452981926064',
+  appId: '1:452981926064:web:c71aceaaa913d672c0f375',
 };
 
 // The one competition document everything hangs off.
