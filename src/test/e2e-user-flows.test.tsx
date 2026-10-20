@@ -57,8 +57,10 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
 
     // 6. Verify Confirmation Receipt (MSP-23)
     await waitFor(() => {
-      expect(screen.getByText(/Score Confirmed \(MSP-23\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/^Score saved$/i)).toBeInTheDocument();
     });
+    // The confirmation also shows in the bottom bar, where the judge tapped
+    expect(screen.getByRole('status', { name: '' }).textContent).toMatch(/Saved: \d+\/50/);
 
     // 7. Verify Auto-Advance to Next Team is available
     expect(screen.getByText(/Score Next: HealthConnect Mobile/i)).toBeInTheDocument();

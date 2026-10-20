@@ -54,6 +54,9 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   const [submissionReceipt, setSubmissionReceipt] = useState<JudgeScoreSubmission | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [viewingHistory, setViewingHistory] = useState(false);
+  // The scores as last submitted for this team, so the bottom bar can tell
+  // "sent" apart from "changed since you sent it".
+  const [submittedScores, setSubmittedScores] = useState<Record<string, number> | null>(null);
 
   // Pitch & Q&A Timer State (Printed packet: 3 min pitch + 3 min Q&A)
   const [timerPhase, setTimerPhase] = useState<'pitch' | 'qa'>('pitch');
@@ -115,12 +118,14 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
       setFeedbackWorked(existing.feedbackWorkedWell || '');
       setFeedbackImprove(existing.feedbackCouldImprove || '');
       setSubmissionReceipt(existing);
+      setSubmittedScores(existing.scores);
       setIsEditing(true);
     } else {
       setScores({});
       setFeedbackWorked('');
       setFeedbackImprove('');
       setSubmissionReceipt(null);
+      setSubmittedScores(null);
       setIsEditing(false);
     }
     // Reset timer when switching teams
@@ -180,6 +185,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     });
 
     setSubmissionReceipt(receipt);
+    setSubmittedScores(scores);
     setIsEditing(true);
     if (onScoreSubmitted) onScoreSubmitted();
   };
@@ -189,6 +195,23 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   const sendState = submissionReceipt ? cloud.sends[submissionReceipt.id] : undefined;
   // Approved by Steph (Oct 13): a refused score must never look like a success.
   const refused = cloud.enabled && sendState === 'failed';
+  const changedSinceSubmit =
+    !!submittedScores &&
+    activeRound.rubric.criteria.some((c) => (scores[c.id] ?? 0) !== (submittedScores[c.id] ?? 0));
+  // MSP-23: what the bottom bar says, right where the judge just tapped.
+  const barStatus: { tone: 'ok' | 'wait' | 'bad'; text: string } | null = !submissionReceipt
+    ? null
+    : changedSinceSubmit
+    ? { tone: 'wait', text: 'Changed. Tap Update Score to send the change.' }
+    : refused
+    ? { tone: 'bad', text: 'Not saved. Show this screen to staff.' }
+    : cloud.enabled && sendState === 'sending'
+    ? { tone: 'wait', text: 'Saved on this phone, sending...' }
+    : { tone: 'ok', text: `${cloud.enabled ? 'Sent to staff' : 'Saved'}: ${submissionReceipt.rawTotal}/${maxPossible}` };
+
+  // MSP-22: jump from the scorecard to a criterion
+  const jumpTo = (criterionId: string) =>
+    document.getElementById(`criterion-${criterionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const mySubmissions = storageService
     .getAllSubmissions()
@@ -218,11 +241,11 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         <button
           onClick={() => setViewingHistory(!viewingHistory)}
           className="flex shrink-0 items-center space-x-1 px-2.5 py-1 bg-tac-ink-900 hover:bg-tac-ink-700 text-tac-stone-300 text-xs rounded-xs border border-tac-ink-700 transition-colors"
-          title="View and revise past submissions (MSP-24)"
+          title="See and change the scores you have sent"
         >
           <History className="w-3.5 h-3.5 text-tac-gold-400" />
           <span>
-            My Submissions ({mySubmissions.length}/{teams.length})
+            My scores ({mySubmissions.length}/{teams.length})
           </span>
         </button>
       </div>
@@ -232,7 +255,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         <div className="bg-tac-ink-800 p-4 rounded-sm border border-tac-gold-700/60 space-y-2 animate-fade-in shadow-tac-md">
           <div className="flex items-center justify-between pb-2 border-b border-tac-ink-700">
             <h4 className="text-xs font-display font-bold uppercase tracking-wider text-tac-gold-400">
-              My Submissions (Tap to Revise Score - MSP-24)
+              My scores: tap a team to change its score
             </h4>
             <button
               onClick={() => setViewingHistory(false)}
@@ -402,6 +425,33 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         </div>
       </div>
 
+      {/* Scorecard (MSP-22): every criterion and its point range at a glance.
+          Tap a row to jump to it. Point definitions stay on each criterion below. */}
+      <nav aria-label="Scorecard" className="bg-tac-ink-900 border border-tac-ink-700 rounded-sm divide-y divide-tac-ink-800">
+        {activeRound.rubric.criteria.map((c, i) => {
+          const val = scores[c.id];
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => jumpTo(c.id)}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-tac-ink-800 transition-colors"
+            >
+              <span className="text-[10px] font-mono font-bold text-tac-gold-500 w-4 shrink-0">{i + 1}</span>
+              <span className="flex-1 min-w-0 truncate text-xs text-tac-stone-200">{c.title}</span>
+              <span className="text-[10px] text-tac-stone-500 shrink-0">0 to {c.maxPoints}</span>
+              <span
+                className={`w-9 text-right text-xs font-display font-black shrink-0 ${
+                  val === undefined ? 'text-tac-stone-600' : 'text-tac-gold-400'
+                }`}
+              >
+                {val === undefined ? '-' : val}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
       {/* Confirmation Receipt Banner (MSP-23) */}
       {submissionReceipt && (
         <div
@@ -417,7 +467,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                 <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
               )}
               <span className="font-bold text-white text-sm">
-                {refused ? 'Not saved' : 'Score Confirmed (MSP-23)'}
+                {refused ? 'Not saved' : 'Score saved'}
               </span>
             </div>
             <span className="text-[10px] text-green-300 font-mono">
@@ -472,7 +522,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
           return (
             <div
               key={criterion.id}
-              className="bg-tac-ink-900 rounded-sm border border-tac-ink-700 p-4 space-y-3 hover:border-tac-gold-700/60 transition-colors shadow-tac-xs"
+              id={`criterion-${criterion.id}`}
+              className="scroll-mt-[230px] sm:scroll-mt-[260px] bg-tac-ink-900 rounded-sm border border-tac-ink-700 p-4 space-y-3 hover:border-tac-gold-700/60 transition-colors shadow-tac-xs"
             >
               {/* Category Header */}
               <div className="flex items-start justify-between gap-2">
@@ -571,7 +622,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         <div className="bg-tac-ink-900 rounded-sm border border-tac-ink-700 p-4 space-y-3">
           <div className="flex items-center space-x-1.5 text-xs text-tac-gold-400 font-semibold">
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>Constructive Founder Feedback (Printed Packet Requirement)</span>
+            <span>Feedback for the founders (optional)</span>
           </div>
 
           <div>
@@ -602,7 +653,36 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         </div>
 
         {/* Sticky Mobile Submit Bar with Next Team Action (MSP-23, MSP-24) */}
-        <div className="sticky bottom-2 z-40 bg-tac-ink-950 border-2 border-tac-gold-700/80 rounded-sm p-3.5 shadow-tac-lg flex items-center justify-between">
+        <div className="sticky bottom-2 z-40 bg-tac-ink-950 border-2 border-tac-gold-700/80 rounded-sm shadow-tac-lg">
+          {barStatus && (
+            <div
+              role="status"
+              className={`flex items-center justify-between gap-2 px-3.5 py-2 text-xs font-semibold border-b ${
+                barStatus.tone === 'ok'
+                  ? 'bg-green-950 text-green-300 border-green-800'
+                  : barStatus.tone === 'bad'
+                  ? 'bg-red-950 text-red-200 border-red-700'
+                  : 'bg-tac-gold-950 text-tac-gold-300 border-tac-gold-800'
+              }`}
+            >
+              <span className="flex items-center gap-1.5 min-w-0">
+                {barStatus.tone === 'ok' && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+                {barStatus.tone === 'bad' && <AlertTriangle className="w-4 h-4 shrink-0" />}
+                <span className="truncate">{barStatus.text}</span>
+              </span>
+              {barStatus.tone === 'ok' && nextTeam && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedTeamId(nextTeam.id)}
+                  className="shrink-0 flex items-center gap-1 text-tac-gold-300 hover:text-white underline underline-offset-2"
+                >
+                  Next: {nextTeam.name.split(' ')[0]}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+          <div className="p-3.5 flex items-center justify-between">
           <div>
             <span className="text-[10px] text-tac-stone-400 uppercase tracking-wider block">
               Total Score
@@ -629,6 +709,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
             <Send className="w-3.5 h-3.5" />
             <span>{isEditing ? 'Update Score' : 'Submit Score'}</span>
           </button>
+          </div>
         </div>
       </form>
     </div>
