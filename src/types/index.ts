@@ -63,6 +63,7 @@ export interface TeamScoreSummary {
   submissionCount: number;
   totalSubmissionsRequired: number;
   allJudgesSubmitted: boolean;
+  judgesTotal: number;          // Story H: the sum of the judges' scores
   averageScore: number;
   regionalBonus: number;
   finalScore: number;

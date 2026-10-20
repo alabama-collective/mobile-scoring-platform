@@ -81,8 +81,9 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     expect(screen.getAllByText(/Missing/i).length).toBeGreaterThan(0); // Shows missing judges
 
     // 9. Open Audit Trail for AgroPulse (MSP-06)
+    // The leaderboard is grouped by booth (story H), so pick AgroPulse's row.
     const auditButtons = screen.getAllByRole('button', { name: /Audit/i });
-    fireEvent.click(auditButtons[0]);
+    fireEvent.click(auditButtons.find((b) => b.closest('tr')?.textContent?.includes('AgroPulse Sensors'))!);
 
     // Verify Audit Modal details
     await waitFor(() => {
