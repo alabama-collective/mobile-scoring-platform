@@ -34,7 +34,7 @@ The **Mobile Scoring Platform (MSP)** replaces error-prone Google Forms and pape
 | **`MSP-31`** | **No-Code Coordinator Admin** | [`src/components/RoundManager.tsx`](./src/components/RoundManager.tsx) | **VERIFIED (Interactive Form Controls)** |
 | **`MSP-32`** | **Rubric Locking on Live Round** | Auto-locks rubric schema into read-only mode once a round is marked `LIVE` | **VERIFIED (Tamper-Proof Safeguard)** |
 | **`MSP-33`** | **Clone Round 1 to Round 2** | One-tap round cloner generates an independent Round 2 finale schema | **VERIFIED (Entity Deep Cloning)** |
-| **`MSP-35`** | **Gift Classic Regional Bonus** | [`src/components/RegionalBonusPanel.tsx`](./src/components/RegionalBonusPanel.tsx) | **VERIFIED (+5 Bonus Points Auto-Allocated)** |
+| **`MSP-35`** | **Give Classic Regional Bonus** | [`src/components/RegionalBonusPanel.tsx`](./src/components/RegionalBonusPanel.tsx) | **VERIFIED (+5 Bonus Points Auto-Allocated)** |
 
 ### Epic 2: Judge Scoring on Any Device
 | Story ID | Capability | Implementation File | Verification Status |
@@ -141,7 +141,7 @@ mobile-scoring-platform/
 │   │   ├── JudgeRosterManager.tsx  # QR code generator & judge roster management
 │   │   ├── JudgeScoringPortal.tsx  # Sticky header, 3m timer, tactile score steppers
 │   │   ├── LiveSubmissionBoard.tsx # Real-time submission matrix, leaderboard, audit modal
-│   │   ├── RegionalBonusPanel.tsx  # Gift Classic +5 bonus award selector
+│   │   ├── RegionalBonusPanel.tsx  # Give Classic +5 bonus award selector
 │   │   ├── RoundManager.tsx        # Stage lifecycle controls, cloner, booth categories
 │   │   ├── RubricBuilder.tsx       # Arbitrary point scales & listening prompts
 │   │   └── TemplateManager.tsx     # Reusable judging form templates & JSON exporter

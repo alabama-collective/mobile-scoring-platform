@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Round, RoundStatus } from '../types';
+import React, { useEffect, useState } from 'react';
+import { BoothDetails, Competition, Round, RoundStatus } from '../types';
 import { storageService } from '../services/storageService';
-import { Play, Copy, CheckCircle2, Lock, Tag } from 'lucide-react';
+import { boothDetails, boothInUseMessage, boothUsage } from '../services/booths';
+import { Play, Copy, CheckCircle2, Lock, Tag, Pencil } from 'lucide-react';
 
 interface RoundManagerProps {
   rounds: Round[];
@@ -10,7 +11,51 @@ interface RoundManagerProps {
   onUpdateRoundStatus: (roundId: string, status: RoundStatus) => void;
   onCloneRound1ToRound2: () => void;
   onUpdateBoothCategories?: (roundId: string, categories: string[]) => void;
+  // MSP-47: renaming a booth also moves its judges and teams to the new name.
+  onRenameBooth?: (from: string, to: string) => void;
+  onBoothDetails?: (booth: string, details: BoothDetails) => void;
+  competition?: Competition;
 }
+
+// A booth's category and location. Saved when the field loses focus.
+const BoothDetailInputs: React.FC<{ booth: string; details: BoothDetails; onSave: (d: BoothDetails) => void }> = ({
+  booth,
+  details,
+  onSave,
+}) => {
+  const [category, setCategory] = useState(details.category ?? '');
+  const [location, setLocation] = useState(details.location ?? '');
+  useEffect(() => {
+    setCategory(details.category ?? '');
+    setLocation(details.location ?? '');
+  }, [details.category, details.location]);
+  const save = () => {
+    const next = { category: category.trim() || undefined, location: location.trim() || undefined };
+    if (next.category !== details.category || next.location !== details.location) onSave(next);
+  };
+  const cls =
+    'bg-tac-ink-950 border border-tac-ink-700 rounded-xs px-2 py-1 text-xs text-tac-stone-200 focus:outline-none focus:border-tac-gold-700';
+  return (
+    <>
+      <input
+        aria-label={`Category for ${booth}`}
+        placeholder="Category"
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        onBlur={save}
+        className={`${cls} w-44`}
+      />
+      <input
+        aria-label={`Location for ${booth}`}
+        placeholder="Location, e.g. Level 2, Bay 14"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        onBlur={save}
+        className={`${cls} w-52`}
+      />
+    </>
+  );
+};
 
 export const RoundManager: React.FC<RoundManagerProps> = ({
   rounds,
@@ -19,6 +64,9 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
   onUpdateRoundStatus,
   onCloneRound1ToRound2,
   onUpdateBoothCategories,
+  onRenameBooth,
+  onBoothDetails,
+  competition,
 }) => {
   const activeRound = rounds.find((r) => r.id === activeRoundId) || rounds[0];
   const { round1, round2 } = storageService.findRound1And2(rounds);
@@ -38,6 +86,8 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
   };
 
   const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [boothMessage, setBoothMessage] = useState('');
+  const [renaming, setRenaming] = useState<{ from: string; to: string } | null>(null);
 
   const handleStatusChange = (status: RoundStatus) => {
     if (!activeRound) return;
@@ -52,16 +102,44 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
 
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCategoryInput.trim() || !activeRound.boothCategories || !onUpdateBoothCategories) return;
-    const updated = [...activeRound.boothCategories, newCategoryInput.trim()];
-    onUpdateBoothCategories(activeRound.id, updated);
+    const name = newCategoryInput.trim();
+    if (!name || !activeRound.boothCategories || !onUpdateBoothCategories) return;
+    if (activeRound.boothCategories.some((b) => b.toLowerCase() === name.toLowerCase())) {
+      setBoothMessage(`There is already a booth called ${name}.`);
+      return;
+    }
+    onUpdateBoothCategories(activeRound.id, [...activeRound.boothCategories, name]);
     setNewCategoryInput('');
+    setBoothMessage('');
   };
 
+  // MSP-47: a booth that still has judges or teams is kept, and staff see who.
   const handleRemoveCategory = (cat: string) => {
     if (!activeRound.boothCategories || !onUpdateBoothCategories) return;
-    const updated = activeRound.boothCategories.filter((c) => c !== cat);
-    onUpdateBoothCategories(activeRound.id, updated);
+    const inUse = competition ? boothInUseMessage(cat, boothUsage(competition, cat)) : null;
+    if (inUse) {
+      setBoothMessage(inUse);
+      return;
+    }
+    onUpdateBoothCategories(activeRound.id, activeRound.boothCategories.filter((c) => c !== cat));
+    setBoothMessage('');
+  };
+
+  const handleRename = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renaming || !onRenameBooth || !activeRound.boothCategories) return;
+    const to = renaming.to.trim();
+    if (!to || to === renaming.from) {
+      setRenaming(null);
+      return;
+    }
+    if (activeRound.boothCategories.some((b) => b !== renaming.from && b.toLowerCase() === to.toLowerCase())) {
+      setBoothMessage(`There is already a booth called ${to}.`);
+      return;
+    }
+    onRenameBooth(renaming.from, to);
+    setRenaming(null);
+    setBoothMessage('');
   };
 
   return (
@@ -73,7 +151,7 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
             Competition Rounds
           </h2>
           <p className="text-xs text-tac-stone-400 mt-0.5">
-            Manage stage progression, pitch booth categories, and live scoring windows.
+            Manage stage progression, booths, and live scoring windows.
           </p>
         </div>
 
@@ -219,25 +297,69 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
             <div className="pt-3 border-t border-tac-ink-800">
               <div className="flex items-center space-x-1.5 text-xs text-tac-gold-400 font-semibold mb-2">
                 <Tag className="w-3.5 h-3.5 text-tac-gold-500" />
-                <span>Pitch Booth Categories (Morning Round):</span>
+                <span>Booths (Round 1):</span>
               </div>
-              <div className="flex flex-wrap gap-2 items-center">
+              <div className="space-y-2">
                 {activeRound.boothCategories.map((category) => (
-                  <span
-                    key={category}
-                    className="inline-flex items-center space-x-1.5 bg-tac-ink-950 border border-tac-ink-700 text-tac-stone-200 text-xs px-2.5 py-1 rounded-xs"
-                  >
-                    <span>{category}</span>
-                    {activeRound.status !== 'live' && onUpdateBoothCategories && (
-                      <button
-                        onClick={() => handleRemoveCategory(category)}
-                        className="text-tac-stone-500 hover:text-red-400 ml-1"
-                      >
-                        ×
-                      </button>
+                  <div key={category} className="flex flex-wrap items-center gap-2">
+                    <div className="min-w-[9rem]">
+                    {renaming?.from === category ? (
+                      <form key={category} onSubmit={handleRename} className="inline-flex items-center space-x-1">
+                        <input
+                          autoFocus
+                          aria-label={`New name for ${category}`}
+                          value={renaming.to}
+                          onChange={(e) => setRenaming({ from: category, to: e.target.value })}
+                          className="bg-tac-ink-950 border border-tac-gold-700 rounded-xs px-2 py-0.5 text-xs text-tac-stone-200 focus:outline-none w-40"
+                        />
+                        <button type="submit" className="px-2 py-0.5 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-semibold text-xs rounded-xs">
+                          Save
+                        </button>
+                        <button type="button" onClick={() => setRenaming(null)} className="px-1 text-xs text-tac-stone-400 hover:text-white">
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                    <span
+                      key={category}
+                      className="inline-flex items-center space-x-1.5 bg-tac-ink-950 border border-tac-ink-700 text-tac-stone-200 text-xs px-2.5 py-1 rounded-xs"
+                    >
+                      <span>{category}</span>
+                      {activeRound.status !== 'live' && onRenameBooth && (
+                        <button
+                          onClick={() => setRenaming({ from: category, to: category })}
+                          className="text-tac-stone-500 hover:text-tac-gold-400 ml-1"
+                          title={`Rename ${category}`}
+                          aria-label={`Rename ${category}`}
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      )}
+                      {activeRound.status !== 'live' && onUpdateBoothCategories && (
+                        <button
+                          onClick={() => handleRemoveCategory(category)}
+                          className="text-tac-stone-500 hover:text-red-400 ml-1"
+                          title={`Remove ${category}`}
+                          aria-label={`Remove ${category}`}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </span>
                     )}
-                  </span>
+                    </div>
+                    {/* Steph, Oct 20: category and location are separate fields */}
+                    {onBoothDetails && competition && (
+                      <BoothDetailInputs
+                        booth={category}
+                        details={boothDetails(competition, category)}
+                        onSave={(d) => onBoothDetails(category, d)}
+                      />
+                    )}
+                  </div>
                 ))}
+              </div>
+              <div className="flex flex-wrap gap-2 items-center mt-2">
 
                 {activeRound.status !== 'live' && onUpdateBoothCategories && (
                   <form onSubmit={handleAddCategory} className="inline-flex items-center space-x-1">
@@ -245,7 +367,7 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
                       type="text"
                       value={newCategoryInput}
                       onChange={(e) => setNewCategoryInput(e.target.value)}
-                      placeholder="+ Add category"
+                      placeholder="+ Add booth"
                       className="bg-tac-ink-950 border border-tac-ink-700 rounded-xs px-2 py-0.5 text-xs text-tac-stone-200 focus:outline-none focus:border-tac-gold-700 w-32"
                     />
                     <button
@@ -257,6 +379,11 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
                   </form>
                 )}
               </div>
+              {boothMessage && (
+                <p role="status" className="mt-2 text-xs text-amber-300">
+                  {boothMessage}
+                </p>
+              )}
             </div>
           )}
         </div>

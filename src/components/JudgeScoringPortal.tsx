@@ -3,6 +3,9 @@ import { Competition, Round, JudgeScoreSubmission } from '../types';
 import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
+import { JudgeFinaleTimer } from './FinaleTimer';
+import { judgesForRound, teamsForJudge, isFinaleJudge, boothLabel } from '../services/booths';
+import { isInRegion, teamRegion } from '../services/regions';
 import {
   CheckCircle2,
   Award,
@@ -31,8 +34,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   onScoreSubmitted,
   lockedJudgeId,
 }) => {
-  const judges = competition.judges;
-  const teams = competition.teams;
+  // Steph's story D: the Round 1 judge list for Round 1, the finale list for the finale.
+  const judges = judgesForRound(competition, activeRound);
 
   // Active Judge state
   const [selectedJudgeId, setSelectedJudgeId] = useState<string>(() => {
@@ -41,6 +44,9 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
   const effectiveJudgeId = lockedJudgeId ?? selectedJudgeId;
   const currentJudge = judges.find((j) => j.id === effectiveJudgeId) || judges[0];
+
+  // MSP-48 and story C: a Round 1 judge sees only the teams at their booth.
+  const teams = teamsForJudge(competition, activeRound, currentJudge);
 
   // Active Team state (MSP-21)
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teams[0]?.id || '');
@@ -121,10 +127,12 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
   const isWinningRegion =
     activeRound.roundType === 'booth' &&
-    competition.winningRegion &&
-    selectedTeam?.region.toLowerCase() === competition.winningRegion.toLowerCase();
+    !!selectedTeam &&
+    isInRegion(selectedTeam, competition.winningRegion);
 
-  const finalTally = rawTotal + (isWinningRegion ? 5 : 0);
+  // MSP-42: the judge's total is their own score only. The Give Classic bonus
+  // is added once per team by the app, not by each judge.
+  const finalTally = rawTotal;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,6 +180,27 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   const mySubmissions = storageService
     .getAllSubmissions()
     .filter((s) => s.judgeId === currentJudge?.id && s.roundId === activeRound.id);
+
+  if (!selectedTeam) {
+    const noBooth = activeRound.roundType === 'booth' && !!currentJudge && !isFinaleJudge(currentJudge) && !currentJudge.boothAssigned;
+    return (
+      <div className="max-w-xl mx-auto bg-tac-ink-800 border border-tac-ink-700 rounded-sm p-6 text-center space-y-3">
+        <AlertTriangle className="w-8 h-8 text-tac-gold-500 mx-auto" />
+        <h2 className="font-display font-bold text-lg text-white">
+          {!currentJudge
+            ? 'No judges have been added for this round yet'
+            : noBooth
+            ? 'Ask staff to assign you a booth'
+            : activeRound.roundType === 'booth'
+            ? `No teams are in ${currentJudge.boothAssigned} yet`
+            : 'No teams are in the finale yet'}
+        </h2>
+        <p className="text-sm text-tac-stone-300">
+          This screen updates by itself as soon as staff make the change. You can leave it open.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-3.5 pb-20">
@@ -244,7 +273,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                       {team.name}
                     </span>
                     <span className="text-[10px] text-tac-stone-400">
-                      {team.boothCategory} • {team.region}
+                      {team.boothCategory} • {teamRegion(team) || 'School needed'}
                     </span>
                   </div>
                   {sub ? (
@@ -290,17 +319,22 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         </h1>
 
         <div className="flex items-center justify-center space-x-2 text-xs text-tac-stone-300 font-light">
-          <span>{selectedTeam?.boothCategory}</span>
+          <span>{selectedTeam ? boothLabel(competition, selectedTeam.boothCategory) : ''}</span>
           <span>•</span>
-          <span className="font-semibold text-tac-gold-400">{selectedTeam?.region}</span>
+          <span className="font-semibold text-tac-gold-400">{teamRegion(selectedTeam) || 'School needed'}</span>
         </div>
 
         {/* Regional Bonus Banner if applied (MSP-35) */}
         {isWinningRegion && (
           <div className="mt-1 inline-flex items-center space-x-1 bg-tac-gold-950 text-tac-gold-300 border border-tac-gold-700/60 px-2.5 py-0.5 rounded-xs text-[11px]">
             <Award className="w-3 h-3 text-tac-gold-500" />
-            <span>Gift Classic Bonus: <strong>+5 points added to Round 1</strong></span>
+            <span>Give Classic bonus ({competition.winningRegion}): <strong>the app adds 5 points to your score</strong></span>
           </div>
+        )}
+
+        {/* Story F: the staff-controlled finale timer. Round 1 has none. */}
+        {activeRound.roundType === 'finale' && activeRound.status === 'live' && (
+          <JudgeFinaleTimer submitted={!!submissionReceipt} />
         )}
 
         {/* Horizontal Quick-Select Team Strip with Submission Status */}
@@ -596,13 +630,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                 {finalTally}
               </span>
               <span className="text-xs text-tac-stone-400 font-medium">
-                / {maxPossible + (isWinningRegion ? 5 : 0)} pts
+                / {maxPossible} pts
               </span>
-              {isWinningRegion && (
-                <span className="text-[10px] text-tac-gold-300 font-semibold bg-tac-gold-900/60 px-1 py-0.5 rounded-xs ml-1">
-                  (+5 bonus)
-                </span>
-              )}
             </div>
           </div>
 

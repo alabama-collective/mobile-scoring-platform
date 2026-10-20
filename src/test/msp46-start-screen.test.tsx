@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from '../App';
 import { storageService, DATA_CHANGED_EVENT } from '../services/storageService';
+import { allTeamsInFinale } from './helpers';
 
 // MSP-46 and MSP-03: judges start from a start screen, pick their own name,
 // never see a draft form, and always land on whichever round is live.
@@ -56,8 +57,25 @@ describe('MSP-46: start screen and judge flow', () => {
     close(r1.id);
     expect(screen.getByText('No round is open for scoring right now')).toBeInTheDocument();
 
+    // Story D: a Round 1 judge never lands in the finale.
+    goLive(r2.id);
+    expect(screen.queryByText(r2.name)).toBeNull();
+  });
+
+  it('a finale judge waits through Round 1, then switches to the finale by itself', () => {
+    allTeamsInFinale();
+    const [r1, r2] = storageService.getCompetition().rounds;
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /I'm a judge/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Jamie Cole' }));
+
+    goLive(r1.id);
+    expect(screen.getByText('Judging has not started yet')).toBeInTheDocument();
+
+    close(r1.id);
     goLive(r2.id);
     expect(screen.getByText(r2.name)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Submit Score/ })).toBeInTheDocument();
   });
 
   it('remembers the judge after a refresh, and "Not you?" lets them choose again', () => {

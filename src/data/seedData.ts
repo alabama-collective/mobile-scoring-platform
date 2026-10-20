@@ -1,4 +1,5 @@
 import { Competition, RubricTemplate, ScoringScaleAnchor, Criterion, Judge } from '../types';
+import { REGION_NAMES } from '../services/regions';
 
 export const OFFICIAL_SCALE_ANCHORS: ScoringScaleAnchor[] = [
   { range: '9–10', label: 'Exceptional', description: 'Clear, specific, convincing.' },
@@ -47,10 +48,14 @@ export const OFFICIAL_CRITERIA: Criterion[] = [
 ];
 
 export const INITIAL_JUDGES: Judge[] = [
-  { id: 'judge-1', name: 'Jordan Lake', email: 'jordan.lake@example.com', boothAssigned: 'CleanTech & Urban' },
-  { id: 'judge-2', name: 'Morgan Hill', email: 'morgan.hill@example.com', boothAssigned: 'HealthTech & Bio' },
-  { id: 'judge-3', name: 'Casey Brooks', email: 'casey.brooks@example.com', boothAssigned: 'FinTech & EdTech' },
-  { id: 'judge-4', name: 'Dr. Riley Stone', email: 'riley.stone@example.com', boothAssigned: 'Consumer & Lifestyle' },
+  { id: 'judge-1', name: 'Jordan Lake', email: 'jordan.lake@example.com', boothAssigned: 'Booth 3' },
+  { id: 'judge-2', name: 'Morgan Hill', email: 'morgan.hill@example.com', boothAssigned: 'Booth 1' },
+  { id: 'judge-3', name: 'Casey Brooks', email: 'casey.brooks@example.com', boothAssigned: 'Booth 2' },
+  { id: 'judge-4', name: 'Dr. Riley Stone', email: 'riley.stone@example.com', boothAssigned: 'Booth 4' },
+  { id: 'judge-5', name: 'Sam Ellis', email: 'sam.ellis@example.com', boothAssigned: 'Booth 3' },
+  // Steph's story D: the finale has its own judge list, with no booth.
+  { id: 'judge-6', name: 'Jamie Cole', email: 'jamie.cole@example.com', roster: 'finale' },
+  { id: 'judge-7', name: 'Quinn Harper', email: 'quinn.harper@example.com', roster: 'finale' },
 ];
 
 export const INITIAL_COMPETITION: Competition = {
@@ -59,7 +64,7 @@ export const INITIAL_COMPETITION: Competition = {
   date: 'Thursday, October 29, 2026',
   location: 'Topgolf Birmingham, Signature Room',
   programDirector: 'Avery Quinn',
-  regions: ['North Alabama', 'Central Alabama', 'Black Belt', 'Gulf Coast'],
+  regions: REGION_NAMES, // MSP-41
   winningRegion: undefined,
   bonusPointsApplied: false,
   judges: INITIAL_JUDGES,
@@ -70,7 +75,14 @@ export const INITIAL_COMPETITION: Competition = {
       roundType: 'booth',
       status: 'draft',
       isLocked: false,
-      boothCategories: ['HealthTech & Bio', 'FinTech & EdTech', 'CleanTech & Urban', 'Consumer & Lifestyle'],
+      // Booth names, categories and locations are made up for testing (Steph, Oct 20).
+      boothCategories: ['Booth 1', 'Booth 2', 'Booth 3', 'Booth 4'],
+      boothDetails: {
+        'Booth 1': { category: 'HealthTech & Bio', location: 'Level 1, Bay 3' },
+        'Booth 2': { category: 'FinTech & EdTech', location: 'Level 1, Bay 7' },
+        'Booth 3': { category: 'CleanTech & Urban', location: 'Level 2, Bay 14' },
+        'Booth 4': { category: 'Consumer & Lifestyle', location: 'Level 2, Bay 18' },
+      },
       rubric: {
         id: 'rubric-r1',
         name: 'Pitch Booths Rubric (50 Points Total)',
@@ -94,40 +106,40 @@ export const INITIAL_COMPETITION: Competition = {
     {
       id: 'team-1',
       name: 'AgroPulse Sensors',
-      region: 'Black Belt',
-      boothCategory: 'CleanTech & Urban',
+      school: 'Tuskegee University',
+      boothCategory: 'Booth 3',
       founderNames: 'Marcus Vance & Jada Hayes',
       bonusPoints: 0,
     },
     {
       id: 'team-2',
       name: 'HealthConnect Mobile',
-      region: 'Central Alabama',
-      boothCategory: 'HealthTech & Bio',
+      school: 'Alabama State University',
+      boothCategory: 'Booth 1',
       founderNames: 'Alana Robinson',
       bonusPoints: 0,
     },
     {
       id: 'team-3',
       name: 'EduPath Pathways',
-      region: 'North Alabama',
-      boothCategory: 'FinTech & EdTech',
+      school: 'Alabama A&M University',
+      boothCategory: 'Booth 2',
       founderNames: 'Darius Washington',
       bonusPoints: 0,
     },
     {
       id: 'team-4',
       name: 'Gulf Coast Cold Chain',
-      region: 'Gulf Coast',
-      boothCategory: 'Consumer & Lifestyle',
+      school: 'Bishop State Community College',
+      boothCategory: 'Booth 4',
       founderNames: 'Serena Davis',
       bonusPoints: 0,
     },
     {
       id: 'team-5',
       name: 'Bham Solar Grid',
-      region: 'Central Alabama',
-      boothCategory: 'CleanTech & Urban',
+      school: 'Miles College',
+      boothCategory: 'Booth 3',
       founderNames: 'Kobe Bryant Jr.',
       bonusPoints: 0,
     },

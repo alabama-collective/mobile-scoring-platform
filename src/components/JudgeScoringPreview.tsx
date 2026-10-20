@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Round, Team } from '../types';
 import { Smartphone, CheckCircle, Info, Award, UserCheck, MessageSquare } from 'lucide-react';
+import { isInRegion, teamRegion } from '../services/regions';
 
 interface JudgeScoringPreviewProps {
   round: Round;
@@ -23,8 +24,8 @@ export const JudgeScoringPreview: React.FC<JudgeScoringPreviewProps> = ({
   const selectedTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
   const isWinningRegion =
     round.roundType === 'booth' &&
-    winningRegion &&
-    selectedTeam?.region.toLowerCase() === winningRegion.toLowerCase();
+    !!selectedTeam &&
+    isInRegion(selectedTeam, winningRegion);
 
   const handleScoreChange = (criterionId: string, val: number) => {
     setScores((prev) => ({
@@ -74,7 +75,7 @@ export const JudgeScoringPreview: React.FC<JudgeScoringPreviewProps> = ({
           >
             {teams.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name} ({t.region})
+                {t.name} ({teamRegion(t) || 'School needed'})
               </option>
             ))}
           </select>
@@ -109,14 +110,14 @@ export const JudgeScoringPreview: React.FC<JudgeScoringPreviewProps> = ({
           <div className="flex items-center justify-center space-x-2 text-xs text-tac-stone-400 pt-1">
             <span>{selectedTeam?.boothCategory}</span>
             <span>•</span>
-            <span className="text-tac-stone-300 font-medium">{selectedTeam?.region}</span>
+            <span className="text-tac-stone-300 font-medium">{selectedTeam ? teamRegion(selectedTeam) || 'School needed' : ''}</span>
           </div>
 
           {/* Regional Bonus indicator if applicable (MSP-35) */}
           {isWinningRegion && (
             <div className="mt-2 inline-flex items-center space-x-1.5 bg-tac-gold-950 border border-tac-gold-700 text-tac-gold-300 text-xs px-3 py-1 rounded-xs">
               <Award className="w-3.5 h-3.5 text-tac-gold-500" />
-              <span>Gift Classic Winning Region Bonus: <strong>+5 Points Applied</strong></span>
+              <span>Give Classic Winning Region Bonus: <strong>+5 Points Applied</strong></span>
             </div>
           )}
         </div>

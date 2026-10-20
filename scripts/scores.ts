@@ -24,6 +24,7 @@ import {
 } from 'firebase/firestore';
 import { COMPETITION_DOC_ID, STAFF_EMAIL, firebaseConfig } from '../src/config/firebase';
 import { computeTeamSummaries } from '../src/services/scoring';
+import { teamRegion } from '../src/services/regions';
 import type { Competition, JudgeScoreSubmission } from '../src/types';
 
 const args = process.argv.slice(2);
@@ -119,8 +120,8 @@ const main = async () => {
     const teamName = (id: string) => comp.teams.find((t) => t.id === id)?.name ?? id;
 
     const resultsRows: unknown[][] = [[
-      'Round', 'Round status', 'Rank', 'Team', 'Region', 'Booth category', 'Scores in', 'Judges',
-      'Average score', 'Give Classic bonus', 'Final score', 'Results confirmed by', 'Confirmed at',
+      'Round', 'Round status', 'Rank', 'Team', 'School', 'Region', 'Booth', 'Scores in', 'Judges',
+      'Judges total', 'Give Classic bonus', 'Final score', 'Results confirmed by', 'Confirmed at',
     ]];
     const scoreRows: unknown[][] = [[
       'Round', 'Team', 'Judge', 'Criterion', 'Points', 'Max points', 'Judge total', 'Worked well', 'Could improve', 'Submitted at', 'Updated at',
@@ -129,8 +130,8 @@ const main = async () => {
       const roundSubs = subs.filter((s) => s.roundId === round.id);
       for (const s of computeTeamSummaries(comp, round, roundSubs)) {
         resultsRows.push([
-          round.name, round.status, s.rank, s.team.name, s.team.region, s.team.boothCategory,
-          s.submissionCount, s.totalSubmissionsRequired, s.averageScore, s.regionalBonus, s.finalScore,
+          round.name, round.status, s.rank, s.team.name, s.team.school ?? '', teamRegion(s.team), s.team.boothCategory,
+          s.submissionCount, s.totalSubmissionsRequired, s.judgesTotal, s.regionalBonus, s.finalScore,
           round.finalizedBy ?? '', round.finalizedAt ?? '',
         ]);
       }
@@ -172,7 +173,8 @@ const main = async () => {
       docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
       await batch.commit();
     }
-    const rounds = comp.rounds.map(({ finalizedAt: _a, finalizedBy: _b, isResultsFinalized: _c, ...r }) => ({
+    // Story A: confirming Round 1 sets booth winners and finalists, so clearing removes them too.
+    const rounds = comp.rounds.map(({ finalizedAt: _a, finalizedBy: _b, isResultsFinalized: _c, confirmReason: _d, boothWinners: _e, finalists: _f, ...r }) => ({
       ...r,
       status: 'draft' as const,
       isLocked: false,

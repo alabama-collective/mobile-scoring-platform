@@ -25,7 +25,8 @@ export interface Rubric {
 export interface Team {
   id: string;
   name: string;
-  region: string;               // MSP-35: Winning region bonus tracking
+  school?: string;              // MSP-41/43: team lead's school, from src/config/regions.ts
+  region?: string;              // Before MSP-41 regions were typed by hand. Unused now: the region comes from the school.
   boothCategory: string;        // Round 1 booth classification
   founderNames?: string;
   bonusPoints: number;          // MSP-35: 5 bonus points when region wins
@@ -35,7 +36,15 @@ export interface Judge {
   id: string;
   name: string;
   email?: string;
-  boothAssigned?: string;       // For Round 1 booth grouping
+  boothAssigned?: string;       // MSP-38: Round 1 booth, picked from the booth list
+  roster?: JudgeRoster;         // Steph's story D: Round 1 judge (default) or finale judge
+}
+
+export type JudgeRoster = 'booth' | 'finale';
+
+export interface BoothDetails {
+  category?: string;            // e.g. "HealthTech & Bio"
+  location?: string;            // e.g. "Level 2, Bay 14", for floor support
 }
 
 export interface JudgeScoreSubmission {
@@ -60,6 +69,7 @@ export interface TeamScoreSummary {
   submissionCount: number;
   totalSubmissionsRequired: number;
   allJudgesSubmitted: boolean;
+  judgesTotal: number;          // Story H: the sum of the judges' scores
   averageScore: number;
   regionalBonus: number;
   finalScore: number;
@@ -73,10 +83,14 @@ export interface Round {
   status: RoundStatus;          // MSP-32: 'draft' | 'live' | 'completed'
   rubric: Rubric;
   isLocked: boolean;            // MSP-32: Locked when status is 'live'
-  boothCategories?: string[];   // Specific categories for pitch booths
+  boothCategories?: string[];   // MSP-47: the booth list for Round 1 (staff add, rename, remove), e.g. "Booth 1"
+  boothDetails?: Record<string, BoothDetails>; // Steph, Oct 20: each booth's category and location
   isResultsFinalized?: boolean; // MSP-34: Results confirmed by staff
   finalizedAt?: string;
   finalizedBy?: string;
+  confirmReason?: string;       // Story A guard: why results were confirmed with scores missing
+  boothWinners?: Record<string, string>; // Story A, Round 1: booth -> winning team id
+  finalists?: Record<string, string>;    // Story A, finale: booth -> team id competing for that booth
 }
 
 export interface Competition {
@@ -88,8 +102,8 @@ export interface Competition {
   rounds: Round[];
   teams: Team[];
   judges: Judge[];              // MSP-05, MSP-19: Official judge roster
-  regions: string[];
-  winningRegion?: string;       // MSP-35: Gift Classic winning region
+  regions: string[];            // MSP-41: the region names (from src/config/regions.ts)
+  winningRegion?: string;       // MSP-35: Give Classic winning region
   bonusPointsApplied: boolean;
 }
 
