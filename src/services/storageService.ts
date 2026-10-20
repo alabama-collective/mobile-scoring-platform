@@ -5,10 +5,13 @@ import {
   Criterion,
   Judge,
   JudgeScoreSubmission,
+  Team,
   TeamScoreSummary,
 } from '../types';
 import { INITIAL_COMPETITION, BUILT_IN_TEMPLATES } from '../data/seedData';
 import { computeTeamSummaries } from './scoring';
+import { isInRegion } from './regions';
+import { boothStandings, finaleRound, missingScores, teamHasRoundScores } from './finalists';
 
 // MSP-45: the shared database layer (services/cloud.ts) registers these hooks
 // so that local saves are also sent to Firebase. Without them (tests, or no
@@ -203,7 +206,7 @@ class StorageService {
     comp.bonusPointsApplied = !!regionName;
 
     comp.teams.forEach((team) => {
-      if (regionName && team.region.toLowerCase() === regionName.toLowerCase()) {
+      if (isInRegion(team, regionName)) {
         team.bonusPoints = 5;
       } else {
         team.bonusPoints = 0;
@@ -254,6 +257,16 @@ class StorageService {
     return newJudge;
   }
 
+  // MSP-38: move a Round 1 judge to another booth (or to no booth).
+  updateJudge(judgeId: string, changes: Partial<Omit<Judge, 'id'>>): Judge | null {
+    const comp = this.getCompetition();
+    const judge = comp.judges.find((j) => j.id === judgeId);
+    if (!judge) return null;
+    Object.assign(judge, changes);
+    this.saveCompetition(comp);
+    return judge;
+  }
+
   removeJudge(judgeId: string): boolean {
     const comp = this.getCompetition();
     const beforeCount = comp.judges.length;
@@ -263,6 +276,39 @@ class StorageService {
       return true;
     }
     return false;
+  }
+
+  // --- TEAM EDITOR (MSP-43) ---
+  addTeam(team: { name: string; founderNames?: string; school?: string; boothCategory: string }): Team {
+    const comp = this.getCompetition();
+    const newTeam: Team = { ...team, id: `team-${Date.now()}`, bonusPoints: 0 };
+    comp.teams.push(newTeam);
+    this.saveCompetition(comp);
+    return newTeam;
+  }
+
+  updateTeam(teamId: string, changes: Partial<Omit<Team, 'id'>>): Team | null {
+    const comp = this.getCompetition();
+    const team = comp.teams.find((t) => t.id === teamId);
+    if (!team) return null;
+    Object.assign(team, changes);
+    this.saveCompetition(comp);
+    return team;
+  }
+
+  teamHasScores(teamId: string): boolean {
+    return this.getAllSubmissions().some((s) => s.teamId === teamId);
+  }
+
+  // A team with scores is never removed, so no score silently disappears.
+  removeTeam(teamId: string): boolean {
+    if (this.teamHasScores(teamId)) return false;
+    const comp = this.getCompetition();
+    const before = comp.teams.length;
+    comp.teams = comp.teams.filter((t) => t.id !== teamId);
+    if (comp.teams.length === before) return false;
+    this.saveCompetition(comp);
+    return true;
   }
 
   // --- SUBMISSIONS & SCORING (Epic 2 & Epic 3) ---
@@ -366,6 +412,65 @@ class StorageService {
     const allSubs = this.getAllSubmissions().filter((s) => s.roundId === round?.id);
 
     return computeTeamSummaries(comp, round, allSubs);
+  }
+
+  // MSP-34 with Steph's story A and the confirm guard.
+  // - Missing scores block confirming, unless staff give a reason.
+  // - Round 1: each booth's top team (with the bonus) is its winner and goes to
+  //   the finale. A tie for first needs staff to pick the winner.
+  confirmResults(
+    roundId: string,
+    finalizedBy: string,
+    opts: { reason?: string; tieWinners?: Record<string, string> } = {}
+  ): { ok: true } | { ok: false; error: 'missing' | 'tie' | 'not-found'; booths?: string[] } {
+    const comp = this.getCompetition();
+    const round = comp.rounds.find((r) => r.id === roundId);
+    if (!round) return { ok: false, error: 'not-found' };
+    const summaries = this.getTeamScoreSummaries(roundId);
+    const reason = opts.reason?.trim();
+    if (missingScores(summaries) > 0 && !reason) return { ok: false, error: 'missing' };
+
+    if (round.roundType === 'booth') {
+      const winners: Record<string, string> = {};
+      const unresolved: string[] = [];
+      boothStandings(summaries).forEach((st) => {
+        if (!st.tied) {
+          winners[st.booth] = st.leaders[0].team.id;
+          return;
+        }
+        const pick = opts.tieWinners?.[st.booth];
+        if (pick && st.leaders.some((l) => l.team.id === pick)) winners[st.booth] = pick;
+        else unresolved.push(st.booth);
+      });
+      if (unresolved.length) return { ok: false, error: 'tie', booths: unresolved };
+      round.boothWinners = winners;
+      const finale = finaleRound(comp);
+      if (finale) finale.finalists = { ...winners };
+    }
+
+    round.isResultsFinalized = true;
+    round.finalizedAt = new Date().toISOString();
+    round.finalizedBy = finalizedBy;
+    round.status = 'completed';
+    if (reason) round.confirmReason = reason;
+    this.saveCompetition(comp);
+    return { ok: true };
+  }
+
+  // Story A: a booth winner cannot compete, so that booth's runner-up (or any
+  // team from the same booth) takes its place in the finale. Not once the
+  // finale has scores for the team being replaced.
+  swapFinalist(booth: string, teamId: string): boolean {
+    const comp = this.getCompetition();
+    const finale = finaleRound(comp);
+    const current = finale?.finalists?.[booth];
+    if (!finale || !current) return false;
+    const team = comp.teams.find((t) => t.id === teamId);
+    if (!team || team.boothCategory !== booth) return false;
+    if (teamHasRoundScores(this.getAllSubmissions(), finale.id, current)) return false;
+    finale.finalists = { ...finale.finalists, [booth]: teamId };
+    this.saveCompetition(comp);
+    return true;
   }
 
   // MSP-34: Review and confirm final results

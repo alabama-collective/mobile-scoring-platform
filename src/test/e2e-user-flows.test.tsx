@@ -63,8 +63,9 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     // The confirmation also shows in the bottom bar, where the judge tapped
     expect(screen.getByRole('status', { name: '' }).textContent).toMatch(/Saved: \d+\/50/);
 
-    // 7. Verify Auto-Advance to Next Team is available
-    expect(screen.getByText(/Score Next: HealthConnect Mobile/i)).toBeInTheDocument();
+    // 7. Verify Auto-Advance to Next Team is available. Jordan Lake judges
+    // Booth 3, so the next team is the other team in that booth (MSP-48).
+    expect(screen.getByText(/Score Next: Bham Solar Grid/i)).toBeInTheDocument();
 
     // 8. Switch to "Live Results" Tab (MSP-05, MSP-06, MSP-19, MSP-34)
     const liveResultsTabBtn = screen.getByRole('button', { name: /Live Results/i });
@@ -80,8 +81,9 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     expect(screen.getAllByText(/Missing/i).length).toBeGreaterThan(0); // Shows missing judges
 
     // 9. Open Audit Trail for AgroPulse (MSP-06)
+    // The leaderboard is grouped by booth (story H), so pick AgroPulse's row.
     const auditButtons = screen.getAllByRole('button', { name: /Audit/i });
-    fireEvent.click(auditButtons[0]);
+    fireEvent.click(auditButtons.find((b) => b.closest('tr')?.textContent?.includes('AgroPulse Sensors'))!);
 
     // Verify Audit Modal details
     await waitFor(() => {
@@ -100,8 +102,14 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
 
     // Verify Finalize Modal
     expect(screen.getByText(/Confirm & Lock Final Results \(MSP-34\)/i)).toBeInTheDocument();
-    const confirmOfficialBtn = screen.getByRole('button', { name: /Confirm Official Results/i });
-    fireEvent.click(confirmOfficialBtn);
+    // The confirm guard (story A): only 1 score is in, so Confirm is locked
+    // until staff give a reason.
+    const confirmAnyway = screen.getByRole('button', { name: /Confirm anyway, with this reason/i });
+    expect(confirmAnyway).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Reason for confirming with scores missing'), {
+      target: { value: 'Test run: only one judge scored.' },
+    });
+    fireEvent.click(confirmAnyway);
 
     // Verify Finalized badge appears
     await waitFor(() => {
@@ -113,12 +121,12 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     const adminTabBtn = screen.getByRole('button', { name: /Admin/i });
     fireEvent.click(adminTabBtn);
 
-    // Select "Black Belt" as winning region
-    const regionSelect = screen.getByDisplayValue(/No Winning Region Designated/i);
-    fireEvent.change(regionSelect, { target: { value: 'Black Belt' } });
+    // Select the South Region as winning region (AgroPulse's school is in it)
+    const regionSelect = screen.getByDisplayValue(/^None$/);
+    fireEvent.change(regionSelect, { target: { value: 'South Region' } });
 
     expect(screen.getByText(/Bonus Active:/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/\+5 pts to black belt/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/\+5 pts per judge to south region/i).length).toBeGreaterThanOrEqual(2);
 
     // Verify on Live Results tab that +5 bonus is reflected in leaderboard
     fireEvent.click(screen.getByRole('button', { name: /Live Results/i }));
@@ -149,5 +157,6 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     await waitFor(() => {
       expect(screen.getByText('Collegiate Spring Showcase 2026')).toBeInTheDocument();
     });
-  });
+    // The whole journey takes about 5 seconds on a slow laptop, so it gets 20.
+  }, 20000);
 });

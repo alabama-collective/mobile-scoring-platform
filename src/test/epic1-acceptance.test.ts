@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { storageService } from '../services/storageService';
+import { regionForSchool } from '../services/regions';
 import { OFFICIAL_CRITERIA } from '../data/seedData';
 import { Criterion } from '../types';
 
@@ -261,21 +262,22 @@ describe('Epic 1 Acceptance Criteria Verification Suite', () => {
     expect(freshRound2?.rubric.criteria.length).toBe(initialRound1CriteriaCount + 1);
   });
 
-  // MSP-35: 5 bonus points for teams from the winning region in Gift Classic
+  // MSP-35: 5 bonus points for teams from the winning region in Give Classic
   it('MSP-35: Adds exactly 5 bonus points to Round 1 teams from the winning region', () => {
     const comp = storageService.getCompetition();
     expect(comp.teams.length).toBeGreaterThan(0);
 
-    // Pick 'Central Alabama' as winning region
-    const winningRegion = 'Central Alabama';
+    // Pick the South Region as winning region (MSP-41: from the team's school)
+    const winningRegion = 'South Region';
     const updatedComp = storageService.setWinningRegionBonus(winningRegion);
 
     expect(updatedComp.winningRegion).toBe(winningRegion);
     expect(updatedComp.bonusPointsApplied).toBe(true);
 
     // Check each team
+    expect(updatedComp.teams.filter((t) => t.bonusPoints === 5).length).toBe(3);
     updatedComp.teams.forEach((team) => {
-      if (team.region.toLowerCase() === winningRegion.toLowerCase()) {
+      if (regionForSchool(team.school) === winningRegion) {
         expect(team.bonusPoints).toBe(5);
       } else {
         expect(team.bonusPoints).toBe(0);

@@ -13,6 +13,8 @@ import { TemplateManager } from './components/TemplateManager';
 import { JudgeScoringPortal } from './components/JudgeScoringPortal';
 import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
+import { TeamEditor } from './components/TeamEditor';
+import { renameBooth, isFinaleJudge, setBoothDetails, boothLabel } from './services/booths';
 import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
 type Mode = 'start' | 'judge' | 'staff';
@@ -118,9 +120,26 @@ export const App: React.FC = () => {
 
   const handleUpdateBoothCategories = (roundId: string, categories: string[]) => {
     const updatedRounds = competition.rounds.map((r) =>
-      r.id === roundId ? { ...r, boothCategories: categories } : r
+      r.id === roundId
+        ? {
+            ...r,
+            boothCategories: categories,
+            // A removed booth's category and location go with it.
+            ...(r.boothDetails
+              ? { boothDetails: Object.fromEntries(Object.entries(r.boothDetails).filter(([b]) => categories.includes(b))) }
+              : {}),
+          }
+        : r
     );
     updateCompetition({ ...competition, rounds: updatedRounds });
+  };
+
+  const handleBoothDetails = (booth: string, details: { category?: string; location?: string }) => {
+    updateCompetition(setBoothDetails(competition, booth, details));
+  };
+
+  const handleRenameBooth = (from: string, to: string) => {
+    updateCompetition(renameBooth(competition, from, to));
   };
 
   const handleSelectWinningRegion = (regionName: string | undefined) => {
@@ -155,12 +174,23 @@ export const App: React.FC = () => {
     setTemplates(storageService.getTemplates());
   };
 
-  const handleFinalizeRound = (signedBy: string) => {
-    const finalized = storageService.finalizeResults(activeRound.id, signedBy);
-    if (finalized) {
+  // MSP-34 with story A: the confirm guard, booth winners and finalists.
+  const handleFinalizeRound = (signedBy: string, opts: { reason?: string; tieWinners?: Record<string, string> }) => {
+    const result = storageService.confirmResults(activeRound.id, signedBy, opts);
+    if (result.ok) {
       setCompetition(storageService.getCompetition());
       setRefreshTrigger((prev) => prev + 1);
     }
+    return result;
+  };
+
+  const handleSwapFinalist = (booth: string, teamId: string) => {
+    const ok = storageService.swapFinalist(booth, teamId);
+    if (ok) {
+      setCompetition(storageService.getCompetition());
+      setRefreshTrigger((prev) => prev + 1);
+    }
+    return ok;
   };
 
   const handleResetDefaults = () => {
@@ -188,12 +218,19 @@ export const App: React.FC = () => {
 
   // ---- MSP-46 / MSP-03: judge flow. Always the live round, never a draft. ----
   if (mode === 'judge') {
-    const liveRounds = competition.rounds.filter((r) => r.status === 'live');
+    const judge = competition.judges.find((j) => j.id === judgeId);
+    // Steph's story D: Round 1 judges only ever see Round 1, finale judges
+    // only the finale. Before their round opens they see "not started yet".
+    const liveRounds = competition.rounds.filter(
+      (r) => r.status === 'live' && (!judge || (r.roundType === 'finale') === isFinaleJudge(judge))
+    );
     const judgeRound =
       liveRounds.length === 1 ? liveRounds[0] : liveRounds.find((r) => r.id === judgeRoundId) || null;
-    const judge = competition.judges.find((j) => j.id === judgeId);
     let body: React.ReactNode;
-    if (!judge) body = <JudgeNamePicker judges={competition.judges} onPick={(id) => setJudgeId(id)} />;
+    if (!judge)
+      body = (
+        <JudgeNamePicker judges={competition.judges} onPick={(id) => setJudgeId(id)} labelFor={(b) => boothLabel(competition, b)} />
+      );
     else if (liveRounds.length === 0) body = <JudgingNotStarted competition={competition} />;
     else if (!judgeRound) body = <RoundPicker rounds={liveRounds} onPick={(id) => setJudgeRoundId(id)} />;
     else
@@ -319,6 +356,9 @@ export const App: React.FC = () => {
               onUpdateRoundStatus={handleUpdateRoundStatus}
               onCloneRound1ToRound2={handleCloneRound1}
               onUpdateBoothCategories={handleUpdateBoothCategories}
+              onRenameBooth={handleRenameBooth}
+              onBoothDetails={handleBoothDetails}
+              competition={competition}
             />
 
             {/* Rubric Builder with Custom Scales & Inline Prompts */}
@@ -336,7 +376,10 @@ export const App: React.FC = () => {
               onSwitchToJudgeView={() => setActiveTab('judge')}
             />
 
-            {/* Gift Classic Regional Bonus Panel (MSP-35) */}
+            {/* Team editor (MSP-43) */}
+            <TeamEditor competition={competition} onUpdateCompetition={setCompetition} />
+
+            {/* Give Classic Regional Bonus Panel (MSP-35) */}
             <RegionalBonusPanel
               competition={competition}
               onSelectWinningRegion={handleSelectWinningRegion}
@@ -353,6 +396,7 @@ export const App: React.FC = () => {
               activeRound={activeRound}
               onRefreshData={() => setRefreshTrigger((prev) => prev + 1)}
               onFinalizeRound={handleFinalizeRound}
+              onSwapFinalist={handleSwapFinalist}
             />
           </div>
         )}
