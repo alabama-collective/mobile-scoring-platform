@@ -3,7 +3,7 @@ import { Competition, Round, JudgeScoreSubmission } from '../types';
 import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
-import { judgesForRound, teamsForJudge, isFinaleJudge } from '../services/booths';
+import { judgesForRound, teamsForJudge, isFinaleJudge, boothLabel } from '../services/booths';
 import { isInRegion, teamRegion } from '../services/regions';
 import {
   CheckCircle2,
@@ -318,7 +318,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         </h1>
 
         <div className="flex items-center justify-center space-x-2 text-xs text-tac-stone-300 font-light">
-          <span>{selectedTeam?.boothCategory}</span>
+          <span>{selectedTeam ? boothLabel(competition, selectedTeam.boothCategory) : ''}</span>
           <span>•</span>
           <span className="font-semibold text-tac-gold-400">{teamRegion(selectedTeam) || 'School needed'}</span>
         </div>

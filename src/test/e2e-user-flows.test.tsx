@@ -64,7 +64,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     expect(screen.getByRole('status', { name: '' }).textContent).toMatch(/Saved: \d+\/50/);
 
     // 7. Verify Auto-Advance to Next Team is available. Jordan Lake judges
-    // CleanTech & Urban, so the next team is the other team in that booth (MSP-48).
+    // Booth 3, so the next team is the other team in that booth (MSP-48).
     expect(screen.getByText(/Score Next: Bham Solar Grid/i)).toBeInTheDocument();
 
     // 8. Switch to "Live Results" Tab (MSP-05, MSP-06, MSP-19, MSP-34)

@@ -43,14 +43,14 @@ describe('Story A: booth winners advance to the finale', () => {
     expect(storageService.confirmResults(r1().id, 'Avery Quinn')).toEqual({ ok: true });
     const names = finalistTeams(comp()).map((t) => t.name).sort();
     expect(names).toEqual(['AgroPulse Sensors', 'EduPath Pathways', 'Gulf Coast Cold Chain', 'HealthConnect Mobile']);
-    expect(r1().boothWinners!['CleanTech & Urban']).toBe(id('AgroPulse Sensors'));
+    expect(r1().boothWinners!['Booth 3']).toBe(id('AgroPulse Sensors'));
   });
 
   it('the Give Classic bonus counts when picking the booth winner', () => {
     scoreEveryone(7, 7); // a tie on the judges' scores; AgroPulse is in the South Region
     storageService.setWinningRegionBonus('South Region');
     expect(storageService.confirmResults(r1().id, 'Avery Quinn')).toEqual({ ok: true });
-    expect(r1().boothWinners!['CleanTech & Urban']).toBe(id('AgroPulse Sensors'));
+    expect(r1().boothWinners!['Booth 3']).toBe(id('AgroPulse Sensors'));
   });
 
   it('finale judges see only the finalists', () => {
@@ -66,10 +66,10 @@ describe('Story A: booth winners advance to the finale', () => {
   it('a tie for first is flagged, and staff pick the winner before finalists are set', () => {
     scoreEveryone(8, 8);
     const result = storageService.confirmResults(r1().id, 'Avery Quinn');
-    expect(result).toEqual({ ok: false, error: 'tie', booths: ['CleanTech & Urban'] });
+    expect(result).toEqual({ ok: false, error: 'tie', booths: ['Booth 3'] });
     expect(finalistTeams(comp())).toHaveLength(0);
     expect(
-      storageService.confirmResults(r1().id, 'Avery Quinn', { tieWinners: { 'CleanTech & Urban': id('Bham Solar Grid') } })
+      storageService.confirmResults(r1().id, 'Avery Quinn', { tieWinners: { 'Booth 3': id('Bham Solar Grid') } })
     ).toEqual({ ok: true });
     expect(finalistTeams(comp()).map((t) => t.name)).toContain('Bham Solar Grid');
   });
@@ -77,19 +77,19 @@ describe('Story A: booth winners advance to the finale', () => {
   it('staff can swap in the runner-up when a winner cannot compete, until the finale scores that winner', () => {
     scoreEveryone(9, 7);
     storageService.confirmResults(r1().id, 'Avery Quinn');
-    expect(storageService.swapFinalist('CleanTech & Urban', id('Bham Solar Grid'))).toBe(true);
+    expect(storageService.swapFinalist('Booth 3', id('Bham Solar Grid'))).toBe(true);
     let names = finalistTeams(comp()).map((t) => t.name);
     expect(names).toContain('Bham Solar Grid');
     expect(names).not.toContain('AgroPulse Sensors');
     // The booth winner on record stays the same
-    expect(r1().boothWinners!['CleanTech & Urban']).toBe(id('AgroPulse Sensors'));
+    expect(r1().boothWinners!['Booth 3']).toBe(id('AgroPulse Sensors'));
 
     // A team from another booth can never be swapped in
-    expect(storageService.swapFinalist('CleanTech & Urban', id('EduPath Pathways'))).toBe(false);
+    expect(storageService.swapFinalist('Booth 3', id('EduPath Pathways'))).toBe(false);
 
     // Once the finale has scored the finalist, no swap
     score('Jamie Cole', 'Bham Solar Grid', 5, 1);
-    expect(storageService.swapFinalist('CleanTech & Urban', id('AgroPulse Sensors'))).toBe(false);
+    expect(storageService.swapFinalist('Booth 3', id('AgroPulse Sensors'))).toBe(false);
     names = finalistTeams(comp()).map((t) => t.name);
     expect(names).toContain('Bham Solar Grid');
   });
@@ -104,7 +104,7 @@ describe('Confirm guard (approved by Steph, Oct 14)', () => {
 
   it('missing scores block confirming unless staff give a reason', () => {
     score('Morgan Hill', 'HealthConnect Mobile', 6);
-    const tie = { 'CleanTech & Urban': id('AgroPulse Sensors') };
+    const tie = { 'Booth 3': id('AgroPulse Sensors') };
     expect(storageService.confirmResults(r1().id, 'Avery Quinn', { tieWinners: tie })).toEqual({ ok: false, error: 'missing' });
     expect(r1().isResultsFinalized).toBeFalsy();
     expect(storageService.confirmResults(r1().id, 'Avery Quinn', { reason: 'A judge left early', tieWinners: tie })).toEqual({ ok: true });
@@ -120,7 +120,7 @@ describe('Confirm guard (approved by Steph, Oct 14)', () => {
     expect(screen.getAllByText('Tie for first: staff pick').length).toBe(2); // both CleanTech teams at 0
     fireEvent.click(screen.getByRole('button', { name: /Review & Confirm Results/ }));
     expect(screen.getByText(/6 scores are still missing/)).toBeInTheDocument();
-    expect(screen.getByText(/Tie for first in CleanTech & Urban/)).toBeInTheDocument();
+    expect(screen.getByText(/Tie for first in Booth 3/)).toBeInTheDocument();
     const btn = screen.getByRole('button', { name: /Confirm anyway, with this reason/ });
     expect(btn).toBeDisabled();
     fireEvent.change(screen.getByLabelText('Reason for confirming with scores missing'), { target: { value: 'Practice' } });

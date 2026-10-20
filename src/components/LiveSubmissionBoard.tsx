@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Competition, Round, TeamScoreSummary } from '../types';
 import { storageService } from '../services/storageService';
-import { judgesForRound, judgesForTeam, isJudgeExpected } from '../services/booths';
+import { judgesForRound, judgesForTeam, isJudgeExpected, boothDetails, boothLabel } from '../services/booths';
 import { teamRegion } from '../services/regions';
 import { boothStandings, finalistsByBooth, missingScores, teamsInRound } from '../services/finalists';
 import {
@@ -420,7 +420,12 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                   {newBooth && (
                     <tr className="bg-tac-ink-950">
                       <td colSpan={isBooth ? 7 : 6} className="py-2 px-3 text-[11px] font-bold uppercase tracking-widest text-tac-gold-500">
-                        {summary.team.boothCategory || 'No booth'}
+                        {summary.team.boothCategory ? boothLabel(competition, summary.team.boothCategory) : 'No booth'}
+                        {boothDetails(competition, summary.team.boothCategory).location && (
+                          <span className="ml-2 normal-case tracking-normal font-normal text-tac-stone-400">
+                            {boothDetails(competition, summary.team.boothCategory).location}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   )}
