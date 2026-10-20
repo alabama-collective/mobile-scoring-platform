@@ -161,12 +161,23 @@ export const App: React.FC = () => {
     setTemplates(storageService.getTemplates());
   };
 
-  const handleFinalizeRound = (signedBy: string) => {
-    const finalized = storageService.finalizeResults(activeRound.id, signedBy);
-    if (finalized) {
+  // MSP-34 with story A: the confirm guard, booth winners and finalists.
+  const handleFinalizeRound = (signedBy: string, opts: { reason?: string; tieWinners?: Record<string, string> }) => {
+    const result = storageService.confirmResults(activeRound.id, signedBy, opts);
+    if (result.ok) {
       setCompetition(storageService.getCompetition());
       setRefreshTrigger((prev) => prev + 1);
     }
+    return result;
+  };
+
+  const handleSwapFinalist = (booth: string, teamId: string) => {
+    const ok = storageService.swapFinalist(booth, teamId);
+    if (ok) {
+      setCompetition(storageService.getCompetition());
+      setRefreshTrigger((prev) => prev + 1);
+    }
+    return ok;
   };
 
   const handleResetDefaults = () => {
@@ -368,6 +379,7 @@ export const App: React.FC = () => {
               activeRound={activeRound}
               onRefreshData={() => setRefreshTrigger((prev) => prev + 1)}
               onFinalizeRound={handleFinalizeRound}
+              onSwapFinalist={handleSwapFinalist}
             />
           </div>
         )}

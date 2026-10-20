@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { storageService } from '../services/storageService';
+import { allTeamsInFinale } from './helpers';
 
 // Story H (Steph, Oct 16): booth totals combine both judges' scores, plus the
 // Give Classic bonus once, and each booth is ranked on its own. Made-up names.
@@ -59,6 +60,7 @@ describe('Story H: booth totals', () => {
   });
 
   it('the finale sums its judges too, ranks all teams together, and has no bonus', () => {
+    allTeamsInFinale();
     storageService.setWinningRegionBonus('South Region');
     score('Jamie Cole', 'AgroPulse Sensors', 1, [6, 6, 6, 6, 6]);
     score('Quinn Harper', 'AgroPulse Sensors', 1, [6, 6, 6, 6, 6]);

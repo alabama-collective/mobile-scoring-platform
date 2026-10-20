@@ -173,7 +173,8 @@ const main = async () => {
       docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
       await batch.commit();
     }
-    const rounds = comp.rounds.map(({ finalizedAt: _a, finalizedBy: _b, isResultsFinalized: _c, ...r }) => ({
+    // Story A: confirming Round 1 sets booth winners and finalists, so clearing removes them too.
+    const rounds = comp.rounds.map(({ finalizedAt: _a, finalizedBy: _b, isResultsFinalized: _c, confirmReason: _d, boothWinners: _e, finalists: _f, ...r }) => ({
       ...r,
       status: 'draft' as const,
       isLocked: false,

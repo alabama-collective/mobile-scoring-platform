@@ -1,6 +1,7 @@
 import type { Competition, JudgeScoreSubmission, Round, TeamScoreSummary } from '../types';
 import { boothList, judgesForTeam } from './booths';
 import { isInRegion } from './regions';
+import { teamsInRound } from './finalists';
 
 // The Give Classic bonus, added once per team in Round 1 (MSP-35).
 export const GIVE_CLASSIC_BONUS = 5;
@@ -16,7 +17,8 @@ export const computeTeamSummaries = (
   round: Round,
   allSubs: JudgeScoreSubmission[]
 ): TeamScoreSummary[] => {
-  const summaries: TeamScoreSummary[] = comp.teams.map((team) => {
+  // Story A: the finale scores only its finalists.
+  const summaries: TeamScoreSummary[] = teamsInRound(comp, round).map((team) => {
     // MSP-48: in Round 1 only the judges at the team's booth score it.
     const totalRequired = judgesForTeam(comp, round, team).length;
     const teamSubs = allSubs.filter((s) => s.teamId === team.id);

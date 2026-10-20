@@ -82,6 +82,9 @@ export interface Round {
   isResultsFinalized?: boolean; // MSP-34: Results confirmed by staff
   finalizedAt?: string;
   finalizedBy?: string;
+  confirmReason?: string;       // Story A guard: why results were confirmed with scores missing
+  boothWinners?: Record<string, string>; // Story A, Round 1: booth -> winning team id
+  finalists?: Record<string, string>;    // Story A, finale: booth -> team id competing for that booth
 }
 
 export interface Competition {

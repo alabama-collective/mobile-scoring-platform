@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from '../App';
 import { storageService, DATA_CHANGED_EVENT } from '../services/storageService';
+import { allTeamsInFinale } from './helpers';
 
 // MSP-46 and MSP-03: judges start from a start screen, pick their own name,
 // never see a draft form, and always land on whichever round is live.
@@ -62,6 +63,7 @@ describe('MSP-46: start screen and judge flow', () => {
   });
 
   it('a finale judge waits through Round 1, then switches to the finale by itself', () => {
+    allTeamsInFinale();
     const [r1, r2] = storageService.getCompetition().rounds;
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: /I'm a judge/ }));

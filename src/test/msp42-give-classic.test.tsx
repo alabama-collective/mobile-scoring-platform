@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import App from '../App';
 import { storageService } from '../services/storageService';
+import { allTeamsInFinale } from './helpers';
 
 // MSP-42 and story E: the Give Classic bonus. Made-up team names only.
 const scoreTeam = (teamName: string, roundIndex: number, judgeName: string) => {
@@ -77,6 +78,7 @@ describe('MSP-42 and E: Give Classic bonus', () => {
   });
 
   it('E: in the finale the bonus appears nowhere and is not applied', () => {
+    allTeamsInFinale();
     storageService.setWinningRegionBonus('South Region');
     const finale = storageService.getCompetition().rounds[1];
     scoreTeam('AgroPulse Sensors', 1, 'Jamie Cole');

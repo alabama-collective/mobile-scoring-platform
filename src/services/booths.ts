@@ -1,4 +1,5 @@
 import type { Competition, Judge, Round, Team } from '../types';
+import { finalistTeams } from './finalists';
 
 // MSP-47, MSP-38, MSP-48 and Steph's stories B, C and D: who judges what.
 // Round 1 has booths. Each Round 1 judge has one booth and scores only the
@@ -22,7 +23,8 @@ export const judgesForRound = (comp: Competition, round: Round | undefined): Jud
 // they have no booth). Finale: every team in the finale.
 export const teamsForJudge = (comp: Competition, round: Round, judge: Judge | undefined): Team[] => {
   if (!judge) return [];
-  if (round.roundType === 'finale') return isFinaleJudge(judge) ? comp.teams : [];
+  // Story A: the finale has only the booth winners (the finalists).
+  if (round.roundType === 'finale') return isFinaleJudge(judge) ? finalistTeams(comp) : [];
   if (isFinaleJudge(judge) || !judge.boothAssigned) return [];
   return comp.teams.filter((t) => t.boothCategory === judge.boothAssigned);
 };

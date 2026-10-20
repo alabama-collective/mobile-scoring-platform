@@ -102,8 +102,14 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
 
     // Verify Finalize Modal
     expect(screen.getByText(/Confirm & Lock Final Results \(MSP-34\)/i)).toBeInTheDocument();
-    const confirmOfficialBtn = screen.getByRole('button', { name: /Confirm Official Results/i });
-    fireEvent.click(confirmOfficialBtn);
+    // The confirm guard (story A): only 1 score is in, so Confirm is locked
+    // until staff give a reason.
+    const confirmAnyway = screen.getByRole('button', { name: /Confirm anyway, with this reason/i });
+    expect(confirmAnyway).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Reason for confirming with scores missing'), {
+      target: { value: 'Test run: only one judge scored.' },
+    });
+    fireEvent.click(confirmAnyway);
 
     // Verify Finalized badge appears
     await waitFor(() => {

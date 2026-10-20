@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from '../App';
 import { storageService, DATA_CHANGED_EVENT } from '../services/storageService';
+import { allTeamsInFinale } from './helpers';
 import {
   boothInUseMessage,
   boothUsage,
@@ -67,7 +68,9 @@ describe('Booths and who judges what', () => {
     expect(judgesForTeam(c, c.rounds[0], agro).map((j) => j.name)).toEqual(['Jordan Lake', 'Sam Ellis']);
     const sums = computeTeamSummaries(c, c.rounds[0], []);
     expect(sums.find((s) => s.team.id === agro.id)!.totalSubmissionsRequired).toBe(2);
-    expect(computeTeamSummaries(c, c.rounds[1], [])[0].totalSubmissionsRequired).toBe(2);
+    allTeamsInFinale();
+    const withFinalists = comp();
+    expect(computeTeamSummaries(withFinalists, withFinalists.rounds[1], [])[0].totalSubmissionsRequired).toBe(2);
   });
 
   it('MSP-47 / B: renaming a booth moves its judges and teams with it', () => {
