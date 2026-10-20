@@ -4,6 +4,7 @@ import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
 import { judgesForRound, teamsForJudge, isFinaleJudge } from '../services/booths';
+import { isInRegion, teamRegion } from '../services/regions';
 import {
   CheckCircle2,
   Award,
@@ -125,8 +126,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
   const isWinningRegion =
     activeRound.roundType === 'booth' &&
-    competition.winningRegion &&
-    selectedTeam?.region.toLowerCase() === competition.winningRegion.toLowerCase();
+    !!selectedTeam &&
+    isInRegion(selectedTeam, competition.winningRegion);
 
   const finalTally = rawTotal + (isWinningRegion ? 5 : 0);
 
@@ -269,7 +270,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                       {team.name}
                     </span>
                     <span className="text-[10px] text-tac-stone-400">
-                      {team.boothCategory} • {team.region}
+                      {team.boothCategory} • {teamRegion(team) || 'School needed'}
                     </span>
                   </div>
                   {sub ? (
@@ -317,7 +318,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         <div className="flex items-center justify-center space-x-2 text-xs text-tac-stone-300 font-light">
           <span>{selectedTeam?.boothCategory}</span>
           <span>•</span>
-          <span className="font-semibold text-tac-gold-400">{selectedTeam?.region}</span>
+          <span className="font-semibold text-tac-gold-400">{teamRegion(selectedTeam) || 'School needed'}</span>
         </div>
 
         {/* Regional Bonus Banner if applied (MSP-35) */}

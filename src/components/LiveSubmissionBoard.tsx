@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Competition, Round, TeamScoreSummary } from '../types';
 import { storageService } from '../services/storageService';
 import { judgesForRound, judgesForTeam, isJudgeExpected } from '../services/booths';
+import { teamRegion } from '../services/regions';
 import {
   Users,
   CheckCircle2,
@@ -212,7 +213,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                     <td className="py-2.5 px-3 font-semibold text-white">
                       {team.name}
                       <span className="block text-[10px] text-tac-stone-400 font-normal">
-                        {team.region}
+                        {teamRegion(team) || 'School needed'}
                       </span>
                     </td>
                     <td className="py-2.5 px-2 text-tac-stone-300">
@@ -342,7 +343,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                         )}
                       </div>
                       <span className="text-[10px] text-tac-stone-400 font-normal block">
-                        Founders: {summary.team.founderNames || 'N/A'} • {summary.team.region}
+                        Founders: {summary.team.founderNames || 'N/A'} • {teamRegion(summary.team) || 'School needed'}
                       </span>
                     </td>
                     <td className="py-2.5 px-2 text-tac-stone-300">

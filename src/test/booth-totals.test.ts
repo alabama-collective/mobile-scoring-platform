@@ -29,7 +29,7 @@ describe('Story H: booth totals', () => {
   });
 
   it('2 judges: the total is the sum of both scores, plus the bonus once', () => {
-    storageService.setWinningRegionBonus('Black Belt'); // AgroPulse Sensors is Black Belt
+    storageService.setWinningRegionBonus('South Region'); // AgroPulse Sensors: Tuskegee University, South
     score('Jordan Lake', 'AgroPulse Sensors', 0, [8, 8, 8, 8, 8]); // 40
     score('Sam Ellis', 'AgroPulse Sensors', 0, [9, 9, 9, 9, 9]); // 45
     const s = summary(0, 'AgroPulse Sensors');
@@ -59,7 +59,7 @@ describe('Story H: booth totals', () => {
   });
 
   it('the finale sums its judges too, ranks all teams together, and has no bonus', () => {
-    storageService.setWinningRegionBonus('Black Belt');
+    storageService.setWinningRegionBonus('South Region');
     score('Jamie Cole', 'AgroPulse Sensors', 1, [6, 6, 6, 6, 6]);
     score('Quinn Harper', 'AgroPulse Sensors', 1, [6, 6, 6, 6, 6]);
     score('Jamie Cole', 'EduPath Pathways', 1, [10, 10, 10, 10, 10]);

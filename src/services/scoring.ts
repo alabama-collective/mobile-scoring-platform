@@ -1,5 +1,6 @@
 import type { Competition, JudgeScoreSubmission, Round, TeamScoreSummary } from '../types';
 import { boothList, judgesForTeam } from './booths';
+import { isInRegion } from './regions';
 
 // The Give Classic bonus, added once per team in Round 1 (MSP-35).
 export const GIVE_CLASSIC_BONUS = 5;
@@ -28,8 +29,7 @@ export const computeTeamSummaries = (
     // MSP-35: the bonus for the winning region, Round 1 only
     const regionalBonus =
       round.roundType === 'booth' &&
-      comp.winningRegion &&
-      team.region.toLowerCase() === comp.winningRegion.toLowerCase()
+      isInRegion(team, comp.winningRegion)
         ? GIVE_CLASSIC_BONUS
         : 0;
 

@@ -9,6 +9,7 @@ import {
 } from '../types';
 import { INITIAL_COMPETITION, BUILT_IN_TEMPLATES } from '../data/seedData';
 import { computeTeamSummaries } from './scoring';
+import { isInRegion } from './regions';
 
 // MSP-45: the shared database layer (services/cloud.ts) registers these hooks
 // so that local saves are also sent to Firebase. Without them (tests, or no
@@ -203,7 +204,7 @@ class StorageService {
     comp.bonusPointsApplied = !!regionName;
 
     comp.teams.forEach((team) => {
-      if (regionName && team.region.toLowerCase() === regionName.toLowerCase()) {
+      if (isInRegion(team, regionName)) {
         team.bonusPoints = 5;
       } else {
         team.bonusPoints = 0;
