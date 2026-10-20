@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Brand: the light logo on the charcoal header (never stretched: height
               set, width auto). Phones and the judge screen show only the round
               icon, kept small; the full logo shows from sm on staff screens. */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex flex-1 items-center gap-3 min-w-0">
             <img
               src={`${BRAND}tac-submark.png`}
               alt="The Alabama Collective"
@@ -58,7 +58,14 @@ export const Header: React.FC<HeaderProps> = ({
                 className="hidden sm:block h-9 lg:h-10 w-auto shrink-0"
               />
             )}
-            <p className="hidden xl:block text-xs text-tac-stone-400 font-light truncate max-w-[14rem] border-l border-tac-ink-700 pl-3">
+            {/* The full name uses whatever room the header has and wraps (up to three
+                lines, which fit the header) rather than being cut off. On phones there is no room
+                beside the tabs, so the name shows in full in the event card
+                directly below the header. */}
+            <p
+              title={competitionName}
+              className="hidden md:line-clamp-3 flex-1 min-w-0 text-xs leading-snug text-tac-stone-400 font-light border-l border-tac-ink-700 pl-3"
+            >
               {competitionName}
             </p>
           </div>
