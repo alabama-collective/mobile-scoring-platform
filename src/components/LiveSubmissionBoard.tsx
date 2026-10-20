@@ -473,7 +473,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       {summary.regionalBonus > 0 ? (
                         <span
                           className="inline-flex items-center space-x-1 text-tac-gold-400 font-bold bg-tac-gold-950 px-2 py-0.5 rounded-xs border border-tac-gold-800 text-[11px]"
-                          title={`+${summary.regionalBonus} Give Classic bonus (${competition.winningRegion})`}
+                          title={`+${summary.regionalBonus} Give Classic bonus (${competition.winningRegion}, 5 per judge)`}
                         >
                           <Award className="w-3 h-3 text-tac-gold-500" />
                           <span>+{summary.regionalBonus} pts</span>
@@ -488,7 +488,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       {/* MSP-42: the bonus shows on the score, with its region */}
                       {summary.regionalBonus > 0 && (
                         <span className="block text-[10px] font-body font-semibold text-tac-gold-500">
-                          +{summary.regionalBonus} Give Classic bonus ({competition.winningRegion})
+                          +{summary.regionalBonus} Give Classic bonus ({competition.winningRegion}, 5 per judge)
                         </span>
                       )}
                     </td>
@@ -553,7 +553,10 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
               <div className="bg-tac-gold-950/40 p-3 rounded-xs border border-tac-gold-800 text-xs flex items-center justify-between">
                 <span className="flex items-center space-x-1.5 text-tac-gold-300 font-semibold">
                   <Award className="w-3.5 h-3.5 text-tac-gold-500" />
-                  <span>Give Classic bonus ({competition.winningRegion})</span>
+                  <span>
+                    Give Classic bonus ({competition.winningRegion}): 5 per judge, {selectedAuditTeam.submissionCount}{' '}
+                    {selectedAuditTeam.submissionCount === 1 ? 'judge' : 'judges'}
+                  </span>
                 </span>
                 <span className="font-bold text-tac-gold-400">+{selectedAuditTeam.regionalBonus} pts</span>
               </div>

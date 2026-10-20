@@ -29,22 +29,26 @@ describe('Story H: booth totals', () => {
     storageService.resetToDefaults();
   });
 
-  it('2 judges: the total is the sum of both scores, plus the bonus once', () => {
+  it('2 judges: the total is the sum of both scores, plus 5 per judge for the winning region (+10)', () => {
     storageService.setWinningRegionBonus('South Region'); // AgroPulse Sensors: Tuskegee University, South
     score('Jordan Lake', 'AgroPulse Sensors', 0, [8, 8, 8, 8, 8]); // 40
     score('Sam Ellis', 'AgroPulse Sensors', 0, [9, 9, 9, 9, 9]); // 45
     const s = summary(0, 'AgroPulse Sensors');
     expect(s.judgesTotal).toBe(85);
-    expect(s.regionalBonus).toBe(5);
-    expect(s.finalScore).toBe(90);
+    expect(s.regionalBonus).toBe(10);
+    expect(s.finalScore).toBe(95);
     expect(s.allJudgesSubmitted).toBe(true);
   });
 
   it('1 judge: the total is that judge\'s score plus any bonus', () => {
     score('Morgan Hill', 'HealthConnect Mobile', 0, [7, 7, 7, 7, 7]);
-    const s = summary(0, 'HealthConnect Mobile');
+    let s = summary(0, 'HealthConnect Mobile');
     expect(s.totalSubmissionsRequired).toBe(1);
     expect(s.finalScore).toBe(35);
+    storageService.setWinningRegionBonus('South Region'); // Alabama State University
+    s = summary(0, 'HealthConnect Mobile');
+    expect(s.regionalBonus).toBe(5);
+    expect(s.finalScore).toBe(40);
   });
 
   it('each booth is ranked on its own, so every booth has a number 1', () => {
