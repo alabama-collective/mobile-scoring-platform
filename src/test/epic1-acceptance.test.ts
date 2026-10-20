@@ -219,7 +219,16 @@ describe('Epic 1 Acceptance Criteria Verification Suite', () => {
       const before = titles(round2!.id);
       storageService.setRoundStatus(round2!.id, 'live');
       expect(storageService.copyRound1ToRound2()).toBeNull();
-      storageService.setRoundStatus(round2!.id, 'draft'); // still locked once opened
+      // Once anyone has scored it, Set Draft keeps it locked (MSP-57).
+      const comp = storageService.getCompetition();
+      storageService.submitJudgeScore({
+        judgeId: comp.judges[0].id,
+        judgeName: comp.judges[0].name,
+        teamId: comp.teams[0].id,
+        roundId: round2!.id,
+        scores: {},
+      });
+      storageService.setRoundStatus(round2!.id, 'draft');
       expect(storageService.copyRound1ToRound2()).toBeNull();
       expect(titles(round2!.id)).toEqual(before);
     });

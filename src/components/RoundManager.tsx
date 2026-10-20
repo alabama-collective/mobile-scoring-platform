@@ -21,6 +21,8 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
   onUpdateBoothCategories,
 }) => {
   const activeRound = rounds.find((r) => r.id === activeRoundId) || rounds[0];
+  // MSP-57: whether anyone has scored this round yet
+  const hasScores = !!activeRound && storageService.roundHasScores(activeRound.id);
   const { round1, round2 } = storageService.findRound1And2(rounds);
   // MSP-33: a Round 2 that has been opened is never overwritten.
   const round2Locked = !!round2 && (round2.status !== 'draft' || round2.isLocked);
@@ -210,7 +212,15 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
               <span>
                 <strong>Round is currently LIVE:</strong> Judges can score teams against this rubric.
                 The rubric is locked to prevent unfair adjustments during active competition.
+                {/* MSP-57 */}
+                {!hasScores && ' No scores yet, so Set Draft unlocks the rubric again if the round was opened by mistake.'}
               </span>
+            </div>
+          )}
+          {activeRound.status !== 'live' && activeRound.isLocked && hasScores && (
+            <div className="text-xs bg-tac-ink-950 border border-tac-ink-700 text-tac-stone-300 p-2.5 rounded-xs flex items-center space-x-2">
+              <Lock className="w-4 h-4 text-tac-stone-400 shrink-0" />
+              <span>Scores have been saved for this round, so its rubric stays locked.</span>
             </div>
           )}
 
