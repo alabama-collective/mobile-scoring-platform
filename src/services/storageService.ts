@@ -9,6 +9,22 @@ import {
 } from '../types';
 import { INITIAL_COMPETITION, BUILT_IN_TEMPLATES } from '../data/seedData';
 
+// MSP-45: the shared database layer (services/cloud.ts) registers these hooks
+// so that local saves are also sent to Firebase. Without them (tests, or no
+// Firebase settings yet) the app works on this device only, as before.
+export interface CloudHooks {
+  onCompetitionSaved: (comp: Competition) => void;
+  onSubmissionSaved: (sub: JudgeScoreSubmission) => void;
+}
+
+// Fired on window whenever data changes because another device changed it.
+export const DATA_CHANGED_EVENT = 'tac-data-changed';
+
+// One record per judge, team and round, so a score saved twice (for example
+// once offline and once again later) can never become two scores.
+export const submissionId = (roundId: string, teamId: string, judgeId: string): string =>
+  `${roundId}__${teamId}__${judgeId}`;
+
 const STORAGE_KEYS = {
   COMPETITION: 'tac_competition_v2',
   TEMPLATES: 'tac_templates_v2',
@@ -18,6 +34,35 @@ const STORAGE_KEYS = {
 
 class StorageService {
   private isBrowser = typeof window !== 'undefined';
+  private hooks: CloudHooks | null = null;
+
+  setCloudHooks(hooks: CloudHooks | null): void {
+    this.hooks = hooks;
+  }
+
+  // Store data that came from the shared database. Does not send it back.
+  applyRemoteCompetition(comp: Competition): void {
+    this.writeLocal(STORAGE_KEYS.COMPETITION, comp);
+    this.notifyChanged();
+  }
+
+  applyRemoteSubmissions(subs: JudgeScoreSubmission[]): void {
+    this.writeLocal(STORAGE_KEYS.SUBMISSIONS, subs);
+    this.notifyChanged();
+  }
+
+  private notifyChanged(): void {
+    if (this.isBrowser) window.dispatchEvent(new Event(DATA_CHANGED_EVENT));
+  }
+
+  private writeLocal(key: string, value: unknown): void {
+    if (!this.isBrowser) return;
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.error('Failed to save to storage', e);
+    }
+  }
 
   getCompetition(): Competition {
     if (!this.isBrowser) return INITIAL_COMPETITION;
@@ -29,17 +74,13 @@ class StorageService {
     } catch (e) {
       console.error('Failed to load competition from storage', e);
     }
-    this.saveCompetition(INITIAL_COMPETITION);
+    this.writeLocal(STORAGE_KEYS.COMPETITION, INITIAL_COMPETITION);
     return INITIAL_COMPETITION;
   }
 
   saveCompetition(comp: Competition): void {
-    if (!this.isBrowser) return;
-    try {
-      localStorage.setItem(STORAGE_KEYS.COMPETITION, JSON.stringify(comp));
-    } catch (e) {
-      console.error('Failed to save competition to storage', e);
-    }
+    this.writeLocal(STORAGE_KEYS.COMPETITION, comp);
+    this.hooks?.onCompetitionSaved(comp);
   }
 
   getTemplates(): RubricTemplate[] {
@@ -273,18 +314,20 @@ class StorageService {
       };
       subs[existingIndex] = updated;
       this.saveSubmissions(subs);
+      this.hooks?.onSubmissionSaved(updated);
       return updated;
     }
 
     const newSubmission: JudgeScoreSubmission = {
       ...payload,
-      id: `sub-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: submissionId(payload.roundId, payload.teamId, payload.judgeId),
       rawTotal,
       submittedAt: now,
     };
 
     subs.push(newSubmission);
     this.saveSubmissions(subs);
+    this.hooks?.onSubmissionSaved(newSubmission);
     return newSubmission;
   }
 
@@ -311,6 +354,7 @@ class StorageService {
 
     subs[index] = updated;
     this.saveSubmissions(subs);
+    this.hooks?.onSubmissionSaved(updated);
     return updated;
   }
 

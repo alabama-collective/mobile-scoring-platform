@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Competition, Round, JudgeScoreSubmission } from '../types';
+import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
 import {
@@ -14,6 +15,7 @@ import {
   Pause,
   RotateCcw,
   ArrowRight,
+  AlertTriangle,
   Plus,
   Minus,
 } from 'lucide-react';
@@ -181,6 +183,12 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     setIsEditing(true);
     if (onScoreSubmitted) onScoreSubmitted();
   };
+
+  // MSP-45: whether this phone's last saved score has reached the shared database.
+  const cloud = useCloudState();
+  const sendState = submissionReceipt ? cloud.sends[submissionReceipt.id] : undefined;
+  // Approved by Steph (Oct 13): a refused score must never look like a success.
+  const refused = cloud.enabled && sendState === 'failed';
 
   const mySubmissions = storageService
     .getAllSubmissions()
@@ -396,25 +404,42 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
       {/* Confirmation Receipt Banner (MSP-23) */}
       {submissionReceipt && (
-        <div className="p-3.5 bg-green-950/90 border border-green-700 rounded-sm text-green-200 text-xs space-y-1 shadow-tac-md animate-fade-in">
+        <div
+          className={`p-3.5 rounded-sm text-xs space-y-1 shadow-tac-md animate-fade-in border ${
+            refused ? 'bg-red-950/90 border-red-600 text-red-200' : 'bg-green-950/90 border-green-700 text-green-200'
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+              {refused ? (
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+              )}
               <span className="font-bold text-white text-sm">
-                Score Confirmed (MSP-23)
+                {refused ? 'Not saved' : 'Score Confirmed (MSP-23)'}
               </span>
             </div>
             <span className="text-[10px] text-green-300 font-mono">
               {new Date(submissionReceipt.updatedAt || submissionReceipt.submittedAt).toLocaleTimeString()}
             </span>
           </div>
-          <p className="text-green-300">
-            Recorded <strong>{submissionReceipt.rawTotal} / {maxPossible} points</strong> for{' '}
-            <strong>{selectedTeam.name}</strong>.
-          </p>
+          {!refused && (
+            <p className="text-green-300">
+              Recorded <strong>{submissionReceipt.rawTotal} / {maxPossible} points</strong> for{' '}
+              <strong>{selectedTeam.name}</strong>.
+            </p>
+          )}
+          {cloud.enabled && sendState && (
+            <p role="status" className={sendState === 'failed' ? 'text-red-300 font-semibold' : 'text-green-300'}>
+              {sendState === 'sending' && 'Saved on this phone, sending to staff. It sends by itself when there is signal.'}
+              {sendState === 'sent' && 'Sent to staff.'}
+              {sendState === 'failed' && `Your score for ${selectedTeam.name} was not saved. Show this screen to staff.`}
+            </p>
+          )}
 
           {/* One-Tap Auto Advance to Next Team */}
-          {nextTeam && (
+          {nextTeam && !refused && (
             <div className="pt-2 border-t border-green-800/80 flex items-center justify-between">
               <span className="text-[11px] text-green-300">Ready for the next pitch?</span>
               <button

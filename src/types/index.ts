@@ -50,6 +50,7 @@ export interface JudgeScoreSubmission {
   feedbackCouldImprove?: string;
   submittedAt: string;
   updatedAt?: string;
+  uid?: string;                 // MSP-45: the sign in that saved it, so a judge can only change their own
 }
 
 export interface TeamScoreSummary {
