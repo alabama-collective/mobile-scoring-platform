@@ -3,6 +3,7 @@ import { Competition, Round, TeamScoreSummary } from '../types';
 import { storageService } from '../services/storageService';
 import { judgesForRound, judgesForTeam, isJudgeExpected } from '../services/booths';
 import { teamRegion } from '../services/regions';
+import { FinaleTimerPanel } from './FinaleTimer';
 import { boothStandings, finalistsByBooth, missingScores, teamsInRound } from '../services/finalists';
 import {
   Users,
@@ -306,6 +307,9 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Story F: staff run the finale timer from Live Results too */}
+      {!isBooth && activeRound.status === 'live' && <FinaleTimerPanel />}
 
       {/* Story A: no finalists until Round 1 is confirmed */}
       {!isBooth && roundTeams.length === 0 && (

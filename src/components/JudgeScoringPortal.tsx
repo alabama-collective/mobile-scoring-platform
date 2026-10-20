@@ -3,6 +3,7 @@ import { Competition, Round, JudgeScoreSubmission } from '../types';
 import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
+import { JudgeFinaleTimer } from './FinaleTimer';
 import { judgesForRound, teamsForJudge, isFinaleJudge } from '../services/booths';
 import { isInRegion, teamRegion } from '../services/regions';
 import {
@@ -329,6 +330,11 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
             <Award className="w-3 h-3 text-tac-gold-500" />
             <span>Give Classic bonus ({competition.winningRegion}): <strong>+5 points added once by staff</strong></span>
           </div>
+        )}
+
+        {/* Story F: the staff-controlled finale timer. Round 1 has none. */}
+        {activeRound.roundType === 'finale' && activeRound.status === 'live' && (
+          <JudgeFinaleTimer submitted={!!submissionReceipt} />
         )}
 
         {/* Horizontal Quick-Select Team Strip with Submission Status */}

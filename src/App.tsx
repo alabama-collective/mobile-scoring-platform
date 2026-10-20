@@ -14,6 +14,7 @@ import { JudgeScoringPortal } from './components/JudgeScoringPortal';
 import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
 import { TeamEditor } from './components/TeamEditor';
+import { FinaleTimerPanel } from './components/FinaleTimer';
 import { renameBooth, isFinaleJudge } from './services/booths';
 import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
@@ -343,6 +344,9 @@ export const App: React.FC = () => {
               onRenameBooth={handleRenameBooth}
               competition={competition}
             />
+
+            {/* Story F: the finale timer, while the finale is live */}
+            {competition.rounds.some((r) => r.roundType === 'finale' && r.status === 'live') && <FinaleTimerPanel />}
 
             {/* Rubric Builder with Custom Scales & Inline Prompts */}
             {activeRound && (
