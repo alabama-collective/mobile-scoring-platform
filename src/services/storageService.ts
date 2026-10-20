@@ -5,6 +5,7 @@ import {
   Criterion,
   Judge,
   JudgeScoreSubmission,
+  Team,
   TeamScoreSummary,
 } from '../types';
 import { INITIAL_COMPETITION, BUILT_IN_TEMPLATES } from '../data/seedData';
@@ -274,6 +275,39 @@ class StorageService {
       return true;
     }
     return false;
+  }
+
+  // --- TEAM EDITOR (MSP-43) ---
+  addTeam(team: { name: string; founderNames?: string; school?: string; boothCategory: string }): Team {
+    const comp = this.getCompetition();
+    const newTeam: Team = { ...team, id: `team-${Date.now()}`, bonusPoints: 0 };
+    comp.teams.push(newTeam);
+    this.saveCompetition(comp);
+    return newTeam;
+  }
+
+  updateTeam(teamId: string, changes: Partial<Omit<Team, 'id'>>): Team | null {
+    const comp = this.getCompetition();
+    const team = comp.teams.find((t) => t.id === teamId);
+    if (!team) return null;
+    Object.assign(team, changes);
+    this.saveCompetition(comp);
+    return team;
+  }
+
+  teamHasScores(teamId: string): boolean {
+    return this.getAllSubmissions().some((s) => s.teamId === teamId);
+  }
+
+  // A team with scores is never removed, so no score silently disappears.
+  removeTeam(teamId: string): boolean {
+    if (this.teamHasScores(teamId)) return false;
+    const comp = this.getCompetition();
+    const before = comp.teams.length;
+    comp.teams = comp.teams.filter((t) => t.id !== teamId);
+    if (comp.teams.length === before) return false;
+    this.saveCompetition(comp);
+    return true;
   }
 
   // --- SUBMISSIONS & SCORING (Epic 2 & Epic 3) ---
