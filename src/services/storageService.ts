@@ -8,6 +8,7 @@ import {
   TeamScoreSummary,
 } from '../types';
 import { INITIAL_COMPETITION, BUILT_IN_TEMPLATES } from '../data/seedData';
+import { computeTeamSummaries } from './scoring';
 
 // MSP-45: the shared database layer (services/cloud.ts) registers these hooks
 // so that local saves are also sent to Firebase. Without them (tests, or no
@@ -364,50 +365,7 @@ class StorageService {
     const round = comp.rounds.find((r) => r.id === roundId) || comp.rounds[0];
     const allSubs = this.getAllSubmissions().filter((s) => s.roundId === round?.id);
 
-    const activeJudges = comp.judges;
-    const totalRequired = activeJudges.length;
-
-    const summaries: TeamScoreSummary[] = comp.teams.map((team) => {
-      const teamSubs = allSubs.filter((s) => s.teamId === team.id);
-      const subCount = teamSubs.length;
-      const allDone = subCount >= totalRequired && totalRequired > 0;
-
-      // Average score across submitted judges
-      const rawSum = teamSubs.reduce((acc, s) => acc + s.rawTotal, 0);
-      const avg = subCount > 0 ? Number((rawSum / subCount).toFixed(2)) : 0;
-
-      // MSP-35: 5 bonus points for Round 1 winning region
-      const regionalBonus =
-        round.roundType === 'booth' &&
-        comp.winningRegion &&
-        team.region.toLowerCase() === comp.winningRegion.toLowerCase()
-          ? 5
-          : 0;
-
-      const finalScore = Number((avg + regionalBonus).toFixed(2));
-
-      return {
-        team,
-        roundId: round.id,
-        judgeScores: teamSubs,
-        submissionCount: subCount,
-        totalSubmissionsRequired: totalRequired,
-        allJudgesSubmitted: allDone,
-        averageScore: avg,
-        regionalBonus,
-        finalScore,
-      };
-    });
-
-    // Sort by finalScore descending
-    summaries.sort((a, b) => b.finalScore - a.finalScore);
-
-    // Assign ranks
-    summaries.forEach((s, idx) => {
-      s.rank = idx + 1;
-    });
-
-    return summaries;
+    return computeTeamSummaries(comp, round, allSubs);
   }
 
   // MSP-34: Review and confirm final results
