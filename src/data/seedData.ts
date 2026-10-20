@@ -51,6 +51,10 @@ export const INITIAL_JUDGES: Judge[] = [
   { id: 'judge-2', name: 'Morgan Hill', email: 'morgan.hill@example.com', boothAssigned: 'HealthTech & Bio' },
   { id: 'judge-3', name: 'Casey Brooks', email: 'casey.brooks@example.com', boothAssigned: 'FinTech & EdTech' },
   { id: 'judge-4', name: 'Dr. Riley Stone', email: 'riley.stone@example.com', boothAssigned: 'Consumer & Lifestyle' },
+  { id: 'judge-5', name: 'Sam Ellis', email: 'sam.ellis@example.com', boothAssigned: 'CleanTech & Urban' },
+  // Steph's story D: the finale has its own judge list, with no booth.
+  { id: 'judge-6', name: 'Jamie Cole', email: 'jamie.cole@example.com', roster: 'finale' },
+  { id: 'judge-7', name: 'Quinn Harper', email: 'quinn.harper@example.com', roster: 'finale' },
 ];
 
 export const INITIAL_COMPETITION: Competition = {

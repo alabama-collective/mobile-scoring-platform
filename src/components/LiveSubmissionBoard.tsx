@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Competition, Round, TeamScoreSummary } from '../types';
 import { storageService } from '../services/storageService';
+import { judgesForRound, judgesForTeam, isJudgeExpected } from '../services/booths';
 import {
   Users,
   CheckCircle2,
@@ -25,7 +26,8 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   activeRound,
   onFinalizeRound,
 }) => {
-  const judges = competition.judges;
+  // MSP-48: Round 1 judges for Round 1, the finale judge list for the finale.
+  const judges = judgesForRound(competition, activeRound);
   const summaries = storageService.getTeamScoreSummaries(activeRound.id);
   const allSubmissions = storageService.getAllSubmissions().filter((s) => s.roundId === activeRound.id);
 
@@ -34,8 +36,18 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
 
   // Calculate high-level progress (MSP-05)
-  const totalSubmissionsNeeded = competition.teams.length * judges.length;
-  const actualSubmissionsCount = allSubmissions.length;
+  // Only the judges at a team's booth are expected to score it (MSP-48).
+  const expectedFor = (teamId: string) => {
+    const team = competition.teams.find((t) => t.id === teamId);
+    return team ? judgesForTeam(competition, activeRound, team) : [];
+  };
+  const totalSubmissionsNeeded = competition.teams.reduce(
+    (acc, t) => acc + judgesForTeam(competition, activeRound, t).length,
+    0
+  );
+  const actualSubmissionsCount = allSubmissions.filter((s) =>
+    expectedFor(s.teamId).some((j) => j.id === s.judgeId)
+  ).length;
   const completionPercentage =
     totalSubmissionsNeeded > 0
       ? Math.round((actualSubmissionsCount / totalSubmissionsNeeded) * 100)
@@ -173,14 +185,14 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <thead className="bg-tac-ink-900 text-tac-stone-400 uppercase text-[10px] tracking-wider border-b border-tac-ink-700">
               <tr>
                 <th className="py-3 px-3 min-w-[160px]">Team</th>
-                <th className="py-3 px-2">Booth Category</th>
+                <th className="py-3 px-2">Booth</th>
                 {judges.map((judge) => (
                   <th key={judge.id} className="py-3 px-2 text-center min-w-[110px]">
                     <span className="block truncate max-w-[100px] font-semibold text-white">
                       {judge.name}
                     </span>
                     <span className="text-[9px] text-tac-stone-400 font-mono">
-                      Judge
+                      {activeRound.roundType === 'finale' ? 'Finale judge' : judge.boothAssigned || 'No booth'}
                     </span>
                   </th>
                 ))}
@@ -189,8 +201,11 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             </thead>
             <tbody className="divide-y divide-tac-ink-700 bg-tac-ink-900/60">
               {competition.teams.map((team) => {
-                const teamSubs = allSubmissions.filter((s) => s.teamId === team.id);
-                const allDone = teamSubs.length >= judges.length;
+                const expected = judgesForTeam(competition, activeRound, team);
+                const teamSubs = allSubmissions.filter(
+                  (s) => s.teamId === team.id && expected.some((j) => j.id === s.judgeId)
+                );
+                const allDone = expected.length > 0 && teamSubs.length >= expected.length;
 
                 return (
                   <tr key={team.id} className="hover:bg-tac-ink-900 transition-colors">
@@ -207,6 +222,13 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                     {/* Judge Submission Status Cells (MSP-05, MSP-19) */}
                     {judges.map((judge) => {
                       const sub = teamSubs.find((s) => s.judgeId === judge.id);
+                      if (!isJudgeExpected(competition, activeRound, team, judge)) {
+                        return (
+                          <td key={judge.id} className="py-2.5 px-2 text-center text-tac-stone-600" title="Not this judge's booth">
+                            –
+                          </td>
+                        );
+                      }
                       return (
                         <td key={judge.id} className="py-2.5 px-2 text-center">
                           {sub ? (
@@ -238,7 +260,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                           ? 'bg-green-950 text-green-400 border border-green-800'
                           : 'bg-tac-ink-800 text-tac-stone-400 border border-tac-ink-700'
                       }`}>
-                        {teamSubs.length} / {judges.length}
+                        {teamSubs.length} / {expected.length}
                       </span>
                     </td>
                   </tr>

@@ -13,6 +13,7 @@ import { TemplateManager } from './components/TemplateManager';
 import { JudgeScoringPortal } from './components/JudgeScoringPortal';
 import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
+import { renameBooth, isFinaleJudge } from './services/booths';
 import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
 type Mode = 'start' | 'judge' | 'staff';
@@ -123,6 +124,10 @@ export const App: React.FC = () => {
     updateCompetition({ ...competition, rounds: updatedRounds });
   };
 
+  const handleRenameBooth = (from: string, to: string) => {
+    updateCompetition(renameBooth(competition, from, to));
+  };
+
   const handleSelectWinningRegion = (regionName: string | undefined) => {
     const updated = storageService.setWinningRegionBonus(regionName);
     setCompetition({ ...updated });
@@ -188,10 +193,14 @@ export const App: React.FC = () => {
 
   // ---- MSP-46 / MSP-03: judge flow. Always the live round, never a draft. ----
   if (mode === 'judge') {
-    const liveRounds = competition.rounds.filter((r) => r.status === 'live');
+    const judge = competition.judges.find((j) => j.id === judgeId);
+    // Steph's story D: Round 1 judges only ever see Round 1, finale judges
+    // only the finale. Before their round opens they see "not started yet".
+    const liveRounds = competition.rounds.filter(
+      (r) => r.status === 'live' && (!judge || (r.roundType === 'finale') === isFinaleJudge(judge))
+    );
     const judgeRound =
       liveRounds.length === 1 ? liveRounds[0] : liveRounds.find((r) => r.id === judgeRoundId) || null;
-    const judge = competition.judges.find((j) => j.id === judgeId);
     let body: React.ReactNode;
     if (!judge) body = <JudgeNamePicker judges={competition.judges} onPick={(id) => setJudgeId(id)} />;
     else if (liveRounds.length === 0) body = <JudgingNotStarted competition={competition} />;
@@ -319,6 +328,8 @@ export const App: React.FC = () => {
               onUpdateRoundStatus={handleUpdateRoundStatus}
               onCloneRound1ToRound2={handleCloneRound1}
               onUpdateBoothCategories={handleUpdateBoothCategories}
+              onRenameBooth={handleRenameBooth}
+              competition={competition}
             />
 
             {/* Rubric Builder with Custom Scales & Inline Prompts */}
