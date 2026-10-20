@@ -24,7 +24,9 @@ export const COMPETITION_DOC_ID = 'main';
 // passcode itself never goes in the repo.
 export const STAFF_EMAIL = 'staff@example.com';
 
-const useEmulator = import.meta.env.VITE_FIREBASE_EMULATOR === '1';
+// import.meta.env only exists inside the app (Vite). The scores script reads
+// this file too, and passes --emulator itself.
+const useEmulator = (import.meta as { env?: Record<string, string> }).env?.VITE_FIREBASE_EMULATOR === '1';
 
 export const cloudSettings = {
   useEmulator,
