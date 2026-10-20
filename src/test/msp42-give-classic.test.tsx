@@ -46,17 +46,17 @@ describe('MSP-42 and E: Give Classic bonus', () => {
     expect(storageService.getCompetition().teams.every((t) => t.bonusPoints === 0)).toBe(true);
   });
 
-  it('Round 1 results show "+5 Give Classic bonus (South Region)" and the audit shows it as its own line', () => {
+  it('Round 1 results show "+5 Give Classic bonus (South Region, 5 per judge)" and the audit shows it as its own line', () => {
     storageService.setWinningRegionBonus('South Region');
     scoreTeam('AgroPulse Sensors', 0, 'Jordan Lake');
     openStaff();
     fireEvent.click(screen.getByRole('button', { name: /Live Results/ }));
     // Only AgroPulse has a score. HealthConnect and Gulf Coast are South too,
     // but an unscored team shows no bonus yet.
-    expect(screen.getAllByText('+5 Give Classic bonus (South Region)').length).toBe(1);
+    expect(screen.getAllByText('+5 Give Classic bonus (South Region, 5 per judge)').length).toBe(1);
     const row = screen.getAllByRole('button', { name: /Audit/ }).find((b) => b.closest('tr')?.textContent?.includes('AgroPulse Sensors'))!;
     fireEvent.click(row);
-    expect(screen.getByText('Give Classic bonus (South Region)')).toBeInTheDocument();
+    expect(screen.getByText(/Give Classic bonus \(South Region\): 5 per judge, 1 judge/)).toBeInTheDocument();
   });
 
   it('a team with no scores yet gets no bonus, so it never shows a score of 5', () => {

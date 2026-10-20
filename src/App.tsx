@@ -15,7 +15,7 @@ import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
 import { TeamEditor } from './components/TeamEditor';
 import { FinaleTimerPanel } from './components/FinaleTimer';
-import { renameBooth, isFinaleJudge } from './services/booths';
+import { renameBooth, isFinaleJudge, setBoothDetails, boothLabel } from './services/booths';
 import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
 type Mode = 'start' | 'judge' | 'staff';
@@ -121,9 +121,22 @@ export const App: React.FC = () => {
 
   const handleUpdateBoothCategories = (roundId: string, categories: string[]) => {
     const updatedRounds = competition.rounds.map((r) =>
-      r.id === roundId ? { ...r, boothCategories: categories } : r
+      r.id === roundId
+        ? {
+            ...r,
+            boothCategories: categories,
+            // A removed booth's category and location go with it.
+            ...(r.boothDetails
+              ? { boothDetails: Object.fromEntries(Object.entries(r.boothDetails).filter(([b]) => categories.includes(b))) }
+              : {}),
+          }
+        : r
     );
     updateCompetition({ ...competition, rounds: updatedRounds });
+  };
+
+  const handleBoothDetails = (booth: string, details: { category?: string; location?: string }) => {
+    updateCompetition(setBoothDetails(competition, booth, details));
   };
 
   const handleRenameBooth = (from: string, to: string) => {
@@ -215,7 +228,10 @@ export const App: React.FC = () => {
     const judgeRound =
       liveRounds.length === 1 ? liveRounds[0] : liveRounds.find((r) => r.id === judgeRoundId) || null;
     let body: React.ReactNode;
-    if (!judge) body = <JudgeNamePicker judges={competition.judges} onPick={(id) => setJudgeId(id)} />;
+    if (!judge)
+      body = (
+        <JudgeNamePicker judges={competition.judges} onPick={(id) => setJudgeId(id)} labelFor={(b) => boothLabel(competition, b)} />
+      );
     else if (liveRounds.length === 0) body = <JudgingNotStarted competition={competition} />;
     else if (!judgeRound) body = <RoundPicker rounds={liveRounds} onPick={(id) => setJudgeRoundId(id)} />;
     else
@@ -342,6 +358,7 @@ export const App: React.FC = () => {
               onCloneRound1ToRound2={handleCloneRound1}
               onUpdateBoothCategories={handleUpdateBoothCategories}
               onRenameBooth={handleRenameBooth}
+              onBoothDetails={handleBoothDetails}
               competition={competition}
             />
 

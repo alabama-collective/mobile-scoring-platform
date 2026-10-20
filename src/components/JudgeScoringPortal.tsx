@@ -4,7 +4,7 @@ import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
 import { JudgeFinaleTimer } from './FinaleTimer';
-import { judgesForRound, teamsForJudge, isFinaleJudge } from '../services/booths';
+import { judgesForRound, teamsForJudge, isFinaleJudge, boothLabel } from '../services/booths';
 import { isInRegion, teamRegion } from '../services/regions';
 import {
   CheckCircle2,
@@ -319,7 +319,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         </h1>
 
         <div className="flex items-center justify-center space-x-2 text-xs text-tac-stone-300 font-light">
-          <span>{selectedTeam?.boothCategory}</span>
+          <span>{selectedTeam ? boothLabel(competition, selectedTeam.boothCategory) : ''}</span>
           <span>•</span>
           <span className="font-semibold text-tac-gold-400">{teamRegion(selectedTeam) || 'School needed'}</span>
         </div>
@@ -328,7 +328,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         {isWinningRegion && (
           <div className="mt-1 inline-flex items-center space-x-1 bg-tac-gold-950 text-tac-gold-300 border border-tac-gold-700/60 px-2.5 py-0.5 rounded-xs text-[11px]">
             <Award className="w-3 h-3 text-tac-gold-500" />
-            <span>Give Classic bonus ({competition.winningRegion}): <strong>+5 points added once by staff</strong></span>
+            <span>Give Classic bonus ({competition.winningRegion}): <strong>the app adds 5 points to your score</strong></span>
           </div>
         )}
 
