@@ -47,6 +47,8 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     const quick10Buttons = screen.getAllByRole('button', { name: '10' });
     expect(quick10Buttons.length).toBeGreaterThan(0);
     fireEvent.click(quick10Buttons[0]); // Category 1 = 10 pts
+    // Every category needs a score before it can be sent (Wednesday test 2.3)
+    screen.getAllByRole('textbox', { name: /^Score for / }).slice(1).forEach((box) => fireEvent.change(box, { target: { value: '8' } }));
 
     // Fill feedback
     const workedWellInput = screen.getByPlaceholderText(/Specific strength, persuasive market data/i);
