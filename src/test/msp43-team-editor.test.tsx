@@ -32,6 +32,24 @@ describe('MSP-43: team editor', () => {
     expect(teamRegion(t)).toBe('North Region');
   });
 
+  it('Wednesday test 1.5: a team with no booth is not saved, with a clear message', () => {
+    openAdmin();
+    fireEvent.change(screen.getByLabelText('Team name'), { target: { value: 'Riverbend Robotics' } });
+    fireEvent.change(screen.getByLabelText("Team lead's school"), { target: { value: 'Talladega College' } });
+    fireEvent.click(screen.getByRole('button', { name: /Add team/ }));
+    expect(team('Riverbend Robotics')).toBeUndefined();
+    expect(screen.getByText('Pick a booth for Riverbend Robotics. A team needs a booth so its judges can score it.')).toBeInTheDocument();
+  });
+
+  it('a duplicate team name is blocked', () => {
+    openAdmin();
+    fireEvent.change(screen.getByLabelText('Team name'), { target: { value: 'agropulse sensors' } });
+    fireEvent.change(screen.getByLabelText('Team booth'), { target: { value: 'Booth 3' } });
+    fireEvent.click(screen.getByRole('button', { name: /Add team/ }));
+    expect(storageService.getCompetition().teams.filter((t) => /agropulse/i.test(t.name))).toHaveLength(1);
+    expect(screen.getByText('There is already a team called agropulse sensors.')).toBeInTheDocument();
+  });
+
   it('school is a dropdown of the 14 schools only, with no free text', () => {
     openAdmin();
     const select = screen.getByLabelText("Team lead's school") as HTMLSelectElement;
