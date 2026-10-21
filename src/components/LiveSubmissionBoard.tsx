@@ -114,7 +114,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <div className="flex items-center space-x-2">
               <Users className="w-5 h-5 text-tac-gold-500" />
               <h2 className="font-display font-bold text-lg text-white uppercase tracking-wide">
-                Live Submission & Tabulation Board (MSP-05, MSP-06)
+                Live Submission & Tabulation Board
               </h2>
             </div>
             <p className="text-xs text-tac-stone-400 mt-1">
@@ -146,7 +146,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 className="flex items-center space-x-2 px-4 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-bold text-xs rounded-xs shadow-tac-sm transition-all"
               >
                 <CheckCheck className="w-4 h-4 text-tac-gold-300" />
-                <span>Review & Confirm Results (MSP-34)</span>
+                <span>Review & Confirm Results</span>
               </button>
             )}
           </div>
@@ -211,7 +211,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-display font-bold text-sm text-tac-stone-100 uppercase tracking-wider">
-              Judge Submission Matrix by Team (MSP-05)
+              Judge Submission Matrix by Team
             </h3>
             <p className="text-xs text-tac-stone-400">
               Identifies which specific judges have recorded scores versus pending stragglers.
@@ -387,7 +387,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-4 h-4 text-tac-gold-500" />
               <h3 className="font-display font-bold text-sm text-tac-stone-100 uppercase tracking-wider">
-                Automated Results & Audit Leaderboard (MSP-06)
+                Automated Results & Audit Leaderboard
               </h3>
             </div>
             <p className="text-xs text-tac-stone-400">
@@ -525,7 +525,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-tac-ink-700">
               <div>
                 <span className="text-[10px] uppercase font-bold text-tac-gold-500 tracking-wider">
-                  Audit Trail & Score Breakdown (MSP-06)
+                  Audit Trail & Score Breakdown
                 </span>
                 <h3 className="font-display font-black text-lg text-white uppercase">
                   {selectedAuditTeam.team.name}
@@ -655,7 +655,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <div className="flex items-center space-x-2 pb-3 border-b border-tac-ink-700">
               <ShieldCheck className="w-5 h-5 text-tac-gold-500" />
               <h3 className="font-display font-bold text-base text-white uppercase tracking-wide">
-                Confirm & Lock Final Results (MSP-34)
+                Confirm & Lock Final Results
               </h3>
             </div>
 

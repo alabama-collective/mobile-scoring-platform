@@ -67,7 +67,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
             <div className="flex items-center space-x-2">
               <FolderGit2 className="w-5 h-5 text-tac-gold-500" />
               <h2 className="font-display font-bold text-lg text-tac-stone-100 uppercase tracking-wide">
-                Judging Form Templates (MSP-01)
+                Judging Form Templates
               </h2>
             </div>
             <p className="text-xs text-tac-stone-400 mt-1 max-w-xl">
@@ -99,7 +99,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
             <Lock className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <span>
               <strong>Templates cannot be loaded while {liveRound.name} is live.</strong> Loading one would
-              replace the rubric judges are scoring with. Close the round first (MSP-32).
+              replace the rubric judges are scoring with. Close the round first.
             </span>
           </div>
         )}

@@ -185,7 +185,7 @@ export const RubricBuilder: React.FC<RubricBuilderProps> = ({ round, onUpdateRub
           <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
           <span>
             <strong>Rubric is locked:</strong> this round has been opened, so criteria and point
-            definitions cannot be changed (MSP-32). Before anyone scores, Set Draft unlocks it again (MSP-57).
+            definitions cannot be changed. Before anyone scores, Set Draft unlocks it again.
           </span>
         </div>
       )}
