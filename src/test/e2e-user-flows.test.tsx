@@ -126,7 +126,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     fireEvent.change(regionSelect, { target: { value: 'South Region' } });
 
     expect(screen.getByText(/Bonus Active:/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/\+5 pts per judge to south region/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/\+5 pts to (each )?south region team/i).length).toBeGreaterThanOrEqual(2);
 
     // Verify on Live Results tab that +5 bonus is reflected in leaderboard
     fireEvent.click(screen.getByRole('button', { name: /Live Results/i }));

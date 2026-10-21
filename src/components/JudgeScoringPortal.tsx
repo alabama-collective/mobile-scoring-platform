@@ -4,10 +4,8 @@ import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
 import { judgesForRound, teamsForJudge, isFinaleJudge, boothLabel } from '../services/booths';
-import { isInRegion, teamRegion } from '../services/regions';
 import {
   CheckCircle2,
-  Award,
   UserCheck,
   Send,
   MessageSquare,
@@ -124,13 +122,9 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
   const maxPossible = activeRound.rubric.criteria.reduce((acc, c) => acc + c.maxPoints, 0);
 
-  const isWinningRegion =
-    activeRound.roundType === 'booth' &&
-    !!selectedTeam &&
-    isInRegion(selectedTeam, competition.winningRegion);
-
-  // MSP-42: the judge's total is their own score only. The Give Classic bonus
-  // is added once per team by the app, not by each judge.
+  // Steph, Oct 20: judges never see the Give Classic bonus, a school or a
+  // region. The judge's total is their own score only; staff screens add the
+  // bonus once per team.
   const finalTally = rawTotal;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -271,9 +265,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                     <span className="text-xs font-semibold text-white block">
                       {team.name}
                     </span>
-                    <span className="text-[10px] text-tac-stone-400">
-                      {team.boothCategory} • {teamRegion(team) || 'School needed'}
-                    </span>
+                    <span className="text-[10px] text-tac-stone-400">{team.boothCategory}</span>
                   </div>
                   {sub ? (
                     <div className="flex items-center space-x-2">
@@ -319,17 +311,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
         <div className="flex items-center justify-center space-x-2 text-xs text-tac-stone-300 font-light">
           <span>{selectedTeam ? boothLabel(competition, selectedTeam.boothCategory) : ''}</span>
-          <span>•</span>
-          <span className="font-semibold text-tac-gold-400">{teamRegion(selectedTeam) || 'School needed'}</span>
         </div>
-
-        {/* Regional Bonus Banner if applied (MSP-35) */}
-        {isWinningRegion && (
-          <div className="mt-1 inline-flex items-center space-x-1 bg-tac-gold-950 text-tac-gold-300 border border-tac-gold-700/60 px-2.5 py-0.5 rounded-xs text-[11px]">
-            <Award className="w-3 h-3 text-tac-gold-500" />
-            <span>Give Classic bonus ({competition.winningRegion}): <strong>the app adds 5 points to your score</strong></span>
-          </div>
-        )}
 
         {/* Horizontal Quick-Select Team Strip with Submission Status */}
         <div className="pt-2 flex items-center justify-start sm:justify-center space-x-1 overflow-x-auto pb-1">

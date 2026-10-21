@@ -405,7 +405,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <th className="py-2.5 px-2">Booth / Track</th>
                 <th className="py-2.5 px-2 text-center">Judges' total</th>
                 {isBooth && <th className="py-2.5 px-2 text-center">Give Classic bonus</th>}
-                <th className="py-2.5 px-3 text-right">Final Score</th>
+                <th className="py-2.5 px-3 text-right">{isBooth ? 'Booth Total' : 'Final Score'}</th>
                 <th className="py-2.5 px-3 text-center">Audit</th>
               </tr>
             </thead>
@@ -481,7 +481,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       {summary.regionalBonus > 0 ? (
                         <span
                           className="inline-flex items-center space-x-1 text-tac-gold-400 font-bold bg-tac-gold-950 px-2 py-0.5 rounded-xs border border-tac-gold-800 text-[11px]"
-                          title={`+${summary.regionalBonus} Give Classic bonus (${competition.winningRegion}, 5 per judge)`}
+                          title={`+${summary.regionalBonus} Give Classic bonus (${competition.winningRegion})`}
                         >
                           <Award className="w-3 h-3 text-tac-gold-500" />
                           <span>+{summary.regionalBonus} pts</span>
@@ -496,7 +496,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       {/* MSP-42: the bonus shows on the score, with its region */}
                       {summary.regionalBonus > 0 && (
                         <span className="block text-[10px] font-body font-semibold text-tac-gold-500">
-                          +{summary.regionalBonus} Give Classic bonus ({competition.winningRegion}, 5 per judge)
+                          +{summary.regionalBonus} Give Classic bonus ({competition.winningRegion})
                         </span>
                       )}
                     </td>
@@ -562,8 +562,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <span className="flex items-center space-x-1.5 text-tac-gold-300 font-semibold">
                   <Award className="w-3.5 h-3.5 text-tac-gold-500" />
                   <span>
-                    Give Classic bonus ({competition.winningRegion}): 5 per judge, {selectedAuditTeam.submissionCount}{' '}
-                    {selectedAuditTeam.submissionCount === 1 ? 'judge' : 'judges'}
+                    Give Classic bonus ({competition.winningRegion}): added once to the booth total
                   </span>
                 </span>
                 <span className="font-bold text-tac-gold-400">+{selectedAuditTeam.regionalBonus} pts</span>

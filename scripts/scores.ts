@@ -121,7 +121,7 @@ const main = async () => {
 
     const resultsRows: unknown[][] = [[
       'Round', 'Round status', 'Rank', 'Team', 'School', 'Region', 'Booth', 'Scores in', 'Judges',
-      'Judges total', 'Give Classic bonus', 'Final score', 'Results confirmed by', 'Confirmed at',
+      'Judges total', 'Give Classic bonus', 'Total (booth total in Round 1)', 'Results confirmed by', 'Confirmed at',
     ]];
     const scoreRows: unknown[][] = [[
       'Round', 'Team', 'Judge', 'Criterion', 'Points', 'Max points', 'Judge total', 'Worked well', 'Could improve', 'Submitted at', 'Updated at',

@@ -33,15 +33,15 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
           </div>
           <p className="text-xs text-tac-stone-400 mt-1">
             Pick the region that won the Give Classic. For every team whose team lead's school is in that region,{' '}
-            <strong>5 points are added to each judge's score</strong> in Round 1: +10 with two judges, +5 with one. The finale has
-            no bonus.
+            <strong>5 points are added once to its Round 1 booth total</strong>, the same with one judge or two, from the start. The
+            finale has no bonus. Judges never see it.
           </p>
         </div>
 
         {bonusPointsApplied && winningRegion && (
           <div className="flex items-center space-x-2 bg-tac-gold-900/40 border border-tac-gold-700 px-3 py-1.5 rounded-xs text-tac-gold-300 text-xs">
             <ShieldCheck className="w-4 h-4 text-tac-gold-500" />
-            <span>Bonus Active: <strong>+5 pts per judge to {winningRegion}</strong></span>
+            <span>Bonus Active: <strong>+5 pts to each {winningRegion} team</strong></span>
           </div>
         )}
       </div>
@@ -121,7 +121,7 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
                       {isWinner ? (
                         <span className="inline-flex items-center space-x-1 text-tac-gold-400 font-bold bg-tac-gold-950 px-2 py-0.5 rounded-xs border border-tac-gold-800">
                           <CheckCircle2 className="w-3 h-3 text-tac-gold-500" />
-                          <span>+5 per judge</span>
+                          <span>+5 per team</span>
                         </span>
                       ) : (
                         <span className="text-tac-stone-500 font-mono">0 pts</span>
