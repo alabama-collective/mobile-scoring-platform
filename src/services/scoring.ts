@@ -1,8 +1,12 @@
 import type { Competition, JudgeScoreSubmission, Round, TeamScoreSummary } from '../types';
 import { boothList, judgesForTeam } from './booths';
 import { isInRegion } from './regions';
+import { teamsInRound } from './finalists';
 
-// The Give Classic bonus, added once per team in Round 1 (MSP-35).
+// The Give Classic bonus (MSP-35). Steph, Oct 20: competitors were told each
+// round is out of 50 with a 5-point bonus, so 5 points are added to EACH
+// judge's score for a team from the winning region. A two-judge booth gets
+// +10 on its combined total, a one-judge booth +5. Round 1 only.
 export const GIVE_CLASSIC_BONUS = 5;
 
 // The results calculation used by Live Results AND by the scores export script
@@ -16,7 +20,8 @@ export const computeTeamSummaries = (
   round: Round,
   allSubs: JudgeScoreSubmission[]
 ): TeamScoreSummary[] => {
-  const summaries: TeamScoreSummary[] = comp.teams.map((team) => {
+  // Story A: the finale scores only its finalists.
+  const summaries: TeamScoreSummary[] = teamsInRound(comp, round).map((team) => {
     // MSP-48: in Round 1 only the judges at the team's booth score it.
     const totalRequired = judgesForTeam(comp, round, team).length;
     const teamSubs = allSubs.filter((s) => s.teamId === team.id);
@@ -26,14 +31,10 @@ export const computeTeamSummaries = (
     const judgesTotal = teamSubs.reduce((acc, s) => acc + s.rawTotal, 0);
     const avg = subCount > 0 ? Number((judgesTotal / subCount).toFixed(2)) : 0;
 
-    // MSP-35: the bonus for the winning region, Round 1 only, once the team
-    // has at least one score (an unscored team shows 0, not just the bonus).
+    // MSP-35: 5 per judge who has scored the team, for the winning region,
+    // Round 1 only (an unscored team shows 0, not just the bonus).
     const regionalBonus =
-      round.roundType === 'booth' &&
-      subCount > 0 &&
-      isInRegion(team, comp.winningRegion)
-        ? GIVE_CLASSIC_BONUS
-        : 0;
+      round.roundType === 'booth' && isInRegion(team, comp.winningRegion) ? GIVE_CLASSIC_BONUS * subCount : 0;
 
     const finalScore = judgesTotal + regionalBonus;
 

@@ -23,12 +23,12 @@ describe('MSP-43: team editor', () => {
     fireEvent.change(screen.getByLabelText('Team name'), { target: { value: 'Riverbend Robotics' } });
     fireEvent.change(screen.getByLabelText('Team lead'), { target: { value: 'Jordan Example' } });
     fireEvent.change(screen.getByLabelText("Team lead's school"), { target: { value: 'Talladega College' } });
-    fireEvent.change(screen.getByLabelText('Team booth'), { target: { value: 'FinTech & EdTech' } });
+    fireEvent.change(screen.getByLabelText('Team booth'), { target: { value: 'Booth 2' } });
     fireEvent.click(screen.getByRole('button', { name: /Add team/ }));
 
     const t = team('Riverbend Robotics')!;
     expect(t.school).toBe('Talladega College');
-    expect(t.boothCategory).toBe('FinTech & EdTech');
+    expect(t.boothCategory).toBe('Booth 2');
     expect(teamRegion(t)).toBe('North Region');
   });
 
@@ -40,7 +40,7 @@ describe('MSP-43: team editor', () => {
   });
 
   it('a team with no school shows "School needed" and gets no bonus', () => {
-    storageService.addTeam({ name: 'No School Yet', boothCategory: 'FinTech & EdTech' });
+    storageService.addTeam({ name: 'No School Yet', boothCategory: 'Booth 2' });
     storageService.setWinningRegionBonus('North Region');
     openAdmin();
     expect(screen.getAllByText('School needed').length).toBeGreaterThan(0);
@@ -54,8 +54,8 @@ describe('MSP-43: team editor', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Save$/ }));
     expect(team('EduPath Labs')).toBeDefined();
 
-    fireEvent.change(screen.getByLabelText('Move EduPath Labs to booth'), { target: { value: 'HealthTech & Bio' } });
-    expect(team('EduPath Labs')!.boothCategory).toBe('HealthTech & Bio');
+    fireEvent.change(screen.getByLabelText('Move EduPath Labs to booth'), { target: { value: 'Booth 1' } });
+    expect(team('EduPath Labs')!.boothCategory).toBe('Booth 1');
   });
 
   it('removes a no-show, but never a team that already has scores', () => {

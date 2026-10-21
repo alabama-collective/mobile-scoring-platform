@@ -1,4 +1,5 @@
-import type { Competition, Judge, Round, Team } from '../types';
+import type { BoothDetails, Competition, Judge, Round, Team } from '../types';
+import { finalistTeams } from './finalists';
 
 // MSP-47, MSP-38, MSP-48 and Steph's stories B, C and D: who judges what.
 // Round 1 has booths. Each Round 1 judge has one booth and scores only the
@@ -13,6 +14,24 @@ export const boothList = (comp: Competition): string[] =>
 
 export const isFinaleJudge = (judge: Judge): boolean => judge.roster === 'finale';
 
+// Steph, Oct 20: booths are named "Booth 1" to "Booth 10", with the category
+// and the location (for example "Level 2, Bay 14") as separate fields.
+export const boothDetails = (comp: Competition, booth: string): BoothDetails =>
+  comp.rounds.find((r) => r.roundType === 'booth')?.boothDetails?.[booth] ?? {};
+
+// "Booth 1 · HealthTech & Bio", or just "Booth 1" when it has no category.
+export const boothLabel = (comp: Competition, booth: string): string => {
+  const { category } = boothDetails(comp, booth);
+  return category ? `${booth} · ${category}` : booth;
+};
+
+export const setBoothDetails = (comp: Competition, booth: string, details: BoothDetails): Competition => ({
+  ...comp,
+  rounds: comp.rounds.map((r) =>
+    r.roundType === 'booth' ? { ...r, boothDetails: { ...(r.boothDetails ?? {}), [booth]: details } } : r
+  ),
+});
+
 // The judges who score a round: Round 1 judges for the booth round, the
 // finale judge list for the finale.
 export const judgesForRound = (comp: Competition, round: Round | undefined): Judge[] =>
@@ -22,7 +41,8 @@ export const judgesForRound = (comp: Competition, round: Round | undefined): Jud
 // they have no booth). Finale: every team in the finale.
 export const teamsForJudge = (comp: Competition, round: Round, judge: Judge | undefined): Team[] => {
   if (!judge) return [];
-  if (round.roundType === 'finale') return isFinaleJudge(judge) ? comp.teams : [];
+  // Story A: the finale has only the booth winners (the finalists).
+  if (round.roundType === 'finale') return isFinaleJudge(judge) ? finalistTeams(comp) : [];
   if (isFinaleJudge(judge) || !judge.boothAssigned) return [];
   return comp.teams.filter((t) => t.boothCategory === judge.boothAssigned);
 };
@@ -62,7 +82,18 @@ export const renameBooth = (comp: Competition, from: string, to: string): Compet
   ...comp,
   rounds: comp.rounds.map((r) =>
     r.roundType === 'booth' && r.boothCategories
-      ? { ...r, boothCategories: r.boothCategories.map((b) => (b === from ? to : b)) }
+      ? {
+          ...r,
+          boothCategories: r.boothCategories.map((b) => (b === from ? to : b)),
+          // The category and location move with the booth.
+          ...(r.boothDetails
+            ? {
+                boothDetails: Object.fromEntries(
+                  Object.entries(r.boothDetails).map(([b, d]) => [b === from ? to : b, d])
+                ),
+              }
+            : {}),
+        }
       : r
   ),
   judges: comp.judges.map((j) => (!isFinaleJudge(j) && j.boothAssigned === from ? { ...j, boothAssigned: to } : j)),

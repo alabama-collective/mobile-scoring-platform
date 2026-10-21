@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from '../App';
 import { storageService, DATA_CHANGED_EVENT } from '../services/storageService';
+import { allTeamsInFinale } from './helpers';
 import {
   boothInUseMessage,
   boothUsage,
@@ -30,7 +31,7 @@ describe('Booths and who judges what', () => {
   it('C / MSP-48: a Round 1 judge sees only the teams at their booth', () => {
     const c = comp();
     const r1 = c.rounds[0];
-    const jordan = c.judges.find((j) => j.name === 'Jordan Lake')!; // CleanTech & Urban
+    const jordan = c.judges.find((j) => j.name === 'Jordan Lake')!; // Booth 3
     expect(teamsForJudge(c, r1, jordan).map((t) => t.name)).toEqual(['AgroPulse Sensors', 'Bham Solar Grid']);
   });
 
@@ -48,7 +49,7 @@ describe('Booths and who judges what', () => {
   it('C: the judge screen shows only the booth teams', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: /I'm a judge/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Morgan Hill' })); // HealthTech & Bio
+    fireEvent.click(screen.getByRole('button', { name: 'Morgan Hill' })); // Booth 1
     goLive(comp().rounds[0].id);
     expect(screen.getAllByText('HealthConnect Mobile').length).toBeGreaterThan(0);
     expect(screen.queryByText('AgroPulse Sensors')).toBeNull();
@@ -67,20 +68,33 @@ describe('Booths and who judges what', () => {
     expect(judgesForTeam(c, c.rounds[0], agro).map((j) => j.name)).toEqual(['Jordan Lake', 'Sam Ellis']);
     const sums = computeTeamSummaries(c, c.rounds[0], []);
     expect(sums.find((s) => s.team.id === agro.id)!.totalSubmissionsRequired).toBe(2);
-    expect(computeTeamSummaries(c, c.rounds[1], [])[0].totalSubmissionsRequired).toBe(2);
+    allTeamsInFinale();
+    const withFinalists = comp();
+    expect(computeTeamSummaries(withFinalists, withFinalists.rounds[1], [])[0].totalSubmissionsRequired).toBe(2);
   });
 
   it('MSP-47 / B: renaming a booth moves its judges and teams with it', () => {
-    const renamed = renameBooth(comp(), 'CleanTech & Urban', 'Booth 3');
-    expect(renamed.rounds[0].boothCategories).toContain('Booth 3');
-    expect(renamed.rounds[0].boothCategories).not.toContain('CleanTech & Urban');
-    expect(renamed.judges.filter((j) => j.boothAssigned === 'Booth 3').map((j) => j.name)).toEqual(['Jordan Lake', 'Sam Ellis']);
-    expect(renamed.teams.filter((t) => t.boothCategory === 'Booth 3')).toHaveLength(2);
+    const renamed = renameBooth(comp(), 'Booth 3', 'Booth 9');
+    expect(renamed.rounds[0].boothCategories).toContain('Booth 9');
+    expect(renamed.rounds[0].boothCategories).not.toContain('Booth 3');
+    expect(renamed.rounds[0].boothDetails!['Booth 9']).toEqual({ category: 'CleanTech & Urban', location: 'Level 2, Bay 14' });
+    expect(renamed.judges.filter((j) => j.boothAssigned === 'Booth 9').map((j) => j.name)).toEqual(['Jordan Lake', 'Sam Ellis']);
+    expect(renamed.teams.filter((t) => t.boothCategory === 'Booth 9')).toHaveLength(2);
+  });
+
+  it('Steph, Oct 20: each booth has its own category and location, editable by staff', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /^Staff$/ }));
+    expect((screen.getByLabelText('Category for Booth 1') as HTMLInputElement).value).toBe('HealthTech & Bio');
+    const loc = screen.getByLabelText('Location for Booth 1');
+    fireEvent.change(loc, { target: { value: 'Level 2, Bay 21' } });
+    fireEvent.blur(loc);
+    expect(comp().rounds[0].boothDetails!['Booth 1']).toEqual({ category: 'HealthTech & Bio', location: 'Level 2, Bay 21' });
   });
 
   it('MSP-47: a booth still in use is not removed, and staff see who uses it', () => {
-    const msg = boothInUseMessage('HealthTech & Bio', boothUsage(comp(), 'HealthTech & Bio'));
-    expect(msg).toBe('HealthTech & Bio still has 1 judge (Morgan Hill) and 1 team (HealthConnect Mobile). Move them first.');
+    const msg = boothInUseMessage('Booth 1', boothUsage(comp(), 'Booth 1'));
+    expect(msg).toBe('Booth 1 still has 1 judge (Morgan Hill) and 1 team (HealthConnect Mobile). Move them first.');
     expect(boothInUseMessage('Empty booth', boothUsage(comp(), 'Empty booth'))).toBeNull();
   });
 });

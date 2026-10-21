@@ -135,7 +135,7 @@ describe('Epic 2 & Epic 3 Acceptance Criteria Verification Suite', () => {
   it('MSP-06 and story H: tallies each booth automatically, sums the judges, and keeps an audit trail', () => {
     const comp = storageService.getCompetition();
     const round = comp.rounds[0];
-    // Both teams are in CleanTech & Urban, judged by Jordan Lake and Sam Ellis.
+    // Both teams are in Booth 3, judged by Jordan Lake and Sam Ellis.
     const teamA = comp.teams.find((t) => t.name === 'AgroPulse Sensors')!;
     const teamB = comp.teams.find((t) => t.name === 'Bham Solar Grid')!;
     const judge1 = comp.judges.find((j) => j.name === 'Jordan Lake')!;
@@ -168,7 +168,7 @@ describe('Epic 2 & Epic 3 Acceptance Criteria Verification Suite', () => {
 
     const booth = storageService
       .getTeamScoreSummaries(round.id)
-      .filter((s) => s.team.boothCategory === 'CleanTech & Urban');
+      .filter((s) => s.team.boothCategory === 'Booth 3');
     const [rank1, rank2] = booth;
 
     expect(rank1.team.id).toBe(teamA.id);
