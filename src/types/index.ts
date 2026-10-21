@@ -94,7 +94,7 @@ export interface Competition {
   teams: Team[];
   judges: Judge[];              // MSP-05, MSP-19: Official judge roster
   regions: string[];            // MSP-41: the region names (from src/config/regions.ts)
-  winningRegion?: string;       // MSP-35: Gift Classic winning region
+  winningRegion?: string;       // MSP-35: Give Classic winning region
   bonusPointsApplied: boolean;
 }
 

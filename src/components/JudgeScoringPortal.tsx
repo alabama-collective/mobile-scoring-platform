@@ -129,7 +129,9 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     !!selectedTeam &&
     isInRegion(selectedTeam, competition.winningRegion);
 
-  const finalTally = rawTotal + (isWinningRegion ? 5 : 0);
+  // MSP-42: the judge's total is their own score only. The Give Classic bonus
+  // is added once per team by the app, not by each judge.
+  const finalTally = rawTotal;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -325,7 +327,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         {isWinningRegion && (
           <div className="mt-1 inline-flex items-center space-x-1 bg-tac-gold-950 text-tac-gold-300 border border-tac-gold-700/60 px-2.5 py-0.5 rounded-xs text-[11px]">
             <Award className="w-3 h-3 text-tac-gold-500" />
-            <span>Gift Classic Bonus: <strong>+5 points added to Round 1</strong></span>
+            <span>Give Classic bonus ({competition.winningRegion}): <strong>+5 points added once by staff</strong></span>
           </div>
         )}
 
@@ -622,13 +624,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                 {finalTally}
               </span>
               <span className="text-xs text-tac-stone-400 font-medium">
-                / {maxPossible + (isWinningRegion ? 5 : 0)} pts
+                / {maxPossible} pts
               </span>
-              {isWinningRegion && (
-                <span className="text-[10px] text-tac-gold-300 font-semibold bg-tac-gold-900/60 px-1 py-0.5 rounded-xs ml-1">
-                  (+5 bonus)
-                </span>
-              )}
             </div>
           </div>
 

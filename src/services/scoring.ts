@@ -26,9 +26,11 @@ export const computeTeamSummaries = (
     const judgesTotal = teamSubs.reduce((acc, s) => acc + s.rawTotal, 0);
     const avg = subCount > 0 ? Number((judgesTotal / subCount).toFixed(2)) : 0;
 
-    // MSP-35: the bonus for the winning region, Round 1 only
+    // MSP-35: the bonus for the winning region, Round 1 only, once the team
+    // has at least one score (an unscored team shows 0, not just the bonus).
     const regionalBonus =
       round.roundType === 'booth' &&
+      subCount > 0 &&
       isInRegion(team, comp.winningRegion)
         ? GIVE_CLASSIC_BONUS
         : 0;

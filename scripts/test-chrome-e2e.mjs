@@ -324,9 +324,9 @@ async function run() {
     await client.captureScreenshot('09_results_finalized.png');
 
     // -------------------------------------------------------------
-    // TEST 9: Gift Classic Regional Bonus (+5 Points) (MSP-35)
+    // TEST 9: Give Classic Regional Bonus (+5 Points) (MSP-35)
     // -------------------------------------------------------------
-    console.log('\n[TEST 9] Testing Gift Classic Regional Bonus Panel (MSP-35)...');
+    console.log('\n[TEST 9] Testing Give Classic Regional Bonus Panel (MSP-35)...');
     await client.clickByText('button', 'Coordinator Admin');
     await client.wait(800);
 

@@ -28,19 +28,19 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
           <div className="flex items-center space-x-2">
             <Award className="w-5 h-5 text-tac-gold-500" />
             <h2 className="font-display font-bold text-base sm:text-lg text-tac-stone-100 uppercase tracking-wide">
-              Gift Classic Regional Bonus (MSP-35)
+              Give Classic Bonus (Round 1 only)
             </h2>
           </div>
           <p className="text-xs text-tac-stone-400 mt-1">
-            Designate the winning region from Gift Classic. Automatically applies a <strong>+5 bonus point award</strong> to
-            Round 1 scores for all competing teams from that region.
+            Pick the region that won the Give Classic. Every team whose team lead's school is in that region gets{' '}
+            <strong>+5 points, once</strong>, on its Round 1 total. The finale has no bonus.
           </p>
         </div>
 
         {bonusPointsApplied && winningRegion && (
           <div className="flex items-center space-x-2 bg-tac-gold-900/40 border border-tac-gold-700 px-3 py-1.5 rounded-xs text-tac-gold-300 text-xs">
             <ShieldCheck className="w-4 h-4 text-tac-gold-500" />
-            <span>Bonus Active: <strong>+5 Pts to {winningRegion}</strong></span>
+            <span>Bonus Active: <strong>+5 pts to {winningRegion}</strong></span>
           </div>
         )}
       </div>
@@ -48,7 +48,7 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
       {/* Selector Control */}
       <div className="bg-tac-ink-900 p-4 rounded-sm border border-tac-ink-700 space-y-3">
         <label className="text-xs text-tac-stone-300 font-semibold block">
-          Select Gift Classic Winning Region:
+          Give Classic winning region:
         </label>
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <select
@@ -56,7 +56,7 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
             onChange={handleRegionChange}
             className="bg-tac-ink-950 border border-tac-ink-700 text-tac-stone-100 text-xs rounded-xs px-3 py-2 focus:outline-none focus:border-tac-gold-700 flex-1"
           >
-            <option value="">-- No Winning Region Designated (0 bonus points) --</option>
+            <option value="">None</option>
             {regions.map((region) => (
               <option key={region} value={region}>
                 {region}
@@ -78,7 +78,7 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
       {/* Impacted Teams Table (MSP-35) */}
       <div className="space-y-2">
         <h4 className="text-xs font-display font-semibold text-tac-stone-300 uppercase tracking-wide">
-          Compromising Teams & Bonus Point Allocation (Round 1)
+          Teams and their Round 1 bonus
         </h4>
 
         <div className="border border-tac-ink-700 rounded-xs overflow-hidden">
@@ -87,7 +87,7 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
               <tr>
                 <th className="py-2.5 px-3">Team Name</th>
                 <th className="py-2.5 px-3">Region</th>
-                <th className="py-2.5 px-3">Booth Category</th>
+                <th className="py-2.5 px-3">Booth</th>
                 <th className="py-2.5 px-3 text-right">Round 1 Bonus</th>
               </tr>
             </thead>
