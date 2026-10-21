@@ -56,7 +56,7 @@ export const JudgeScoringPreview: React.FC<JudgeScoringPreviewProps> = ({
               Judge Mobile View Simulator
             </h2>
             <p className="text-[11px] text-tac-stone-400">
-              Live preview of inline rubric guidelines (MSP-12) and custom point ranges (MSP-10).
+              Live preview of inline rubric guidelines and custom point ranges.
             </p>
           </div>
         </div>

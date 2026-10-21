@@ -103,7 +103,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     fireEvent.click(reviewConfirmBtn);
 
     // Verify Finalize Modal
-    expect(screen.getByText(/Confirm & Lock Final Results \(MSP-34\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Confirm & Lock Final Results/i)).toBeInTheDocument();
     // The confirm guard (story A): only 1 score is in, so Confirm is locked
     // until staff give a reason.
     const confirmAnyway = screen.getByRole('button', { name: /Confirm anyway, with this reason/i });

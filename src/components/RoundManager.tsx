@@ -95,7 +95,7 @@ export const RoundManager: React.FC<RoundManagerProps> = ({
     if (!activeRound) return;
     if (status === 'live') {
       const confirmOpen = window.confirm(
-        `Are you sure you want to set "${activeRound.name}" to LIVE? This will lock the scoring rubric against further modifications while judges are scoring (MSP-32).`
+        `Are you sure you want to set "${activeRound.name}" to LIVE? This will lock the scoring rubric against further modifications while judges are scoring.`
       );
       if (!confirmOpen) return;
     }
