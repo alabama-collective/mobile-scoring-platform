@@ -1,4 +1,5 @@
 import type { Competition, JudgeScoreSubmission, Round, TeamScoreSummary } from '../types';
+import { judgesForTeam } from './booths';
 
 // The results calculation used by Live Results AND by the scores export script
 // (scripts/scores.ts), so the exported totals always match the screen exactly.
@@ -7,10 +8,9 @@ export const computeTeamSummaries = (
   round: Round,
   allSubs: JudgeScoreSubmission[]
 ): TeamScoreSummary[] => {
-  const activeJudges = comp.judges;
-  const totalRequired = activeJudges.length;
-
   const summaries: TeamScoreSummary[] = comp.teams.map((team) => {
+    // MSP-48: in Round 1 only the judges at the team's booth score it.
+    const totalRequired = judgesForTeam(comp, round, team).length;
     const teamSubs = allSubs.filter((s) => s.teamId === team.id);
     const subCount = teamSubs.length;
     const allDone = subCount >= totalRequired && totalRequired > 0;

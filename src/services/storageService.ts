@@ -254,6 +254,16 @@ class StorageService {
     return newJudge;
   }
 
+  // MSP-38: move a Round 1 judge to another booth (or to no booth).
+  updateJudge(judgeId: string, changes: Partial<Omit<Judge, 'id'>>): Judge | null {
+    const comp = this.getCompetition();
+    const judge = comp.judges.find((j) => j.id === judgeId);
+    if (!judge) return null;
+    Object.assign(judge, changes);
+    this.saveCompetition(comp);
+    return judge;
+  }
+
   removeJudge(judgeId: string): boolean {
     const comp = this.getCompetition();
     const beforeCount = comp.judges.length;

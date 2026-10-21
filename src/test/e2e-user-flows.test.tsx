@@ -63,8 +63,9 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     // The confirmation also shows in the bottom bar, where the judge tapped
     expect(screen.getByRole('status', { name: '' }).textContent).toMatch(/Saved: \d+\/50/);
 
-    // 7. Verify Auto-Advance to Next Team is available
-    expect(screen.getByText(/Score Next: HealthConnect Mobile/i)).toBeInTheDocument();
+    // 7. Verify Auto-Advance to Next Team is available. Jordan Lake judges
+    // CleanTech & Urban, so the next team is the other team in that booth (MSP-48).
+    expect(screen.getByText(/Score Next: Bham Solar Grid/i)).toBeInTheDocument();
 
     // 8. Switch to "Live Results" Tab (MSP-05, MSP-06, MSP-19, MSP-34)
     const liveResultsTabBtn = screen.getByRole('button', { name: /Live Results/i });
@@ -149,5 +150,6 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     await waitFor(() => {
       expect(screen.getByText('Collegiate Spring Showcase 2026')).toBeInTheDocument();
     });
-  });
+    // The whole journey takes about 5 seconds on a slow laptop, so it gets 20.
+  }, 20000);
 });

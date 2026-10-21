@@ -35,8 +35,11 @@ export interface Judge {
   id: string;
   name: string;
   email?: string;
-  boothAssigned?: string;       // For Round 1 booth grouping
+  boothAssigned?: string;       // MSP-38: Round 1 booth, picked from the booth list
+  roster?: JudgeRoster;         // Steph's story D: Round 1 judge (default) or finale judge
 }
+
+export type JudgeRoster = 'booth' | 'finale';
 
 export interface JudgeScoreSubmission {
   id: string;
@@ -73,7 +76,7 @@ export interface Round {
   status: RoundStatus;          // MSP-32: 'draft' | 'live' | 'completed'
   rubric: Rubric;
   isLocked: boolean;            // MSP-32: Locked when status is 'live'
-  boothCategories?: string[];   // Specific categories for pitch booths
+  boothCategories?: string[];   // MSP-47: the booth list for Round 1 (staff add, rename, remove)
   isResultsFinalized?: boolean; // MSP-34: Results confirmed by staff
   finalizedAt?: string;
   finalizedBy?: string;

@@ -3,6 +3,7 @@ import { Competition, Round, JudgeScoreSubmission } from '../types';
 import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
+import { judgesForRound, teamsForJudge, isFinaleJudge } from '../services/booths';
 import {
   CheckCircle2,
   Award,
@@ -31,8 +32,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   onScoreSubmitted,
   lockedJudgeId,
 }) => {
-  const judges = competition.judges;
-  const teams = competition.teams;
+  // Steph's story D: the Round 1 judge list for Round 1, the finale list for the finale.
+  const judges = judgesForRound(competition, activeRound);
 
   // Active Judge state
   const [selectedJudgeId, setSelectedJudgeId] = useState<string>(() => {
@@ -41,6 +42,9 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
   const effectiveJudgeId = lockedJudgeId ?? selectedJudgeId;
   const currentJudge = judges.find((j) => j.id === effectiveJudgeId) || judges[0];
+
+  // MSP-48 and story C: a Round 1 judge sees only the teams at their booth.
+  const teams = teamsForJudge(competition, activeRound, currentJudge);
 
   // Active Team state (MSP-21)
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teams[0]?.id || '');
@@ -172,6 +176,27 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   const mySubmissions = storageService
     .getAllSubmissions()
     .filter((s) => s.judgeId === currentJudge?.id && s.roundId === activeRound.id);
+
+  if (!selectedTeam) {
+    const noBooth = activeRound.roundType === 'booth' && !!currentJudge && !isFinaleJudge(currentJudge) && !currentJudge.boothAssigned;
+    return (
+      <div className="max-w-xl mx-auto bg-tac-ink-800 border border-tac-ink-700 rounded-sm p-6 text-center space-y-3">
+        <AlertTriangle className="w-8 h-8 text-tac-gold-500 mx-auto" />
+        <h2 className="font-display font-bold text-lg text-white">
+          {!currentJudge
+            ? 'No judges have been added for this round yet'
+            : noBooth
+            ? 'Ask staff to assign you a booth'
+            : activeRound.roundType === 'booth'
+            ? `No teams are in ${currentJudge.boothAssigned} yet`
+            : 'No teams are in the finale yet'}
+        </h2>
+        <p className="text-sm text-tac-stone-300">
+          This screen updates by itself as soon as staff make the change. You can leave it open.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-3.5 pb-20">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, UserCheck } from 'lucide-react';
 import type { Competition, Judge, Round } from '../types';
+import { isFinaleJudge } from '../services/booths';
 
 const BRAND = `${import.meta.env.BASE_URL}brand/`;
 
@@ -65,8 +66,9 @@ export const RoundPicker: React.FC<{ rounds: Round[]; onPick: (id: string) => vo
 // The judge picks their own name once. The phone remembers it.
 export const JudgeNamePicker: React.FC<{ judges: Judge[]; onPick: (id: string) => void }> = ({ judges, onPick }) => {
   const groups = new Map<string, Judge[]>();
-  judges.forEach((j) => {
-    const key = j.boothAssigned || '';
+  // Round 1 judges grouped by booth, then the finale judges.
+  [...judges.filter((j) => !isFinaleJudge(j)), ...judges.filter(isFinaleJudge)].forEach((j) => {
+    const key = isFinaleJudge(j) ? 'Finale judges' : j.boothAssigned || '';
     groups.set(key, [...(groups.get(key) || []), j]);
   });
   return (
