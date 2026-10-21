@@ -25,6 +25,7 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  setLogLevel,
   updateDoc,
   writeBatch,
 } from 'firebase/firestore';
@@ -101,6 +102,9 @@ const main = async () => {
   const app = initializeApp(config);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  // Firestore prints harmless internal warnings (for example "BloomFilter error"
+  // after a collection is emptied) that look alarming to staff. Show errors only.
+  setLogLevel('error');
   if (emulator) {
     connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
