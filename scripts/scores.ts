@@ -215,6 +215,8 @@ const main = async () => {
         'competition.winningRegion': deleteField(),
         'competition.bonusPointsApplied': false,
         liveRounds: {},
+        // The floor support rules read this to keep the finale from Round 1-only viewers.
+        roundTypes: Object.fromEntries(comp.rounds.map((r) => [r.id, r.roundType])),
       });
       // Judge email addresses go with the judges. The viewer list is not touched.
       await updateDoc(doc(db, 'competitions', COMPETITION_DOC_ID, 'private', 'contacts'), { judgeEmails: {} }).catch(() => undefined);

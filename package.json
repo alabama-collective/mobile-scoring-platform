@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:rules": "npx -y firebase-tools@13 emulators:exec --only firestore --project demo-tac-scoring \"vitest run --config vitest.rules.config.ts\"",
+    "test:rules": "npx -y firebase-tools@13 emulators:exec --config firebase.rules-test.json --only firestore --project demo-tac-rules \"vitest run --config vitest.rules.config.ts\"",
     "dev:cloud": "npx -y firebase-tools@13 emulators:exec --only auth,firestore --project demo-tac-scoring \"vite --mode emulator\"",
     "scores:export": "tsx scripts/scores.ts export",
     "scores:clear": "tsx scripts/scores.ts clear",
