@@ -294,20 +294,32 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <th className="py-2.5 px-3 text-center w-12">Rank</th>
                 <th className="py-2.5 px-3">Team Name</th>
                 <th className="py-2.5 px-2">Booth / Track</th>
-                <th className="py-2.5 px-2 text-center">Judge Avg</th>
+                <th className="py-2.5 px-2 text-center">Judges' total</th>
                 <th className="py-2.5 px-2 text-center">Regional Bonus</th>
                 <th className="py-2.5 px-3 text-right">Final Score</th>
                 <th className="py-2.5 px-3 text-center">Audit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-tac-ink-700 bg-tac-ink-900/60">
-              {summaries.map((summary) => {
-                const isLeader = summary.rank === 1;
+              {summaries.map((summary, idx) => {
+                // No winner label until the team has at least one score.
+                const isLeader = summary.rank === 1 && summary.submissionCount > 0;
+                // Story H: in Round 1 each booth is ranked on its own, under its own heading.
+                const newBooth =
+                  activeRound.roundType === 'booth' &&
+                  (idx === 0 || summaries[idx - 1].team.boothCategory !== summary.team.boothCategory);
 
                 return (
+                  <React.Fragment key={summary.team.id}>
+                  {newBooth && (
+                    <tr className="bg-tac-ink-950">
+                      <td colSpan={7} className="py-2 px-3 text-[11px] font-bold uppercase tracking-widest text-tac-gold-500">
+                        {summary.team.boothCategory || 'No booth'}
+                      </td>
+                    </tr>
+                  )}
                   <tr
-                    key={summary.team.id}
-                    className={`transition-colors ${
+                      className={`transition-colors ${
                       isLeader ? 'bg-tac-gold-950/20' : 'hover:bg-tac-ink-900'
                     }`}
                   >
@@ -337,7 +349,10 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       {summary.team.boothCategory}
                     </td>
                     <td className="py-2.5 px-2 text-center font-mono font-semibold text-tac-stone-200">
-                      {summary.averageScore} pts
+                      {summary.judgesTotal} pts
+                      <span className="block text-[10px] text-tac-stone-500 font-normal">
+                        {summary.submissionCount} of {summary.totalSubmissionsRequired} judges
+                      </span>
                     </td>
                     <td className="py-2.5 px-2 text-center">
                       {summary.regionalBonus > 0 ? (
@@ -362,6 +377,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       </button>
                     </td>
                   </tr>
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -395,8 +411,8 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
               <div>
                 <span className="text-tac-stone-400 block">Calculation Method:</span>
                 <span className="text-tac-stone-200">
-                  Average of {selectedAuditTeam.judgeScores.length} judges ({selectedAuditTeam.averageScore} pts) +{' '}
-                  {selectedAuditTeam.regionalBonus} Regional Bonus
+                  Sum of {selectedAuditTeam.judgeScores.length} judges' scores ({selectedAuditTeam.judgesTotal} pts) +{' '}
+                  {selectedAuditTeam.regionalBonus} Give Classic bonus
                 </span>
               </div>
               <div className="text-right">
@@ -519,7 +535,17 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
               <div className="bg-tac-ink-950 p-3 rounded-xs border border-tac-ink-800 text-xs text-tac-stone-400 space-y-1">
                 <span className="font-bold text-tac-stone-200 block">Verification Summary:</span>
                 <p>• {summaries.length} competing teams scored</p>
-                <p>• Winner: <strong>{summaries[0]?.team.name}</strong> ({summaries[0]?.finalScore} pts)</p>
+                {activeRound.roundType === 'booth' ? (
+                  summaries
+                    .filter((s) => s.rank === 1)
+                    .map((s) => (
+                      <p key={s.team.id}>
+                        • {s.team.boothCategory || 'No booth'} winner: <strong>{s.team.name}</strong> ({s.finalScore} pts)
+                      </p>
+                    ))
+                ) : (
+                  <p>• Winner: <strong>{summaries[0]?.team.name}</strong> ({summaries[0]?.finalScore} pts)</p>
+                )}
                 <p>• Regional bonus applied: <strong>{competition.bonusPointsApplied ? competition.winningRegion : 'None'}</strong></p>
               </div>
 

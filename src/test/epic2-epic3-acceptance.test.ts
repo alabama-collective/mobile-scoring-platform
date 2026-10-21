@@ -132,13 +132,16 @@ describe('Epic 2 & Epic 3 Acceptance Criteria Verification Suite', () => {
     expect(updatedTeam1?.submissionCount).toBe(2);
   });
 
-  it('MSP-06: Tallies scores automatically with an audit trail and ranks teams', () => {
+  it('MSP-06 and story H: tallies each booth automatically, sums the judges, and keeps an audit trail', () => {
     const comp = storageService.getCompetition();
     const round = comp.rounds[0];
-    const [teamA, teamB] = comp.teams;
-    const [judge1, judge2] = comp.judges;
+    // Both teams are in CleanTech & Urban, judged by Jordan Lake and Sam Ellis.
+    const teamA = comp.teams.find((t) => t.name === 'AgroPulse Sensors')!;
+    const teamB = comp.teams.find((t) => t.name === 'Bham Solar Grid')!;
+    const judge1 = comp.judges.find((j) => j.name === 'Jordan Lake')!;
+    const judge2 = comp.judges.find((j) => j.name === 'Sam Ellis')!;
 
-    // Team A gets scores of 40 and 50 (Avg: 45)
+    // Team A gets 40 and 50: a judges' total of 90
     storageService.submitJudgeScore({
       judgeId: judge1.id,
       judgeName: judge1.name,
@@ -154,7 +157,7 @@ describe('Epic 2 & Epic 3 Acceptance Criteria Verification Suite', () => {
       scores: { 'crit-clarity': 10, 'crit-market': 10, 'crit-feasibility': 10, 'crit-differentiation': 10, 'crit-delivery': 10 },
     });
 
-    // Team B gets score of 30 from judge 1 (Avg: 30)
+    // Team B gets 30 from judge 1 only
     storageService.submitJudgeScore({
       judgeId: judge1.id,
       judgeName: judge1.name,
@@ -163,17 +166,19 @@ describe('Epic 2 & Epic 3 Acceptance Criteria Verification Suite', () => {
       scores: { 'crit-clarity': 10, 'crit-market': 10, 'crit-feasibility': 10 },
     });
 
-    const summaries = storageService.getTeamScoreSummaries(round.id);
-    const rank1 = summaries[0];
-    const rank2 = summaries[1];
+    const booth = storageService
+      .getTeamScoreSummaries(round.id)
+      .filter((s) => s.team.boothCategory === 'CleanTech & Urban');
+    const [rank1, rank2] = booth;
 
     expect(rank1.team.id).toBe(teamA.id);
-    expect(rank1.averageScore).toBe(45);
+    expect(rank1.judgesTotal).toBe(90);
+    expect(rank1.finalScore).toBe(90);
     expect(rank1.judgeScores.length).toBe(2); // Audit trail contains 2 entries
     expect(rank1.rank).toBe(1);
 
     expect(rank2.team.id).toBe(teamB.id);
-    expect(rank2.averageScore).toBe(30);
+    expect(rank2.judgesTotal).toBe(30);
     expect(rank2.judgeScores.length).toBe(1);
     expect(rank2.rank).toBe(2);
   });

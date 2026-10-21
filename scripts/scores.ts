@@ -120,7 +120,7 @@ const main = async () => {
 
     const resultsRows: unknown[][] = [[
       'Round', 'Round status', 'Rank', 'Team', 'Region', 'Booth category', 'Scores in', 'Judges',
-      'Average score', 'Give Classic bonus', 'Final score', 'Results confirmed by', 'Confirmed at',
+      'Judges total', 'Give Classic bonus', 'Final score', 'Results confirmed by', 'Confirmed at',
     ]];
     const scoreRows: unknown[][] = [[
       'Round', 'Team', 'Judge', 'Criterion', 'Points', 'Max points', 'Judge total', 'Worked well', 'Could improve', 'Submitted at', 'Updated at',
@@ -130,7 +130,7 @@ const main = async () => {
       for (const s of computeTeamSummaries(comp, round, roundSubs)) {
         resultsRows.push([
           round.name, round.status, s.rank, s.team.name, s.team.region, s.team.boothCategory,
-          s.submissionCount, s.totalSubmissionsRequired, s.averageScore, s.regionalBonus, s.finalScore,
+          s.submissionCount, s.totalSubmissionsRequired, s.judgesTotal, s.regionalBonus, s.finalScore,
           round.finalizedBy ?? '', round.finalizedAt ?? '',
         ]);
       }
