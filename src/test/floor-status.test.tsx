@@ -62,6 +62,16 @@ describe('Which scores are in, booth by booth', () => {
     expect(boardRound(live, 'all').round?.roundType).toBe('finale');
     expect(boardRound(withLive(comp(), 0), 'round1').round?.roundType).toBe('booth');
   });
+
+  it('a Round 1-only viewer is done once Round 1 closes, before the finale opens', () => {
+    const c = comp();
+    const closed = { ...c, rounds: c.rounds.map((r, i) => (i === 0 ? { ...r, status: 'completed' as const } : r)) };
+    expect(boardRound(closed, 'round1')).toEqual({ finaleHidden: true });
+    expect(boardRound(closed, 'all').round?.roundType).toBe('booth');
+    render(<FloorStatusBoard competition={closed} scope="round1" marks={[]} />);
+    expect(screen.getByText('Pitch booth judging is complete.')).toBeInTheDocument();
+    expect(screen.queryByText(/finale is under way/)).not.toBeInTheDocument();
+  });
 });
 
 describe('The status board screen', () => {

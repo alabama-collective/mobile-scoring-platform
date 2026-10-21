@@ -107,6 +107,10 @@ export const boardRound = (
   if (liveAllowed) return { round: liveAllowed, finaleHidden: false };
   const finaleLive = live.some((r) => r.roundType === 'finale');
   if (finaleLive) return { finaleHidden: true }; // a Round 1 viewer during the finale
+  // Thursday test, step 3.8: once Round 1 is closed, a Round 1 viewer is done
+  // too, before the finale opens.
+  const booth = comp.rounds.find((r) => r.roundType === 'booth');
+  if (scope === 'round1' && booth?.status === 'completed') return { finaleHidden: true };
   return { round: comp.rounds.find((r) => r.roundType === 'booth') ?? comp.rounds[0], finaleHidden: false };
 };
 
