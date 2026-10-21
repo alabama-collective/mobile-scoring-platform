@@ -167,7 +167,11 @@ const main = async () => {
     const typed = await ask('Type CLEAR to continue, or anything else to stop: ');
     if (typed !== 'CLEAR') fail('you did not type CLEAR. Nothing was cleared.');
 
-    const docs = subsSnap.docs;
+    // The floor support board's status records go with the scores.
+    const statusDocs = (
+      await Promise.all(comp.rounds.map((r) => getDocs(collection(db, 'competitions', COMPETITION_DOC_ID, 'rounds', r.id, 'status'))))
+    ).flatMap((snap) => snap.docs);
+    const docs = [...subsSnap.docs, ...statusDocs];
     for (let i = 0; i < docs.length; i += 400) {
       const batch = writeBatch(db);
       docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));

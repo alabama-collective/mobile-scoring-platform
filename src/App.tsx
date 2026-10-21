@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Competition, Rubric, RoundStatus, RubricTemplate } from './types';
 import { storageService, DATA_CHANGED_EVENT } from './services/storageService';
-import { useCloudState, staffSignOut } from './services/cloud';
+import { useCloudState, staffSignOut, saveViewer, removeViewer } from './services/cloud';
 import { StaffSignIn } from './components/StaffSignIn';
 import { StartScreen } from './components/StartScreen';
 import { JudgeHeader, JudgingNotStarted, JudgeNamePicker, RoundPicker } from './components/JudgeShell';
@@ -14,10 +14,12 @@ import { JudgeScoringPortal } from './components/JudgeScoringPortal';
 import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
 import { TeamEditor } from './components/TeamEditor';
+import { FloorStatusPage } from './components/FloorStatusBoard';
+import { FloorSupportViewers } from './components/FloorSupportViewers';
 import { renameBooth, isFinaleJudge, setBoothDetails, boothLabel } from './services/booths';
 import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
-type Mode = 'start' | 'judge' | 'staff';
+type Mode = 'start' | 'judge' | 'staff' | 'status';
 const MODE_KEY = 'tac_mode_v1';
 const JUDGE_KEY = 'tac_current_judge_id';
 const JUDGE_ROUND_KEY = 'tac_judge_round_v1';
@@ -43,6 +45,9 @@ const initialMode = (): Mode => {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
   if (hash === '#/judge' || (typeof window !== 'undefined' && window.location.search.includes('mode=judge'))) return 'judge';
   if (hash === '#/staff') return 'staff';
+  // Floor support status board (Steph, Oct 20). Never remembered as the
+  // phone's mode, so a judge's phone is never stuck on it.
+  if (hash === '#/status') return 'status';
   const saved = read(MODE_KEY);
   return saved === 'judge' || saved === 'staff' ? saved : 'start';
 };
@@ -212,6 +217,12 @@ export const App: React.FC = () => {
     .getAllSubmissions()
     .filter((s) => s.roundId === activeRound?.id);
 
+  // ---- Floor support status board (Steph, Oct 20) -----------------------------
+  // A Google sign in is only ever floor support, so it always lands here.
+  if (mode === 'status' || cloud.viewerEmail) {
+    return <FloorStatusPage competition={competition} />;
+  }
+
   // ---- MSP-46: start screen -------------------------------------------------
   if (mode === 'start') {
     return <StartScreen competitionName={competition.name} onJudge={() => setMode('judge')} onStaff={() => setMode('staff')} />;
@@ -379,6 +390,9 @@ export const App: React.FC = () => {
 
             {/* Team editor (MSP-43) */}
             <TeamEditor competition={competition} onUpdateCompetition={setCompetition} />
+
+            {/* Floor support access (Steph, Oct 20) */}
+            <FloorSupportViewers enabled={cloud.enabled} viewers={cloud.viewers} onSave={saveViewer} onRemove={removeViewer} />
 
             {/* Give Classic Regional Bonus Panel (MSP-35) */}
             <RegionalBonusPanel

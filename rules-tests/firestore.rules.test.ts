@@ -48,9 +48,12 @@ const seed = async (liveRounds: Record<string, boolean>) => {
 };
 
 beforeAll(async () => {
+  // Its own test database (firebase.rules-test.json, port 8180), so clearing it
+  // between tests never touches the preview's practice data on port 8080.
+  const [host, port] = (process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8180').split(':');
   env = await initializeTestEnvironment({
-    projectId: 'demo-tac-scoring',
-    firestore: { rules: readFileSync('firestore.rules', 'utf8'), host: '127.0.0.1', port: 8080 },
+    projectId: 'demo-tac-rules',
+    firestore: { rules: readFileSync('firestore.rules', 'utf8'), host, port: Number(port) },
   });
 });
 afterAll(async () => env?.cleanup());
