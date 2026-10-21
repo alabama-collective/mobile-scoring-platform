@@ -13,6 +13,7 @@ import { TemplateManager } from './components/TemplateManager';
 import { JudgeScoringPortal } from './components/JudgeScoringPortal';
 import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
+import { TeamEditor } from './components/TeamEditor';
 import { renameBooth, isFinaleJudge } from './services/booths';
 import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
@@ -346,6 +347,9 @@ export const App: React.FC = () => {
               onUpdateCompetition={setCompetition}
               onSwitchToJudgeView={() => setActiveTab('judge')}
             />
+
+            {/* Team editor (MSP-43) */}
+            <TeamEditor competition={competition} onUpdateCompetition={setCompetition} />
 
             {/* Gift Classic Regional Bonus Panel (MSP-35) */}
             <RegionalBonusPanel
