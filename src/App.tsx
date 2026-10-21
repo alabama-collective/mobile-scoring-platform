@@ -71,7 +71,8 @@ export const App: React.FC = () => {
     const liveRound = comp.rounds.find((r) => r.status === 'live');
     return liveRound ? liveRound.id : comp.rounds[0]?.id || 'round-1';
   });
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // Bumped when data changes, so the screens redraw with fresh data.
+  const [, setRefreshTrigger] = useState(0);
   const cloud = useCloudState();
 
   // MSP-45: another device changed the shared data, so re-read the local copy.
@@ -391,7 +392,9 @@ export const App: React.FC = () => {
         {activeTab === 'live' && activeRound && !needsStaff && (
           <div className="animate-fade-in">
             <LiveSubmissionBoard
-              key={refreshTrigger}
+              // Redraw in place when data changes, so an open window or typed reason is kept.
+              // A new round starts fresh.
+              key={activeRound.id}
               competition={competition}
               activeRound={activeRound}
               onRefreshData={() => setRefreshTrigger((prev) => prev + 1)}
