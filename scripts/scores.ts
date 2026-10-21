@@ -24,6 +24,7 @@ import {
 } from 'firebase/firestore';
 import { COMPETITION_DOC_ID, STAFF_EMAIL, firebaseConfig } from '../src/config/firebase';
 import { computeTeamSummaries } from '../src/services/scoring';
+import { teamRegion } from '../src/services/regions';
 import type { Competition, JudgeScoreSubmission } from '../src/types';
 
 const args = process.argv.slice(2);
@@ -119,7 +120,7 @@ const main = async () => {
     const teamName = (id: string) => comp.teams.find((t) => t.id === id)?.name ?? id;
 
     const resultsRows: unknown[][] = [[
-      'Round', 'Round status', 'Rank', 'Team', 'Region', 'Booth category', 'Scores in', 'Judges',
+      'Round', 'Round status', 'Rank', 'Team', 'School', 'Region', 'Booth', 'Scores in', 'Judges',
       'Judges total', 'Give Classic bonus', 'Final score', 'Results confirmed by', 'Confirmed at',
     ]];
     const scoreRows: unknown[][] = [[
@@ -129,7 +130,7 @@ const main = async () => {
       const roundSubs = subs.filter((s) => s.roundId === round.id);
       for (const s of computeTeamSummaries(comp, round, roundSubs)) {
         resultsRows.push([
-          round.name, round.status, s.rank, s.team.name, s.team.region, s.team.boothCategory,
+          round.name, round.status, s.rank, s.team.name, s.team.school ?? '', teamRegion(s.team), s.team.boothCategory,
           s.submissionCount, s.totalSubmissionsRequired, s.judgesTotal, s.regionalBonus, s.finalScore,
           round.finalizedBy ?? '', round.finalizedAt ?? '',
         ]);

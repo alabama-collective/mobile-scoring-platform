@@ -115,12 +115,12 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     const adminTabBtn = screen.getByRole('button', { name: /Admin/i });
     fireEvent.click(adminTabBtn);
 
-    // Select "Black Belt" as winning region
+    // Select the South Region as winning region (AgroPulse's school is in it)
     const regionSelect = screen.getByDisplayValue(/No Winning Region Designated/i);
-    fireEvent.change(regionSelect, { target: { value: 'Black Belt' } });
+    fireEvent.change(regionSelect, { target: { value: 'South Region' } });
 
     expect(screen.getByText(/Bonus Active:/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/\+5 pts to black belt/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/\+5 pts to south region/i).length).toBeGreaterThanOrEqual(2);
 
     // Verify on Live Results tab that +5 bonus is reflected in leaderboard
     fireEvent.click(screen.getByRole('button', { name: /Live Results/i }));

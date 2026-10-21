@@ -25,7 +25,8 @@ export interface Rubric {
 export interface Team {
   id: string;
   name: string;
-  region: string;               // MSP-35: Winning region bonus tracking
+  school?: string;              // MSP-41/43: team lead's school, from src/config/regions.ts
+  region?: string;              // Before MSP-41 regions were typed by hand. Unused now: the region comes from the school.
   boothCategory: string;        // Round 1 booth classification
   founderNames?: string;
   bonusPoints: number;          // MSP-35: 5 bonus points when region wins
@@ -92,7 +93,7 @@ export interface Competition {
   rounds: Round[];
   teams: Team[];
   judges: Judge[];              // MSP-05, MSP-19: Official judge roster
-  regions: string[];
+  regions: string[];            // MSP-41: the region names (from src/config/regions.ts)
   winningRegion?: string;       // MSP-35: Gift Classic winning region
   bonusPointsApplied: boolean;
 }

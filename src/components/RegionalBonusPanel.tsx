@@ -1,6 +1,7 @@
 import React from 'react';
 import { Competition } from '../types';
 import { Award, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { REGION_NAMES, isInRegion, teamRegion } from '../services/regions';
 
 interface RegionalBonusPanelProps {
   competition: Competition;
@@ -11,7 +12,9 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
   competition,
   onSelectWinningRegion,
 }) => {
-  const { regions, winningRegion, teams, bonusPointsApplied } = competition;
+  const { winningRegion, teams, bonusPointsApplied } = competition;
+  // MSP-41: the regions come from src/config/regions.ts, never typed by hand.
+  const regions = REGION_NAMES;
 
   const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -90,7 +93,7 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
             </thead>
             <tbody className="divide-y divide-tac-ink-700 bg-tac-ink-900/60">
               {teams.map((team) => {
-                const isWinner = winningRegion && team.region.toLowerCase() === winningRegion.toLowerCase();
+                const isWinner = isInRegion(team, winningRegion);
                 return (
                   <tr
                     key={team.id}
@@ -107,7 +110,7 @@ export const RegionalBonusPanel: React.FC<RegionalBonusPanelProps> = ({
                           ? 'bg-tac-gold-900/60 text-tac-gold-300 font-semibold border border-tac-gold-700/60'
                           : 'bg-tac-ink-800 text-tac-stone-400'
                       }`}>
-                        {team.region}
+                        {teamRegion(team) || 'School needed'}
                       </span>
                     </td>
                     <td className="py-2 px-3 text-tac-stone-400">

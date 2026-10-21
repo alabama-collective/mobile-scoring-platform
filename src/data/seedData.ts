@@ -1,4 +1,5 @@
 import { Competition, RubricTemplate, ScoringScaleAnchor, Criterion, Judge } from '../types';
+import { REGION_NAMES } from '../services/regions';
 
 export const OFFICIAL_SCALE_ANCHORS: ScoringScaleAnchor[] = [
   { range: '9–10', label: 'Exceptional', description: 'Clear, specific, convincing.' },
@@ -63,7 +64,7 @@ export const INITIAL_COMPETITION: Competition = {
   date: 'Thursday, October 29, 2026',
   location: 'Topgolf Birmingham, Signature Room',
   programDirector: 'Avery Quinn',
-  regions: ['North Alabama', 'Central Alabama', 'Black Belt', 'Gulf Coast'],
+  regions: REGION_NAMES, // MSP-41
   winningRegion: undefined,
   bonusPointsApplied: false,
   judges: INITIAL_JUDGES,
@@ -98,7 +99,7 @@ export const INITIAL_COMPETITION: Competition = {
     {
       id: 'team-1',
       name: 'AgroPulse Sensors',
-      region: 'Black Belt',
+      school: 'Tuskegee University',
       boothCategory: 'CleanTech & Urban',
       founderNames: 'Marcus Vance & Jada Hayes',
       bonusPoints: 0,
@@ -106,7 +107,7 @@ export const INITIAL_COMPETITION: Competition = {
     {
       id: 'team-2',
       name: 'HealthConnect Mobile',
-      region: 'Central Alabama',
+      school: 'Alabama State University',
       boothCategory: 'HealthTech & Bio',
       founderNames: 'Alana Robinson',
       bonusPoints: 0,
@@ -114,7 +115,7 @@ export const INITIAL_COMPETITION: Competition = {
     {
       id: 'team-3',
       name: 'EduPath Pathways',
-      region: 'North Alabama',
+      school: 'Alabama A&M University',
       boothCategory: 'FinTech & EdTech',
       founderNames: 'Darius Washington',
       bonusPoints: 0,
@@ -122,7 +123,7 @@ export const INITIAL_COMPETITION: Competition = {
     {
       id: 'team-4',
       name: 'Gulf Coast Cold Chain',
-      region: 'Gulf Coast',
+      school: 'Bishop State Community College',
       boothCategory: 'Consumer & Lifestyle',
       founderNames: 'Serena Davis',
       bonusPoints: 0,
@@ -130,7 +131,7 @@ export const INITIAL_COMPETITION: Competition = {
     {
       id: 'team-5',
       name: 'Bham Solar Grid',
-      region: 'Central Alabama',
+      school: 'Miles College',
       boothCategory: 'CleanTech & Urban',
       founderNames: 'Kobe Bryant Jr.',
       bonusPoints: 0,
