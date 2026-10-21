@@ -88,7 +88,10 @@ export const FloorStatusBoard: React.FC<{
       <Card>
         <CheckCircle2 className="w-8 h-8 text-green-400 mx-auto" />
         <h2 className="font-display font-bold text-lg text-white">Pitch booth judging is complete.</h2>
-        <p className="text-sm text-tac-stone-300">The finale is under way. Thank you for your help on the floor.</p>
+        <p className="text-sm text-tac-stone-300">
+          {competition.rounds.some((r) => r.roundType === 'finale' && r.status === 'live') ? 'The finale is under way. ' : ''}
+          Thank you for your help on the floor.
+        </p>
       </Card>
     );
   }
