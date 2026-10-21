@@ -1,7 +1,7 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle2, LogOut, MapPin, Radio } from 'lucide-react';
 import type { Competition } from '../types';
-import { useCloudState, viewerSignIn, viewerSignOut } from '../services/cloud';
+import { staffWatchStatus, useCloudState, viewerSignIn, viewerSignOut } from '../services/cloud';
 import { boardRound, roundStatus, VIEWER_SCOPE_LABEL, type StatusMark, type ViewerScope } from '../services/floorStatus';
 
 const BRAND = `${import.meta.env.BASE_URL}brand/`;
@@ -198,6 +198,13 @@ export const FloorStatusPage: React.FC<{ competition: Competition }> = ({ compet
     if (!r.ok) setMessage(r.message);
   };
   const signOut = () => void viewerSignOut();
+  // A phone or laptop already signed in as staff sees the board straight away.
+  const staffView = cloud.enabled && cloud.isStaff && !cloud.viewerEmail;
+  React.useEffect(() => {
+    if (!staffView) return;
+    staffWatchStatus(true);
+    return () => staffWatchStatus(false);
+  }, [staffView]);
 
   let body: React.ReactNode;
   if (!cloud.enabled)
@@ -205,6 +212,18 @@ export const FloorStatusPage: React.FC<{ competition: Competition }> = ({ compet
       <Card>
         <p className="text-sm text-tac-stone-300">The status board needs the shared database. Open it on the live site.</p>
       </Card>
+    );
+  else if (staffView)
+    body = (
+      <div className="space-y-3">
+        <p className="max-w-xl mx-auto text-xs text-tac-stone-400">
+          You are signed in as staff on this device, so you see every round.{' '}
+          <a href="#/staff" className="text-tac-gold-400 underline underline-offset-2">
+            Back to the staff screen
+          </a>
+        </p>
+        <FloorStatusBoard competition={competition} scope="all" marks={cloud.statusMarks} connected={cloud.connected} />
+      </div>
     );
   else if (!cloud.viewerEmail) body = <FloorSignIn onSignIn={signIn} message={message} busy={busy} />;
   else if (cloud.viewerScope === undefined) body = <FloorChecking />;

@@ -295,6 +295,16 @@ const watchStatus = (comp: Competition | null, scope: ViewerScope | null | undef
     );
 };
 
+// Staff opening the status link see the board with their staff sign in, for
+// every round. Only while the status page is open.
+let staffStatusOn = false;
+export const staffWatchStatus = (on: boolean) => {
+  staffStatusOn = on;
+  if (state.viewerEmail) return;
+  if (on && state.isStaff) watchStatus(remoteCompetition, 'all');
+  else if (!on) stopStatus();
+};
+
 const listenViewer = (u: User) => {
   const email = normalizeEmail(u.email || '');
   setState({ viewerEmail: email, viewerScope: undefined });
@@ -333,6 +343,7 @@ const listen = (u: User) => {
           remoteCompetition = snap.data().competition as Competition;
           applyCompetition();
           if (viewer) watchStatus(remoteCompetition, state.viewerScope);
+          else if (staff && staffStatusOn) watchStatus(remoteCompetition, 'all');
         } else if (staff && !snap.metadata.fromCache) {
           // First staff sign in on an empty database: start from the app's
           // clean defaults, never from whatever an old browser still holds

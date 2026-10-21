@@ -116,6 +116,14 @@ describe('The status board screen', () => {
     expect(screen.getByText('Floor support')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Staff$/ })).not.toBeInTheDocument();
   });
+
+  it('the status link opens the board even when the app is already open on another screen', async () => {
+    render(<App />);
+    expect(screen.queryByText('Floor support')).not.toBeInTheDocument();
+    window.location.hash = '#/status';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(await screen.findByText('Floor support')).toBeInTheDocument();
+  });
 });
 
 describe('Floor support access, the staff panel', () => {

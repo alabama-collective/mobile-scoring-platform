@@ -58,6 +58,15 @@ export const App: React.FC = () => {
     setModeState(m);
     write(MODE_KEY, m === 'start' ? null : m);
   };
+  // A link tapped while the app is already open changes only the hash, and the
+  // page does not reload. Follow it, so the status link always opens the board.
+  useEffect(() => {
+    const follow = () => {
+      if (['#/status', '#/staff', '#/judge'].includes(window.location.hash)) setModeState(initialMode());
+    };
+    window.addEventListener('hashchange', follow);
+    return () => window.removeEventListener('hashchange', follow);
+  }, []);
   const [judgeId, setJudgeIdState] = useState<string | null>(() => read(JUDGE_KEY));
   const setJudgeId = (id: string | null) => {
     setJudgeIdState(id);
