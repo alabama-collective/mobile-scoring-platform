@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
           {hasWinningRegion && winningRegionName && (
             <div className="hidden xl:flex items-center space-x-2 bg-tac-gold-900/40 border border-tac-gold-700/60 text-tac-gold-300 px-3 py-1 rounded-xs text-xs">
               <Award className="w-4 h-4 text-tac-gold-500" />
-              <span>Give Classic, Round 1: <strong>+5 pts per judge to {winningRegionName}</strong></span>
+              <span>Give Classic, Round 1: <strong>+5 pts to {winningRegionName} teams</strong></span>
             </div>
           )}
 
