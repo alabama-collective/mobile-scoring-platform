@@ -40,7 +40,10 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   const summaries = storageService.getTeamScoreSummaries(activeRound.id);
   const allSubmissions = storageService.getAllSubmissions().filter((s) => s.roundId === activeRound.id);
 
-  const [selectedAuditTeam, setSelectedAuditTeam] = useState<TeamScoreSummary | null>(null);
+  // Keep only the team id, so an open audit shows new scores as they arrive.
+  const [auditTeamId, setAuditTeamId] = useState<string | null>(null);
+  const selectedAuditTeam = summaries.find((s) => s.team.id === auditTeamId) ?? null;
+  const setSelectedAuditTeam = (s: TeamScoreSummary | null) => setAuditTeamId(s ? s.team.id : null);
   const [signerName, setSignerName] = useState('Avery Quinn');
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
 
