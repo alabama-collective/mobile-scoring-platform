@@ -16,7 +16,7 @@ import { JudgeRosterManager } from './components/JudgeRosterManager';
 import { TeamEditor } from './components/TeamEditor';
 import { FloorStatusPage } from './components/FloorStatusBoard';
 import { FloorSupportViewers } from './components/FloorSupportViewers';
-import { renameBooth, isFinaleJudge, setBoothDetails, boothLabel } from './services/booths';
+import { renameBooth, isFinaleJudge, setBoothDetails, boothLabel, judgesToSignIn } from './services/booths';
 import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
 
 type Mode = 'start' | 'judge' | 'staff' | 'status';
@@ -250,7 +250,7 @@ export const App: React.FC = () => {
     let body: React.ReactNode;
     if (!judge)
       body = (
-        <JudgeNamePicker judges={competition.judges} onPick={(id) => setJudgeId(id)} labelFor={(b) => boothLabel(competition, b)} />
+        <JudgeNamePicker judges={judgesToSignIn(competition)} onPick={(id) => setJudgeId(id)} labelFor={(b) => boothLabel(competition, b)} />
       );
     else if (liveRounds.length === 0) body = <JudgingNotStarted competition={competition} />;
     else if (!judgeRound) body = <RoundPicker rounds={liveRounds} onPick={(id) => setJudgeRoundId(id)} />;
