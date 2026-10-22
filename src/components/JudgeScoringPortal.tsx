@@ -121,9 +121,10 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     setScores((prev) => ({ ...prev, [criterionId]: val }));
   };
 
-  // Typed entry: a whole number from 0 to the category's maximum. Anything
-  // else is refused with a message and the score stays as it was. Emptying
-  // the box leaves the category blank.
+  // Typed entry: a whole number from 0 to the category's maximum. Wednesday
+  // test, Oct 21: anything else sets the category to 0 with a warning. Keeping
+  // the old value was easy to miss (typing 15 on a 10-point category left 1).
+  // Emptying the box leaves the category blank.
   const handleScoreTyped = (criterionId: string, raw: string, maxPoints: number) => {
     const typed = raw.trim();
     if (typed === '') {
@@ -133,7 +134,11 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     }
     const val = /^\d+$/.test(typed) ? parseInt(typed, 10) : NaN;
     if (Number.isNaN(val) || val > maxPoints) {
-      setEntryNotes((prev) => ({ ...prev, [criterionId]: `${typed} is not a score. Use a whole number from 0 to ${maxPoints}.` }));
+      setScores((prev) => ({ ...prev, [criterionId]: 0 }));
+      setEntryNotes((prev) => ({
+        ...prev,
+        [criterionId]: `${typed} is not a score, so this is now 0. Type a whole number from 0 to ${maxPoints}.`,
+      }));
       return;
     }
     handleScoreDirect(criterionId, val);
