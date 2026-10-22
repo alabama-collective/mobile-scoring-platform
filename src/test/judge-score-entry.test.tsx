@@ -22,19 +22,29 @@ describe('Judge score entry (Wednesday test 2.3)', () => {
     storageService.resetToDefaults();
   });
 
-  it('11, -1 and a letter are refused with a message, and the score stays as it was', () => {
+  it('11, -1 and a letter set the score to 0 with a warning', () => {
     openAsMorgan();
     const first = boxes()[0];
     fireEvent.change(first, { target: { value: '7' } });
     expect(first.value).toBe('7');
     for (const bad of ['11', '-1', 'a']) {
+      fireEvent.change(first, { target: { value: '7' } });
       fireEvent.change(first, { target: { value: bad } });
-      expect(screen.getByRole('alert')).toHaveTextContent(`${bad} is not a score. Use a whole number from 0 to 10.`);
-      expect(first.value).toBe('7');
+      expect(screen.getByRole('alert')).toHaveTextContent(`${bad} is not a score, so this is now 0. Type a whole number from 0 to 10.`);
+      expect(first.value).toBe('0');
     }
     fireEvent.change(first, { target: { value: '10' } });
     expect(screen.queryByRole('alert')).toBeNull();
     expect(first.value).toBe('10');
+  });
+
+  it('typing 15 on a 10-point category ends at 0, not 1', () => {
+    openAsMorgan();
+    const first = boxes()[0];
+    fireEvent.change(first, { target: { value: '1' } });
+    fireEvent.change(first, { target: { value: '15' } });
+    expect(first.value).toBe('0');
+    expect(screen.getByRole('alert')).toHaveTextContent('15 is not a score, so this is now 0.');
   });
 
   it('a blank category stops the score from being sent, and says which', () => {
