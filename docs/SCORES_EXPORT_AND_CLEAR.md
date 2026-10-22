@@ -8,7 +8,7 @@ Three commands for TAC staff. You do not need to be a developer. The one-page ve
 
 All three ask for the **staff passcode** every time and never save it. Anyone with the staff passcode can run them.
 
-The files hold judges' names and feedback. **Save them only to the TAC shared drive**, never to a personal laptop folder.
+The files hold judges' names and feedback. **Save them only to the MSP Pilot results folder** in the TAC-PM Google Drive, never to a personal laptop folder.
 
 ---
 
@@ -108,7 +108,7 @@ Use this to start again from an empty competition, for example before a walkthro
 | Between Oct 20 and Oct 23 | **Practice run** of export and clear on the scores from the Oct 19 phone test, so the first time is not the real time | Rhonoya with Steph or Damian |
 | Mon Oct 26, after the rehearsal | Export the rehearsal scores and check the results file against Live Results, including the +5 Give Classic bonus | Rhonoya and Steph |
 | Tue Oct 27, very last step | **Clear**, after all fixes and testing, so no test scores remain | Rhonoya, with Steph or Damian |
-| Thu Oct 29, each round close | Screenshot Live Results as a backup | Staff on site |
+| Thu Oct 29, each round close | Screenshot Live Results as a backup, and **export only**. Never clear on Oct 29: clear deletes every round's scores, so a clear between rounds would erase the booth results. | Staff on site |
 | Thu Oct 29 evening, or Oct 30 morning | **Export** the real scores to the shared drive and send Steph the files. This is the official record for prizes and reporting. | Rhonoya, Steph or Damian |
 
 ## For developers

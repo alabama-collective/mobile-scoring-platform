@@ -4,7 +4,7 @@ One page for the TAC staff laptop. Full details: [SCORES_EXPORT_AND_CLEAR.md](SC
 
 **Every time:** open the project folder, right-click an empty space, choose **Open in Terminal**. Type the command, press Enter, then type the **staff passcode** when asked. Nothing shows while you type the passcode. That is normal. Never write the passcode down or type it where others can see.
 
-Save to the TAC shared drive only. In the commands below, the folder is `G:\Shared drives\TAC\Pilot results`. Change it if yours is different.
+Save only to the **MSP Pilot results** folder in the TAC-PM Google Drive. The commands below show an example Windows path. Change it to where that folder is on your laptop.
 
 | I want to | Type this | It asks you to type | You should see |
 |---|---|---|---|
