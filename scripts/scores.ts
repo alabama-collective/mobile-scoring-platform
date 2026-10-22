@@ -246,7 +246,7 @@ const main = async () => {
 
 main()
   .then(() => {
-    console.log('\nDone. Remember: these files are the record. Keep them on the TAC shared drive.\n');
+    console.log('\nDone. Remember: these files are the record. Keep them in the MSP Pilot results folder.\n');
     process.exit(0);
   })
   .catch((e) => fail(e instanceof Error ? e.message : String(e)));
