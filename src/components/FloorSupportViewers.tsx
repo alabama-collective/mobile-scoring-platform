@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, Trash2, UserPlus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Eye, Trash2, UserPlus } from 'lucide-react';
 import { isEmailLike, normalizeEmail, VIEWER_SCOPE_LABEL, type ViewerScope } from '../services/floorStatus';
 
 // Floor support access (Steph, Oct 20). Staff keep the list of Google accounts
@@ -21,6 +21,8 @@ export const FloorSupportViewers: React.FC<{
   const [email, setEmail] = useState('');
   const [scope, setScope] = useState<ViewerScope>('round1');
   const [message, setMessage] = useState('');
+  // Closed by default, so the addresses stay off screen in demos and recordings.
+  const [showList, setShowList] = useState(false);
   const link = `${window.location.origin}${window.location.pathname}#/status`;
 
   const add = async (e: React.FormEvent) => {
@@ -97,37 +99,50 @@ export const FloorSupportViewers: React.FC<{
           {viewers.length === 0 ? (
             <p className="text-xs text-tac-stone-400">Nobody is on the list yet.</p>
           ) : (
-            <ul className="space-y-1.5">
-              {viewers.map((v) => (
-                <li
-                  key={v.email}
-                  className="bg-tac-ink-900 border border-tac-ink-700 rounded-xs px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs"
-                >
-                  <span className="text-white break-all">{v.email}</span>
-                  <span className="flex items-center gap-2">
-                    <select
-                      value={v.scope}
-                      onChange={async (e) => {
-                        const next = e.target.value as ViewerScope;
-                        setMessage((await onSave(v.email, next)) ? `${v.email} now has ${VIEWER_SCOPE_LABEL[next]}.` : 'The database did not save that.');
-                      }}
-                      aria-label={`Access for ${v.email}`}
-                      className="bg-tac-ink-950 border border-tac-ink-700 rounded-xs px-2 py-1 text-xs text-white"
+            <>
+              <button
+                type="button"
+                onClick={() => setShowList((open) => !open)}
+                aria-expanded={showList}
+                className="flex items-center gap-1 text-xs font-semibold text-tac-gold-300 hover:text-tac-gold-200"
+              >
+                {showList ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                {showList ? 'Hide the list' : `Show the list (${viewers.length} ${viewers.length === 1 ? 'person' : 'people'})`}
+              </button>
+              {showList && (
+                <ul className="space-y-1.5">
+                  {viewers.map((v) => (
+                    <li
+                      key={v.email}
+                      className="bg-tac-ink-900 border border-tac-ink-700 rounded-xs px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs"
                     >
-                      <option value="round1">{VIEWER_SCOPE_LABEL.round1}</option>
-                      <option value="all">{VIEWER_SCOPE_LABEL.all}</option>
-                    </select>
-                    <button
-                      onClick={async () => setMessage((await onRemove(v.email)) ? `${v.email} removed.` : 'The database did not save that.')}
-                      aria-label={`Remove ${v.email}`}
-                      className="text-tac-stone-400 hover:text-red-300"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </span>
-                </li>
-              ))}
-            </ul>
+                      <span className="text-white break-all">{v.email}</span>
+                      <span className="flex items-center gap-2">
+                        <select
+                          value={v.scope}
+                          onChange={async (e) => {
+                            const next = e.target.value as ViewerScope;
+                            setMessage((await onSave(v.email, next)) ? `${v.email} now has ${VIEWER_SCOPE_LABEL[next]}.` : 'The database did not save that.');
+                          }}
+                          aria-label={`Access for ${v.email}`}
+                          className="bg-tac-ink-950 border border-tac-ink-700 rounded-xs px-2 py-1 text-xs text-white"
+                        >
+                          <option value="round1">{VIEWER_SCOPE_LABEL.round1}</option>
+                          <option value="all">{VIEWER_SCOPE_LABEL.all}</option>
+                        </select>
+                        <button
+                          onClick={async () => setMessage((await onRemove(v.email)) ? `${v.email} removed.` : 'The database did not save that.')}
+                          aria-label={`Remove ${v.email}`}
+                          className="text-tac-stone-400 hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
         </>
       )}
