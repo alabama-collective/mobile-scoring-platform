@@ -146,6 +146,9 @@ describe('Floor support access, the staff panel', () => {
     const onSave = vi.fn().mockResolvedValue(true);
     const onRemove = vi.fn().mockResolvedValue(true);
     render(<FloorSupportViewers enabled viewers={[{ email: 'floor.one@example.com', scope: 'round1' }]} onSave={onSave} onRemove={onRemove} />);
+    // The list starts closed, so no address shows until staff open it
+    expect(screen.queryByText('floor.one@example.com')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the list (1 person)' }));
     fireEvent.change(screen.getByLabelText('Access for floor.one@example.com'), { target: { value: 'all' } });
     await waitFor(() => expect(onSave).toHaveBeenCalledWith('floor.one@example.com', 'all'));
     fireEvent.click(screen.getByRole('button', { name: 'Remove floor.one@example.com' }));
