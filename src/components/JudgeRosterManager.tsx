@@ -23,6 +23,7 @@ const RosterList: React.FC<{
   const [judgeName, setJudgeName] = useState('');
   const [judgeEmail, setJudgeEmail] = useState('');
   const [booth, setBooth] = useState(NO_BOOTH);
+  const [nameError, setNameError] = useState('');
   const booths = boothList(competition);
   const isFinale = roster === 'finale';
   const judges = competition.judges.filter((j) => isFinaleJudge(j) === isFinale);
@@ -31,6 +32,15 @@ const RosterList: React.FC<{
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!judgeName.trim()) return;
+    // Wednesday test, Oct 21: the same name twice on one list makes two
+    // identical buttons on the judge sign-in screen. Spacing and capitals
+    // do not make a name different.
+    const key = (n: string) => n.trim().replace(/\s+/g, ' ').toLowerCase();
+    const same = judges.find((j) => key(j.name) === key(judgeName));
+    if (same) {
+      setNameError(`${same.name} is already on this list. Use a different name, or remove the first one.`);
+      return;
+    }
     storageService.addJudge({
       name: judgeName.trim(),
       email: judgeEmail.trim() || undefined,
@@ -83,7 +93,10 @@ const RosterList: React.FC<{
           aria-label={isFinale ? 'Finale judge name' : 'Round 1 judge name'}
           placeholder="Judge full name"
           value={judgeName}
-          onChange={(e) => setJudgeName(e.target.value)}
+          onChange={(e) => {
+            setJudgeName(e.target.value);
+            setNameError('');
+          }}
           className={inputClass}
         />
         <input
@@ -103,6 +116,11 @@ const RosterList: React.FC<{
           <span>Add</span>
         </button>
       </form>
+      {nameError && (
+        <p role="alert" className="text-xs font-semibold text-red-300">
+          {nameError}
+        </p>
+      )}
 
       <div className="space-y-2 max-h-72 overflow-y-auto">
         {judges.map((judge) => (
