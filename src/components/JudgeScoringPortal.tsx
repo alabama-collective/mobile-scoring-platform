@@ -195,7 +195,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     : refused
     ? { tone: 'bad', text: 'Not saved. Show this screen to staff.' }
     : cloud.enabled && sendState === 'sending'
-    ? { tone: 'wait', text: 'Saved on this phone, sending...' }
+    ? { tone: 'wait', text: 'Saved on this device, sending...' }
     : { tone: 'ok', text: `${cloud.enabled ? 'Sent to staff' : 'Saved'}: ${submissionReceipt.rawTotal}/${maxPossible}` };
 
   // MSP-22: jump from the scorecard to a criterion
@@ -428,7 +428,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
           )}
           {cloud.enabled && sendState && (
             <p role="status" className={sendState === 'failed' ? 'text-red-300 font-semibold' : 'text-green-300'}>
-              {sendState === 'sending' && 'Saved on this phone, sending to staff. It sends by itself when there is signal.'}
+              {sendState === 'sending' && 'Saved on this device, sending to staff. It sends by itself when the connection is back.'}
               {sendState === 'sent' && 'Sent to staff.'}
               {sendState === 'failed' && `Your score for ${selectedTeam.name} was not saved. Show this screen to staff.`}
             </p>
