@@ -39,6 +39,16 @@ export const judgesForRound = (comp: Competition, round: Round | undefined): Jud
 
 // The teams a judge scores in a round. Round 1: only their booth (none if
 // they have no booth). Finale: every team in the finale.
+// Wednesday test, Oct 21: the judge sign-in list. Once Round 1 is closed or
+// the finale is open, only finale judges can pick a name. Before that, both
+// lists show, so a finale judge who arrives early can still sign in.
+export const judgesToSignIn = (comp: Competition): Judge[] => {
+  const finaleTime = comp.rounds.some(
+    (r) => (r.roundType === 'booth' && r.status === 'completed') || (r.roundType === 'finale' && r.status === 'live')
+  );
+  return finaleTime ? comp.judges.filter(isFinaleJudge) : comp.judges;
+};
+
 export const teamsForJudge = (comp: Competition, round: Round, judge: Judge | undefined): Team[] => {
   if (!judge) return [];
   // Story A: the finale has only the booth winners (the finalists).
