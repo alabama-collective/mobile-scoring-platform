@@ -111,12 +111,17 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     fireEvent.change(screen.getByLabelText('Reason for confirming with scores missing'), {
       target: { value: 'Test run: only one judge scored.' },
     });
+    // The sign-off name starts empty, so Confirm stays locked until staff type one
+    expect(screen.getByLabelText('Sign-off staff name')).toHaveValue('');
+    expect(confirmAnyway).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Sign-off staff name'), { target: { value: 'Test Staff Signer' } });
+    expect(confirmAnyway).not.toBeDisabled();
     fireEvent.click(confirmAnyway);
 
     // Verify Finalized badge appears
     await waitFor(() => {
       expect(screen.getByText(/Confirmed Final by/i)).toBeInTheDocument();
-      expect(screen.getAllByText(/Avery Quinn/i).length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByText('Test Staff Signer')).toBeInTheDocument();
     });
 
     // 11. Test Regional Bonus Panel (MSP-35)

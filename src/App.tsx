@@ -17,7 +17,7 @@ import { TeamEditor } from './components/TeamEditor';
 import { FloorStatusPage } from './components/FloorStatusBoard';
 import { FloorSupportViewers } from './components/FloorSupportViewers';
 import { renameBooth, isFinaleJudge, setBoothDetails, boothLabel, judgesToSignIn } from './services/booths';
-import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
+import { RotateCcw, Calendar, MapPin, LogOut } from 'lucide-react';
 
 type Mode = 'start' | 'judge' | 'staff' | 'status';
 const MODE_KEY = 'tac_mode_v1';
@@ -310,10 +310,6 @@ export const App: React.FC = () => {
               <span className="flex items-center space-x-1">
                 <MapPin className="w-3.5 h-3.5 text-tac-gold-500" />
                 <span>{competition.location}</span>
-              </span>
-              <span className="flex items-center space-x-1">
-                <User className="w-3.5 h-3.5 text-tac-gold-500" />
-                <span>Director: {competition.programDirector}</span>
               </span>
             </div>
           </div>
