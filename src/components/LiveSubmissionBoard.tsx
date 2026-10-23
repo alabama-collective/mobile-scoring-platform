@@ -27,6 +27,8 @@ interface LiveSubmissionBoardProps {
   onSwapFinalist?: (booth: string, teamId: string) => boolean;
 }
 
+const PLACE: Record<number, string> = { 1: '1st', 2: '2nd', 3: '3rd' };
+
 export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   competition,
   activeRound,
@@ -690,7 +692,15 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       </p>
                     ))
                 ) : (
-                  <p>• Winner: <strong>{summaries[0]?.team.name}</strong> ({summaries[0]?.finalScore} pts)</p>
+                  // Meeting, Oct 23: the finale summary lists all three places, not only the winner.
+                  // Teams tied on points share a place.
+                  summaries
+                    .filter((s) => s.rank && PLACE[s.rank])
+                    .map((s) => (
+                      <p key={s.team.id}>
+                        • {PLACE[s.rank!]}: <strong>{s.team.name}</strong> ({s.finalScore} pts)
+                      </p>
+                    ))
                 )}
                 {isBooth && (
                   <p>• Give Classic bonus: <strong>{competition.bonusPointsApplied ? competition.winningRegion : 'None'}</strong></p>
