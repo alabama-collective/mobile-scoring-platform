@@ -684,13 +684,20 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <span className="font-bold text-tac-stone-200 block">Verification Summary:</span>
                 <p>• {summaries.length} competing teams scored</p>
                 {activeRound.roundType === 'booth' ? (
-                  summaries
-                    .filter((s) => s.rank === 1)
-                    .map((s) => (
-                      <p key={s.team.id}>
-                        • {s.team.boothCategory || 'No booth'} winner: <strong>{s.team.name}</strong> ({s.finalScore} pts)
+                  // Charisse walkthrough check, Oct 23: a tied booth names no winner until staff pick one.
+                  standings.map((st) => {
+                    const pickedId = st.tied ? tieWinners[st.booth] ?? activeRound.boothWinners?.[st.booth] : st.leaders[0]?.team.id;
+                    const winner = st.leaders.find((l) => l.team.id === pickedId);
+                    return winner ? (
+                      <p key={st.booth}>
+                        • {st.booth} winner: <strong>{winner.team.name}</strong> ({winner.finalScore} pts){st.tied && ', picked from a tie'}
                       </p>
-                    ))
+                    ) : (
+                      <p key={st.booth}>
+                        • {st.booth}: tie for first between {st.leaders.map((l) => l.team.name).join(' and ')}. Pick the winner below.
+                      </p>
+                    );
+                  })
                 ) : (
                   // Meeting, Oct 23: the finale summary lists all three places, not only the winner.
                   // Teams tied on points share a place.
