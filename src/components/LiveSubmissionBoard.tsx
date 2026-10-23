@@ -46,7 +46,8 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   const [auditTeamId, setAuditTeamId] = useState<string | null>(null);
   const selectedAuditTeam = summaries.find((s) => s.team.id === auditTeamId) ?? null;
   const setSelectedAuditTeam = (s: TeamScoreSummary | null) => setAuditTeamId(s ? s.team.id : null);
-  const [signerName, setSignerName] = useState('Avery Quinn');
+  // Oct 23: starts empty. A made-up name here would end up on the official results.
+  const [signerName, setSignerName] = useState('');
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
 
   // Calculate high-level progress (MSP-05)
@@ -80,7 +81,8 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   const [tieWinners, setTieWinners] = useState<Record<string, string>>({});
   const [confirmError, setConfirmError] = useState('');
   const unresolvedTies = standings.filter((st) => st.tied && !tieWinners[st.booth]);
-  const canConfirm = (missing === 0 || confirmReason.trim().length > 0) && unresolvedTies.length === 0;
+  const canConfirm =
+    signerName.trim().length > 0 && (missing === 0 || confirmReason.trim().length > 0) && unresolvedTies.length === 0;
   const finalists = finalistsByBooth(competition);
   const [swapMessage, setSwapMessage] = useState('');
 
@@ -676,6 +678,9 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                   required
                   value={signerName}
                   onChange={(e) => setSignerName(e.target.value)}
+                  placeholder="Type your full name"
+                  autoComplete="off"
+                  aria-label="Sign-off staff name"
                   className="w-full bg-tac-ink-950 border border-tac-ink-700 rounded-xs px-3 py-2 text-xs text-white focus:outline-none focus:border-tac-gold-700"
                 />
               </div>
@@ -752,6 +757,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                   {confirmError}
                 </p>
               )}
+              {!signerName.trim() && <p className="text-xs text-amber-300">Type your name above to sign off.</p>}
 
               <div className="flex justify-end space-x-2 pt-2">
                 <button
