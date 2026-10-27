@@ -37,6 +37,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
   writeBatch,
   type Firestore,
@@ -46,6 +47,7 @@ import { cloudSettings, isCloudConfigured, COMPETITION_DOC_ID, STAFF_EMAIL } fro
 import { storageService } from './storageService';
 import { INITIAL_COMPETITION } from '../data/seedData';
 import type { Competition, JudgeScoreSubmission } from '../types';
+import { applyFinaleTimer, setFinaleTimerSender, type FinaleTimer } from './finaleTimer';
 import { normalizeEmail, type StatusMark, type ViewerScope } from './floorStatus';
 
 export type SendState = 'sending' | 'sent' | 'failed';
@@ -145,13 +147,19 @@ const pushCompetition = async (comp: Competition) => {
   pushesInFlight++;
   try {
     await setDoc(contactsRef(), { judgeEmails: emails, updatedAt: serverTimestamp() });
-    await setDoc(compRef(), {
-      competition: { ...comp, judges },
-      liveRounds: liveRoundsOf(comp),
-      // The database rules use this to keep the finale from Round 1-only viewers.
-      roundTypes: Object.fromEntries(comp.rounds.map((r) => [r.id, r.roundType])),
-      updatedAt: serverTimestamp(),
-    });
+    // Only these fields are replaced, so the finale timer (its own field,
+    // story F) is never wiped by a competition save.
+    await setDoc(
+      compRef(),
+      {
+        competition: { ...comp, judges },
+        liveRounds: liveRoundsOf(comp),
+        // The database rules use this to keep the finale from Round 1-only viewers.
+        roundTypes: Object.fromEntries(comp.rounds.map((r) => [r.id, r.roundType])),
+        updatedAt: serverTimestamp(),
+      },
+      { mergeFields: ['competition', 'liveRounds', 'roundTypes', 'updatedAt'] }
+    );
     setState({ error: undefined });
   } catch (e) {
     setState({ error: plainMessage(e) });
@@ -342,6 +350,18 @@ const listen = (u: User) => {
         if (snap.exists()) {
           remoteCompetition = snap.data().competition as Competition;
           applyCompetition();
+          // Story F: the finale timer. The start time is the database's own
+          // clock, so every phone counts down from the same moment.
+          const ft = snap.data().finaleTimer;
+          applyFinaleTimer(
+            ft
+              ? {
+                  status: ft.status,
+                  remainingMs: ft.remainingMs,
+                  startedAtMs: ft.startedAt?.toMillis?.() ?? ft.startedAtMs,
+                }
+              : null
+          );
           if (viewer) watchStatus(remoteCompetition, state.viewerScope);
           else if (staff && staffStatusOn) watchStatus(remoteCompetition, 'all');
         } else if (staff && !snap.metadata.fromCache) {
@@ -440,6 +460,21 @@ export const startCloud = (): void => {
       viewerEmail: isGoogle(u) ? normalizeEmail(u.email || '') : undefined,
       error: undefined,
     });
+    // Story F: only staff send the finale timer (the database refuses anyone else).
+    setFinaleTimerSender(
+      u.email === STAFF_EMAIL
+        ? (t: FinaleTimer) => {
+            updateDoc(compRef(), {
+              finaleTimer: {
+                status: t.status,
+                remainingMs: t.remainingMs,
+                startedAtMs: t.startedAtMs ?? null,
+                startedAt: t.status === 'running' ? serverTimestamp() : null,
+              },
+            }).catch((e) => setState({ error: plainMessage(e) }));
+          }
+        : null
+    );
     listen(u);
     flushUnsent();
   });

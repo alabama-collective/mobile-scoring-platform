@@ -3,6 +3,7 @@ import { Competition, Round, JudgeScoreSubmission } from '../types';
 import { useCloudState } from '../services/cloud';
 import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
+import { JudgeFinaleTimer } from './FinaleTimer';
 import { judgesForRound, teamsForJudge, isFinaleJudge, boothLabel } from '../services/booths';
 import {
   CheckCircle2,
@@ -349,6 +350,11 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         <div className="flex items-center justify-center space-x-2 text-xs text-tac-stone-300 font-light">
           <span>{selectedTeam ? boothLabel(competition, selectedTeam.boothCategory) : ''}</span>
         </div>
+
+        {/* Story F: the staff-controlled finale timer. Round 1 has none. */}
+        {activeRound.roundType === 'finale' && activeRound.status === 'live' && (
+          <JudgeFinaleTimer submitted={!!submissionReceipt} />
+        )}
 
         {/* Horizontal Quick-Select Team Strip with Submission Status */}
         <div className="pt-2 flex items-center justify-start sm:justify-center space-x-1 overflow-x-auto pb-1">
