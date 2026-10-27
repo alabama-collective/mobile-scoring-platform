@@ -140,7 +140,7 @@ export const INITIAL_COMPETITION: Competition = {
       name: 'Bham Solar Grid',
       school: 'Miles College',
       boothCategory: 'Booth 3',
-      founderNames: 'Kobe Bryant Jr.',
+      founderNames: 'Malcolm Reed',
       bonusPoints: 0,
     },
   ],

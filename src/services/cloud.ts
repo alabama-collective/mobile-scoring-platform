@@ -7,13 +7,16 @@
 // - This file copies local saves up to Firestore (through storageService's
 //   hooks) and copies changes from other devices down into the local copy.
 // - Judges get an automatic anonymous sign in. Staff sign in with the staff
-//   passcode. firestore.rules decides what each may read and change, so a
-//   hidden button is never the only protection.
+//   passcode. Floor support viewers sign in with their own Google account
+//   (Steph, Oct 20). firestore.rules decides what each may read and change,
+//   so a hidden button is never the only protection.
 import { useSyncExternalStore } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
   connectAuthEmulator,
+  GoogleAuthProvider,
+  signInWithPopup,
   onAuthStateChanged,
   signInAnonymously,
   signInWithEmailAndPassword,
@@ -27,13 +30,16 @@ import {
   persistentMultipleTabManager,
   connectFirestoreEmulator,
   collection,
+  deleteDoc,
   doc,
+  getDocs,
   onSnapshot,
   query,
   serverTimestamp,
   setDoc,
   updateDoc,
   where,
+  writeBatch,
   type Firestore,
   type Unsubscribe,
 } from 'firebase/firestore';
@@ -42,6 +48,7 @@ import { storageService } from './storageService';
 import { INITIAL_COMPETITION } from '../data/seedData';
 import type { Competition, JudgeScoreSubmission } from '../types';
 import { applyFinaleTimer, setFinaleTimerSender, type FinaleTimer } from './finaleTimer';
+import { normalizeEmail, type StatusMark, type ViewerScope } from './floorStatus';
 
 export type SendState = 'sending' | 'sent' | 'failed';
 
@@ -52,9 +59,22 @@ export interface CloudState {
   connected: boolean;      // last news from the database came from the server, not the phone's copy
   error?: string;
   sends: Record<string, SendState>; // submission id -> send state on this device
+  // Floor support (Steph, Oct 20)
+  viewerEmail?: string;               // signed in with Google
+  viewerScope?: ViewerScope | null;   // null: checked, not on the approved list
+  statusMarks: StatusMark[];          // which scores are in, for the rounds this viewer may see
+  viewers: { email: string; scope: ViewerScope }[]; // the approved list, staff only
 }
 
-let state: CloudState = { enabled: false, signedIn: false, isStaff: false, connected: false, sends: {} };
+let state: CloudState = {
+  enabled: false,
+  signedIn: false,
+  isStaff: false,
+  connected: false,
+  sends: {},
+  statusMarks: [],
+  viewers: [],
+};
 const listeners = new Set<() => void>();
 const setState = (patch: Partial<CloudState>) => {
   state = { ...state, ...patch };
@@ -81,6 +101,17 @@ let remoteCompetition: Competition | null = null;
 const compRef = () => doc(db!, 'competitions', COMPETITION_DOC_ID);
 const contactsRef = () => doc(db!, 'competitions', COMPETITION_DOC_ID, 'private', 'contacts');
 const submissionsCol = () => collection(db!, 'competitions', COMPETITION_DOC_ID, 'submissions');
+const viewersCol = () => collection(db!, 'competitions', COMPETITION_DOC_ID, 'viewers');
+const statusCol = (roundId: string) => collection(db!, 'competitions', COMPETITION_DOC_ID, 'rounds', roundId, 'status');
+// A status record says a judge has scored a team, never the score.
+const statusRecord = (sub: JudgeScoreSubmission, uid: string) => ({
+  roundId: sub.roundId,
+  teamId: sub.teamId,
+  judgeId: sub.judgeId,
+  uid,
+  savedAt: serverTimestamp(),
+});
+const isGoogle = (u: User) => u.providerData.some((p) => p.providerId === 'google.com');
 
 const liveRoundsOf = (comp: Competition): Record<string, boolean> =>
   Object.fromEntries(comp.rounds.filter((r) => r.status === 'live').map((r) => [r.id, true]));
@@ -123,9 +154,11 @@ const pushCompetition = async (comp: Competition) => {
       {
         competition: { ...comp, judges },
         liveRounds: liveRoundsOf(comp),
+        // The database rules use this to keep the finale from Round 1-only viewers.
+        roundTypes: Object.fromEntries(comp.rounds.map((r) => [r.id, r.roundType])),
         updatedAt: serverTimestamp(),
       },
-      { mergeFields: ['competition', 'liveRounds', 'updatedAt'] }
+      { mergeFields: ['competition', 'liveRounds', 'roundTypes', 'updatedAt'] }
     );
     setState({ error: undefined });
   } catch (e) {
@@ -181,7 +214,13 @@ const pushSubmission = (sub: JudgeScoreSubmission) => {
   setState({ sends: { ...state.sends, [sub.id]: 'sending' } });
   // With the offline cache the write is kept on the phone straight away;
   // the promise settles when the database has accepted or refused it.
-  setDoc(doc(submissionsCol(), sub.id), { ...sub, uid, savedAt: serverTimestamp() })
+  // The score and its status record are saved together, so the floor support
+  // board never shows a score as in before the database has it.
+  const batch = writeBatch(db);
+  batch.set(doc(submissionsCol(), sub.id), { ...sub, uid, savedAt: serverTimestamp() });
+  batch.set(doc(statusCol(sub.roundId), sub.id), statusRecord(sub, uid));
+  batch
+    .commit()
     .then(() => setState({ sends: { ...state.sends, [sub.id]: 'sent' } }))
     .catch((e) => setState({ sends: { ...state.sends, [sub.id]: 'failed' }, error: plainMessage(e) }));
 };
@@ -202,10 +241,104 @@ const applyCompetition = () => {
   if (remoteCompetition) storageService.applyRemoteCompetition(withEmails(remoteCompetition));
 };
 
+// Staff laptop: make sure every score has its status record, for example a
+// score saved before the floor support board existed. Reads one small list
+// per round and writes only what is missing.
+let reconcileTimer: ReturnType<typeof setTimeout> | null = null;
+const reconcileStatus = (subs: JudgeScoreSubmission[]) => {
+  if (reconcileTimer) clearTimeout(reconcileTimer);
+  reconcileTimer = setTimeout(async () => {
+    if (!db || !state.isStaff) return;
+    try {
+      for (const roundId of [...new Set(subs.map((s) => s.roundId))]) {
+        const have = new Set((await getDocs(statusCol(roundId))).docs.map((d) => d.id));
+        const missing = subs.filter((s) => s.roundId === roundId && !have.has(s.id));
+        for (let i = 0; i < missing.length; i += 400) {
+          const batch = writeBatch(db);
+          missing.slice(i, i + 400).forEach((s) => batch.set(doc(statusCol(roundId), s.id), statusRecord(s, s.uid || '')));
+          await batch.commit();
+        }
+      }
+    } catch (e) {
+      setState({ error: plainMessage(e) });
+    }
+  }, 2000);
+};
+
+// Floor support: the board's status records, one list per round this person may see.
+let statusUnsubs = new Map<string, Unsubscribe>();
+let marksByRound: Record<string, StatusMark[]> = {};
+const stopStatus = () => {
+  statusUnsubs.forEach((f) => f());
+  statusUnsubs = new Map();
+  marksByRound = {};
+  setState({ statusMarks: [] });
+};
+const watchStatus = (comp: Competition | null, scope: ViewerScope | null | undefined) => {
+  const roundIds = !comp || !scope ? [] : comp.rounds.filter((r) => scope === 'all' || r.roundType === 'booth').map((r) => r.id);
+  statusUnsubs.forEach((f, id) => {
+    if (!roundIds.includes(id)) {
+      f();
+      statusUnsubs.delete(id);
+      delete marksByRound[id];
+    }
+  });
+  roundIds
+    .filter((id) => !statusUnsubs.has(id))
+    .forEach((roundId) =>
+      statusUnsubs.set(
+        roundId,
+        onSnapshot(
+          statusCol(roundId),
+          (snap) => {
+            marksByRound[roundId] = snap.docs.map((d) => {
+              const { teamId, judgeId } = d.data() as StatusMark;
+              return { roundId, teamId, judgeId };
+            });
+            setState({ statusMarks: Object.values(marksByRound).flat() });
+          },
+          (e) => setState({ error: plainMessage(e) })
+        )
+      )
+    );
+};
+
+// Staff opening the status link see the board with their staff sign in, for
+// every round. Only while the status page is open.
+let staffStatusOn = false;
+export const staffWatchStatus = (on: boolean) => {
+  staffStatusOn = on;
+  if (state.viewerEmail) return;
+  if (on && state.isStaff) watchStatus(remoteCompetition, 'all');
+  else if (!on) stopStatus();
+};
+
+const listenViewer = (u: User) => {
+  const email = normalizeEmail(u.email || '');
+  setState({ viewerEmail: email, viewerScope: undefined });
+  unsubs.push(
+    onSnapshot(
+      doc(viewersCol(), email),
+      (snap) => {
+        const scope = snap.exists() ? ((snap.data().scope as ViewerScope) ?? null) : null;
+        setState({ viewerScope: scope });
+        watchStatus(remoteCompetition, scope);
+      },
+      // Not on the list: the database refuses to read the entry.
+      () => {
+        setState({ viewerScope: null });
+        stopStatus();
+      }
+    )
+  );
+};
+
 const listen = (u: User) => {
   unsubs.forEach((f) => f());
   unsubs = [];
+  stopStatus();
   const staff = u.email === STAFF_EMAIL;
+  const viewer = isGoogle(u);
 
   unsubs.push(
     onSnapshot(
@@ -229,6 +362,8 @@ const listen = (u: User) => {
                 }
               : null
           );
+          if (viewer) watchStatus(remoteCompetition, state.viewerScope);
+          else if (staff && staffStatusOn) watchStatus(remoteCompetition, 'all');
         } else if (staff && !snap.metadata.fromCache) {
           // First staff sign in on an empty database: start from the app's
           // clean defaults, never from whatever an old browser still holds
@@ -242,7 +377,25 @@ const listen = (u: User) => {
     )
   );
 
+  if (viewer) {
+    // Floor support never asks for scores; the database would refuse anyway.
+    listenViewer(u);
+    return;
+  }
+
   if (staff) {
+    unsubs.push(
+      onSnapshot(
+        viewersCol(),
+        (snap) =>
+          setState({
+            viewers: snap.docs
+              .map((d) => ({ email: d.id, scope: d.data().scope as ViewerScope }))
+              .sort((a, b) => a.email.localeCompare(b.email)),
+          }),
+        (e) => setState({ error: plainMessage(e) })
+      )
+    );
     unsubs.push(
       onSnapshot(
         contactsRef(),
@@ -266,6 +419,7 @@ const listen = (u: User) => {
           return rest as JudgeScoreSubmission;
         });
         storageService.applyRemoteSubmissions(remote);
+        if (staff) reconcileStatus(remote);
       },
       (e) => setState({ error: plainMessage(e) })
     )
@@ -295,11 +449,17 @@ export const startCloud = (): void => {
     if (!u) {
       unsubs.forEach((f) => f());
       unsubs = [];
-      setState({ signedIn: false, isStaff: false });
+      stopStatus();
+      setState({ signedIn: false, isStaff: false, viewerEmail: undefined, viewerScope: undefined, viewers: [] });
       signInAnonymously(auth!).catch((e) => setState({ error: plainMessage(e) }));
       return;
     }
-    setState({ signedIn: true, isStaff: u.email === STAFF_EMAIL, error: undefined });
+    setState({
+      signedIn: true,
+      isStaff: u.email === STAFF_EMAIL,
+      viewerEmail: isGoogle(u) ? normalizeEmail(u.email || '') : undefined,
+      error: undefined,
+    });
     // Story F: only staff send the finale timer (the database refuses anyone else).
     setFinaleTimerSender(
       u.email === STAFF_EMAIL
@@ -338,4 +498,47 @@ export const staffSignIn = async (passcode: string): Promise<{ ok: true } | { ok
 export const staffSignOut = async (): Promise<void> => {
   flushCompetition();
   if (auth) await signOut(auth);
+};
+
+// ---- Floor support (Steph, Oct 20) ------------------------------------------
+
+export const viewerSignIn = async (): Promise<{ ok: true } | { ok: false; message: string }> => {
+  if (!auth) return { ok: false, message: 'The shared database is not set up on this device.' };
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+    return { ok: true };
+  } catch (e) {
+    const code = (e as { code?: string })?.code || '';
+    if (code.includes('popup-closed') || code.includes('cancelled-popup')) return { ok: false, message: 'Sign in was closed before it finished.' };
+    if (code.includes('popup-blocked')) return { ok: false, message: 'The sign in window was blocked. Allow pop-ups for this site, then try again.' };
+    if (code.includes('network')) return { ok: false, message: 'No connection. Try again when the phone has signal.' };
+    return { ok: false, message: 'Google sign in did not work. Try again.' };
+  }
+};
+
+export const viewerSignOut = async (): Promise<void> => {
+  if (auth) await signOut(auth);
+};
+
+// Staff: add or change someone on the approved list. The email is the key, in lower case.
+export const saveViewer = async (email: string, scope: ViewerScope): Promise<boolean> => {
+  if (!db || !state.isStaff) return false;
+  try {
+    await setDoc(doc(viewersCol(), normalizeEmail(email)), { scope, addedAt: serverTimestamp() });
+    return true;
+  } catch (e) {
+    setState({ error: plainMessage(e) });
+    return false;
+  }
+};
+
+export const removeViewer = async (email: string): Promise<boolean> => {
+  if (!db || !state.isStaff) return false;
+  try {
+    await deleteDoc(doc(viewersCol(), normalizeEmail(email)));
+    return true;
+  } catch (e) {
+    setState({ error: plainMessage(e) });
+    return false;
+  }
 };

@@ -28,6 +28,8 @@ interface LiveSubmissionBoardProps {
   onSwapFinalist?: (booth: string, teamId: string) => boolean;
 }
 
+const PLACE: Record<number, string> = { 1: '1st', 2: '2nd', 3: '3rd' };
+
 export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   competition,
   activeRound,
@@ -41,8 +43,12 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   const summaries = storageService.getTeamScoreSummaries(activeRound.id);
   const allSubmissions = storageService.getAllSubmissions().filter((s) => s.roundId === activeRound.id);
 
-  const [selectedAuditTeam, setSelectedAuditTeam] = useState<TeamScoreSummary | null>(null);
-  const [signerName, setSignerName] = useState('Avery Quinn');
+  // Keep only the team id, so an open audit shows new scores as they arrive.
+  const [auditTeamId, setAuditTeamId] = useState<string | null>(null);
+  const selectedAuditTeam = summaries.find((s) => s.team.id === auditTeamId) ?? null;
+  const setSelectedAuditTeam = (s: TeamScoreSummary | null) => setAuditTeamId(s ? s.team.id : null);
+  // Oct 23: starts empty. A made-up name here would end up on the official results.
+  const [signerName, setSignerName] = useState('');
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
 
   // Calculate high-level progress (MSP-05)
@@ -76,7 +82,8 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
   const [tieWinners, setTieWinners] = useState<Record<string, string>>({});
   const [confirmError, setConfirmError] = useState('');
   const unresolvedTies = standings.filter((st) => st.tied && !tieWinners[st.booth]);
-  const canConfirm = (missing === 0 || confirmReason.trim().length > 0) && unresolvedTies.length === 0;
+  const canConfirm =
+    signerName.trim().length > 0 && (missing === 0 || confirmReason.trim().length > 0) && unresolvedTies.length === 0;
   const finalists = finalistsByBooth(competition);
   const [swapMessage, setSwapMessage] = useState('');
 
@@ -112,7 +119,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <div className="flex items-center space-x-2">
               <Users className="w-5 h-5 text-tac-gold-500" />
               <h2 className="font-display font-bold text-lg text-white uppercase tracking-wide">
-                Live Submission & Tabulation Board (MSP-05, MSP-06)
+                Live Submission & Tabulation Board
               </h2>
             </div>
             <p className="text-xs text-tac-stone-400 mt-1">
@@ -144,7 +151,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 className="flex items-center space-x-2 px-4 py-2 bg-tac-gold-700 hover:bg-tac-gold-600 text-tac-ink-900 font-bold text-xs rounded-xs shadow-tac-sm transition-all"
               >
                 <CheckCheck className="w-4 h-4 text-tac-gold-300" />
-                <span>Review & Confirm Results (MSP-34)</span>
+                <span>Review & Confirm Results</span>
               </button>
             )}
           </div>
@@ -209,7 +216,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-display font-bold text-sm text-tac-stone-100 uppercase tracking-wider">
-              Judge Submission Matrix by Team (MSP-05)
+              Judge Submission Matrix by Team
             </h3>
             <p className="text-xs text-tac-stone-400">
               Identifies which specific judges have recorded scores versus pending stragglers.
@@ -388,7 +395,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-4 h-4 text-tac-gold-500" />
               <h3 className="font-display font-bold text-sm text-tac-stone-100 uppercase tracking-wider">
-                Automated Results & Audit Leaderboard (MSP-06)
+                Automated Results & Audit Leaderboard
               </h3>
             </div>
             <p className="text-xs text-tac-stone-400">
@@ -406,7 +413,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <th className="py-2.5 px-2">Booth / Track</th>
                 <th className="py-2.5 px-2 text-center">Judges' total</th>
                 {isBooth && <th className="py-2.5 px-2 text-center">Give Classic bonus</th>}
-                <th className="py-2.5 px-3 text-right">Final Score</th>
+                <th className="py-2.5 px-3 text-right">{isBooth ? 'Booth Total' : 'Final Score'}</th>
                 <th className="py-2.5 px-3 text-center">Audit</th>
               </tr>
             </thead>
@@ -482,7 +489,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       {summary.regionalBonus > 0 ? (
                         <span
                           className="inline-flex items-center space-x-1 text-tac-gold-400 font-bold bg-tac-gold-950 px-2 py-0.5 rounded-xs border border-tac-gold-800 text-[11px]"
-                          title={`+${summary.regionalBonus} Give Classic bonus (${competition.winningRegion}, 5 per judge)`}
+                          title={`+${summary.regionalBonus} Give Classic bonus (${competition.winningRegion})`}
                         >
                           <Award className="w-3 h-3 text-tac-gold-500" />
                           <span>+{summary.regionalBonus} pts</span>
@@ -497,7 +504,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                       {/* MSP-42: the bonus shows on the score, with its region */}
                       {summary.regionalBonus > 0 && (
                         <span className="block text-[10px] font-body font-semibold text-tac-gold-500">
-                          +{summary.regionalBonus} Give Classic bonus ({competition.winningRegion}, 5 per judge)
+                          +{summary.regionalBonus} Give Classic bonus ({competition.winningRegion})
                         </span>
                       )}
                     </td>
@@ -526,7 +533,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-tac-ink-700">
               <div>
                 <span className="text-[10px] uppercase font-bold text-tac-gold-500 tracking-wider">
-                  Audit Trail & Score Breakdown (MSP-06)
+                  Audit Trail & Score Breakdown
                 </span>
                 <h3 className="font-display font-black text-lg text-white uppercase">
                   {selectedAuditTeam.team.name}
@@ -563,8 +570,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <span className="flex items-center space-x-1.5 text-tac-gold-300 font-semibold">
                   <Award className="w-3.5 h-3.5 text-tac-gold-500" />
                   <span>
-                    Give Classic bonus ({competition.winningRegion}): 5 per judge, {selectedAuditTeam.submissionCount}{' '}
-                    {selectedAuditTeam.submissionCount === 1 ? 'judge' : 'judges'}
+                    Give Classic bonus ({competition.winningRegion}): added once to the booth total
                   </span>
                 </span>
                 <span className="font-bold text-tac-gold-400">+{selectedAuditTeam.regionalBonus} pts</span>
@@ -657,7 +663,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
             <div className="flex items-center space-x-2 pb-3 border-b border-tac-ink-700">
               <ShieldCheck className="w-5 h-5 text-tac-gold-500" />
               <h3 className="font-display font-bold text-base text-white uppercase tracking-wide">
-                Confirm & Lock Final Results (MSP-34)
+                Confirm & Lock Final Results
               </h3>
             </div>
 
@@ -676,6 +682,9 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                   required
                   value={signerName}
                   onChange={(e) => setSignerName(e.target.value)}
+                  placeholder="Type your full name"
+                  autoComplete="off"
+                  aria-label="Sign-off staff name"
                   className="w-full bg-tac-ink-950 border border-tac-ink-700 rounded-xs px-3 py-2 text-xs text-white focus:outline-none focus:border-tac-gold-700"
                 />
               </div>
@@ -684,15 +693,30 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                 <span className="font-bold text-tac-stone-200 block">Verification Summary:</span>
                 <p>• {summaries.length} competing teams scored</p>
                 {activeRound.roundType === 'booth' ? (
+                  // Charisse walkthrough check, Oct 23: a tied booth names no winner until staff pick one.
+                  standings.map((st) => {
+                    const pickedId = st.tied ? tieWinners[st.booth] ?? activeRound.boothWinners?.[st.booth] : st.leaders[0]?.team.id;
+                    const winner = st.leaders.find((l) => l.team.id === pickedId);
+                    return winner ? (
+                      <p key={st.booth}>
+                        • {st.booth} winner: <strong>{winner.team.name}</strong> ({winner.finalScore} pts){st.tied && ', picked from a tie'}
+                      </p>
+                    ) : (
+                      <p key={st.booth}>
+                        • {st.booth}: tie for first between {st.leaders.map((l) => l.team.name).join(' and ')}. Pick the winner below.
+                      </p>
+                    );
+                  })
+                ) : (
+                  // Meeting, Oct 23: the finale summary lists all three places, not only the winner.
+                  // Teams tied on points share a place.
                   summaries
-                    .filter((s) => s.rank === 1)
+                    .filter((s) => s.rank && PLACE[s.rank])
                     .map((s) => (
                       <p key={s.team.id}>
-                        • {s.team.boothCategory || 'No booth'} winner: <strong>{s.team.name}</strong> ({s.finalScore} pts)
+                        • {PLACE[s.rank!]}: <strong>{s.team.name}</strong> ({s.finalScore} pts)
                       </p>
                     ))
-                ) : (
-                  <p>• Winner: <strong>{summaries[0]?.team.name}</strong> ({summaries[0]?.finalScore} pts)</p>
                 )}
                 {isBooth && (
                   <p>• Give Classic bonus: <strong>{competition.bonusPointsApplied ? competition.winningRegion : 'None'}</strong></p>
@@ -744,6 +768,7 @@ export const LiveSubmissionBoard: React.FC<LiveSubmissionBoardProps> = ({
                   {confirmError}
                 </p>
               )}
+              {!signerName.trim() && <p className="text-xs text-amber-300">Type your name above to sign off.</p>}
 
               <div className="flex justify-end space-x-2 pt-2">
                 <button

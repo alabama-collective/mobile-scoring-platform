@@ -1,13 +1,14 @@
-# Exporting and clearing scores
+# Exporting, clearing and resetting
 
-Two commands for TAC staff. You do not need to be a developer.
+Three commands for TAC staff. You do not need to be a developer. The one-page version is [STAFF_LAPTOP_SHEET.md](STAFF_LAPTOP_SHEET.md).
 
 - **Export** saves every score and each round's results to files. It only reads, so it is safe to run at any time.
-- **Clear** runs an export first, so nothing is lost, then deletes every score, puts every round back to draft and unlocks it, and un-confirms results. Rubrics, judges and teams stay. It will not run while a round is live.
+- **Clear** runs an export first, so nothing is lost, then deletes every score, puts every round back to draft and unlocks it, and un-confirms results. Booths, judges, teams and rubrics stay. It will not run while a round is live.
+- **Reset** runs an export first, then empties the competition: no booths, teams, judges or scores. Every round goes back to draft and the Give Classic region is cleared. The rubrics and the floor support viewer list stay. It will not run while a round is live.
 
-Both ask for the **staff passcode** every time and never save it. Anyone with the staff passcode can run them.
+All three ask for the **staff passcode** every time and never save it. Anyone with the staff passcode can run them.
 
-The files hold judges' names and feedback. **Save them only to the TAC shared drive**, never to a personal laptop folder.
+The files hold judges' names and feedback. **Save them only to the MSP Pilot results folder** in the TAC-PM Google Drive, never to a personal laptop folder.
 
 ---
 
@@ -46,11 +47,11 @@ The three files:
 
 | File | What is in it |
 |---|---|
-| `results_<date>.csv` | One row per team per round: rank, team, region, booth category, scores in, average, Give Classic bonus, final score, and who confirmed the results and when. Opens in Excel or Google Sheets. |
+| `results_<date>.csv` | One row per team per round: rank, team, school, region, booth, scores in, judges total, Give Classic bonus, and the total (the booth total in Round 1), and who confirmed the results and when. Opens in Excel or Google Sheets. |
 | `scores-by-judge_<date>.csv` | Every judge's points for every criterion, with their feedback. |
 | `full-backup_<date>.json` | Everything, for a developer if something ever needs to be restored. |
 
-The totals use the same calculation as the Live Results screen, so they match it exactly, including the +5 Give Classic bonus.
+The totals use the same calculation as the Live Results screen, so they match it exactly. The Give Classic bonus (+5 once per team in the winning region, Round 1 only) is its own column, apart from the judges' total.
 
 ## Clear scores
 
@@ -67,6 +68,50 @@ The totals use the same calculation as the Live Results screen, so they match it
 6. You should see `Cleared. 0 scores left, and all rounds are back to draft.`
 7. Check the app: Live Results shows no scores, and each round shows **Draft**.
 
+## Reset the competition
+
+Use this to start again from an empty competition, for example before a walkthrough.
+
+1. **Close every live round first**, in the app: Coordinator Admin, select the round, **Close Round**.
+2. Open a terminal in the project folder and type:
+
+   ```
+   npm run competition:reset -- --out "G:\Shared drives\TAC\Pilot results"
+   ```
+
+3. Type the staff passcode when asked.
+4. It saves an export first. Those files start with `before-reset_`.
+5. It says how many scores, teams and judges it will delete and asks you to type `RESET`. Type it in capitals and press Enter. Anything else stops it, and nothing is deleted.
+6. You should see `Reset. The competition is empty: 0 booths, 0 teams, 0 judges, 0 scores.`
+7. Check the app: no booths, teams or judges, each round shows **Draft**, and the rubric is still there.
+
+## Upload booths, teams and judges from the sheet
+
+This loads the Booths, Teams and Round 1 Judges tabs of the bulk upload Google Sheet. It checks the whole sheet first and lists every problem. Nothing is uploaded unless the sheet has no problems. It only uploads into an empty competition, so **run the reset first**. Finale judges, the floor support list, the rubrics and the Give Classic region are not touched.
+
+1. In the Google Sheet, choose **File**, **Download**, **Microsoft Excel (.xlsx)**. It saves to your Downloads folder.
+2. Open a terminal in the project folder (setup step 4).
+3. **Check the sheet first** (no passcode needed, nothing is uploaded). Type this, ending with a space, then drag the downloaded file into the window and press Enter:
+
+   ```
+   npm run competition:upload -- --check --file 
+   ```
+
+4. If it lists problems, fix them in the Google Sheet, download it again, and repeat step 3. Each problem names the tab and row, for example `Teams, row 9: the team is Track 2, but Booth 2 is a START booth.`
+5. When it says `The sheet has no problems`, run it again **without** `--check`, again dragging in the file:
+
+   ```
+   npm run competition:upload -- --file 
+   ```
+
+6. Type the staff passcode when asked.
+7. It lists each booth with its teams and judges and asks you to type `UPLOAD`. Type it in capitals and press Enter. Anything else stops it, and nothing is uploaded.
+8. You should see `Uploaded. The app now has ... booths, ... teams and ... Round 1 judges.`, then `Done.`
+9. **Delete the downloaded .xlsx file.** It has judges' emails.
+10. Refresh the app and check the booths, teams and judges. Set the Give Classic region if it is known.
+
+The sheet is matched by its column headers, so extra columns such as Check are skipped. The school must be spelled as on the app's school list, and the Region column must agree with it.
+
 ---
 
 ## If it says "Stopped"
@@ -76,8 +121,14 @@ The totals use the same calculation as the Live Results screen, so they match it
 | `that passcode is not right, or there is no internet connection` | Check the passcode and the Wi-Fi, then run it again. |
 | `... is live. Close the round first. Nothing was cleared.` | Close the live round in the app, then run the clear again. |
 | `you did not type CLEAR. Nothing was cleared.` | Run it again and type `CLEAR` in capitals. |
+| `you did not type RESET. Nothing was reset.` | Run it again and type `RESET` in capitals. |
+| `... is live. Close the round first. Nothing was reset.` | Close the live round in the app, then run the reset again. |
 | `say where to save the files` | Add `--out "your shared drive folder"` to the end of the command. |
-| `... score(s) are still there` | Run the clear again. If it happens twice, contact the maintainers. |
+| `the sheet has problems. Nothing was uploaded.` | Fix each problem listed above it in the Google Sheet, download it again, and run it again. |
+| `the app already has ... booth(s), ... team(s) and ... Round 1 judge(s)` | Run the reset first, then the upload again. |
+| `you did not type UPLOAD. Nothing was uploaded.` | Run it again and type `UPLOAD` in capitals. |
+| `say which sheet to upload` or `that is not an .xlsx file` | Download the sheet as Microsoft Excel (.xlsx) and drag that file in after `--file `. |
+| `... score(s) are still there` or `some booths, teams or judges are still there` | Run it again. If it happens twice, contact the maintainers. |
 
 ---
 
@@ -88,7 +139,7 @@ The totals use the same calculation as the Live Results screen, so they match it
 | Between Oct 20 and Oct 23 | **Practice run** of export and clear on the scores from the Oct 19 phone test, so the first time is not the real time | Rhonoya with Steph or Damian |
 | Mon Oct 26, after the rehearsal | Export the rehearsal scores and check the results file against Live Results, including the +5 Give Classic bonus | Rhonoya and Steph |
 | Tue Oct 27, very last step | **Clear**, after all fixes and testing, so no test scores remain | Rhonoya, with Steph or Damian |
-| Thu Oct 29, each round close | Screenshot Live Results as a backup | Staff on site |
+| Thu Oct 29, each round close | Screenshot Live Results as a backup, and **export only**. Never clear on Oct 29: clear deletes every round's scores, so a clear between rounds would erase the booth results. | Staff on site |
 | Thu Oct 29 evening, or Oct 30 morning | **Export** the real scores to the shared drive and send Steph the files. This is the official record for prizes and reporting. | Rhonoya, Steph or Damian |
 
 ## For developers

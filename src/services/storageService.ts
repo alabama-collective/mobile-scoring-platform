@@ -195,9 +195,18 @@ class StorageService {
       if (status === 'live') {
         round.isLocked = true;
       }
+      // MSP-57: a round opened by mistake can be unlocked again, but only
+      // before anyone has scored it. Once a score exists the rubric stays locked.
+      if (status === 'draft' && !this.roundHasScores(roundId)) {
+        round.isLocked = false;
+      }
       this.saveCompetition(comp);
     }
     return comp;
+  }
+
+  roundHasScores(roundId: string): boolean {
+    return this.getAllSubmissions().some((s) => s.roundId === roundId);
   }
 
   setWinningRegionBonus(regionName: string | undefined): Competition {

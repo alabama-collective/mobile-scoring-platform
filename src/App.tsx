@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Competition, Rubric, RoundStatus, RubricTemplate } from './types';
 import { storageService, DATA_CHANGED_EVENT } from './services/storageService';
-import { useCloudState, staffSignOut } from './services/cloud';
+import { useCloudState, staffSignOut, saveViewer, removeViewer } from './services/cloud';
 import { StaffSignIn } from './components/StaffSignIn';
 import { StartScreen } from './components/StartScreen';
 import { JudgeHeader, JudgingNotStarted, JudgeNamePicker, RoundPicker } from './components/JudgeShell';
@@ -15,10 +15,12 @@ import { LiveSubmissionBoard } from './components/LiveSubmissionBoard';
 import { JudgeRosterManager } from './components/JudgeRosterManager';
 import { TeamEditor } from './components/TeamEditor';
 import { FinaleTimerPanel } from './components/FinaleTimer';
-import { renameBooth, isFinaleJudge, setBoothDetails, boothLabel } from './services/booths';
-import { RotateCcw, Calendar, MapPin, User, LogOut } from 'lucide-react';
+import { FloorStatusPage } from './components/FloorStatusBoard';
+import { FloorSupportViewers } from './components/FloorSupportViewers';
+import { renameBooth, isFinaleJudge, setBoothDetails, boothLabel, judgesToSignIn } from './services/booths';
+import { RotateCcw, Calendar, MapPin, LogOut } from 'lucide-react';
 
-type Mode = 'start' | 'judge' | 'staff';
+type Mode = 'start' | 'judge' | 'staff' | 'status';
 const MODE_KEY = 'tac_mode_v1';
 const JUDGE_KEY = 'tac_current_judge_id';
 const JUDGE_ROUND_KEY = 'tac_judge_round_v1';
@@ -44,6 +46,9 @@ const initialMode = (): Mode => {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
   if (hash === '#/judge' || (typeof window !== 'undefined' && window.location.search.includes('mode=judge'))) return 'judge';
   if (hash === '#/staff') return 'staff';
+  // Floor support status board (Steph, Oct 20). Never remembered as the
+  // phone's mode, so a judge's phone is never stuck on it.
+  if (hash === '#/status') return 'status';
   const saved = read(MODE_KEY);
   return saved === 'judge' || saved === 'staff' ? saved : 'start';
 };
@@ -54,6 +59,15 @@ export const App: React.FC = () => {
     setModeState(m);
     write(MODE_KEY, m === 'start' ? null : m);
   };
+  // A link tapped while the app is already open changes only the hash, and the
+  // page does not reload. Follow it, so the status link always opens the board.
+  useEffect(() => {
+    const follow = () => {
+      if (['#/status', '#/staff', '#/judge'].includes(window.location.hash)) setModeState(initialMode());
+    };
+    window.addEventListener('hashchange', follow);
+    return () => window.removeEventListener('hashchange', follow);
+  }, []);
   const [judgeId, setJudgeIdState] = useState<string | null>(() => read(JUDGE_KEY));
   const setJudgeId = (id: string | null) => {
     setJudgeIdState(id);
@@ -72,7 +86,8 @@ export const App: React.FC = () => {
     const liveRound = comp.rounds.find((r) => r.status === 'live');
     return liveRound ? liveRound.id : comp.rounds[0]?.id || 'round-1';
   });
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // Bumped when data changes, so the screens redraw with fresh data.
+  const [, setRefreshTrigger] = useState(0);
   const cloud = useCloudState();
 
   // MSP-45: another device changed the shared data, so re-read the local copy.
@@ -212,6 +227,12 @@ export const App: React.FC = () => {
     .getAllSubmissions()
     .filter((s) => s.roundId === activeRound?.id);
 
+  // ---- Floor support status board (Steph, Oct 20) -----------------------------
+  // A Google sign in is only ever floor support, so it always lands here.
+  if (mode === 'status' || cloud.viewerEmail) {
+    return <FloorStatusPage competition={competition} />;
+  }
+
   // ---- MSP-46: start screen -------------------------------------------------
   if (mode === 'start') {
     return <StartScreen competitionName={competition.name} onJudge={() => setMode('judge')} onStaff={() => setMode('staff')} />;
@@ -230,7 +251,7 @@ export const App: React.FC = () => {
     let body: React.ReactNode;
     if (!judge)
       body = (
-        <JudgeNamePicker judges={competition.judges} onPick={(id) => setJudgeId(id)} labelFor={(b) => boothLabel(competition, b)} />
+        <JudgeNamePicker judges={judgesToSignIn(competition)} onPick={(id) => setJudgeId(id)} labelFor={(b) => boothLabel(competition, b)} />
       );
     else if (liveRounds.length === 0) body = <JudgingNotStarted competition={competition} />;
     else if (!judgeRound) body = <RoundPicker rounds={liveRounds} onPick={(id) => setJudgeRoundId(id)} />;
@@ -290,10 +311,6 @@ export const App: React.FC = () => {
               <span className="flex items-center space-x-1">
                 <MapPin className="w-3.5 h-3.5 text-tac-gold-500" />
                 <span>{competition.location}</span>
-              </span>
-              <span className="flex items-center space-x-1">
-                <User className="w-3.5 h-3.5 text-tac-gold-500" />
-                <span>Director: {competition.programDirector}</span>
               </span>
             </div>
           </div>
@@ -383,6 +400,9 @@ export const App: React.FC = () => {
             {/* Team editor (MSP-43) */}
             <TeamEditor competition={competition} onUpdateCompetition={setCompetition} />
 
+            {/* Floor support access (Steph, Oct 20) */}
+            <FloorSupportViewers enabled={cloud.enabled} viewers={cloud.viewers} onSave={saveViewer} onRemove={removeViewer} />
+
             {/* Give Classic Regional Bonus Panel (MSP-35) */}
             <RegionalBonusPanel
               competition={competition}
@@ -395,7 +415,9 @@ export const App: React.FC = () => {
         {activeTab === 'live' && activeRound && !needsStaff && (
           <div className="animate-fade-in">
             <LiveSubmissionBoard
-              key={refreshTrigger}
+              // Redraw in place when data changes, so an open window or typed reason is kept.
+              // A new round starts fresh.
+              key={activeRound.id}
               competition={competition}
               activeRound={activeRound}
               onRefreshData={() => setRefreshTrigger((prev) => prev + 1)}

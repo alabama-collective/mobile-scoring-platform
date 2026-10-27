@@ -9,6 +9,10 @@ rules_version = '2';
 // - Judges: an automatic anonymous sign in on their phone. They may read the
 //   competition, and save or change only their own scores while the round is
 //   live. They cannot delete scores or read other judges' scores.
+// - Floor support viewers (Steph, Oct 20): their own Google account, on the
+//   approved list that staff keep. They may read which scores are in, never
+//   the scores themselves. "round1" viewers see Round 1 only; "all" viewers
+//   also see the finale. They cannot change anything.
 // - Everyone else, and anything not listed here: refused.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -23,9 +27,63 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider == 'password';
     }
 
+    // Approved list: competitions/{id}/viewers/{email in lower case}
+    function viewerDoc(compId) {
+      return /databases/$(database)/documents/competitions/$(compId)/viewers/$(request.auth.token.email.lower());
+    }
+
+    function isViewer(compId) {
+      return signedIn()
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.email_verified == true
+        && exists(viewerDoc(compId));
+    }
+
+    function viewerSeesRound(compId, roundId) {
+      let scope = get(viewerDoc(compId)).data.scope;
+      let comp = get(/databases/$(database)/documents/competitions/$(compId)).data;
+      return scope == 'all'
+        || (scope == 'round1' && comp.get('roundTypes', {}).get(roundId, 'finale') == 'booth');
+    }
+
     match /competitions/{compId} {
       allow read: if signedIn();
       allow write: if isStaff();
+
+      // Floor support approved list. Real emails live only here, never in the code.
+      match /viewers/{email} {
+        allow read: if isStaff()
+          || (isViewer(compId) && email == request.auth.token.email.lower());
+        allow delete: if isStaff();
+        allow create, update: if isStaff()
+          && email == email.lower()
+          && request.resource.data.keys().hasOnly(['scope', 'addedAt'])
+          && request.resource.data.scope in ['round1', 'all'];
+      }
+
+      // Which scores are in, without the scores: one record per round, team
+      // and judge, saved by the judge's phone together with the score.
+      match /rounds/{roundId}/status/{statusId} {
+        function statusOk() {
+          let d = request.resource.data;
+          return d.keys().hasOnly(['roundId', 'teamId', 'judgeId', 'uid', 'savedAt'])
+            && d.roundId == roundId
+            && statusId == roundId + '__' + d.teamId + '__' + d.judgeId;
+        }
+        function judgeMayMark() {
+          let sub = /databases/$(database)/documents/competitions/$(compId)/submissions/$(statusId);
+          return signedIn()
+            && request.auth.token.firebase.sign_in_provider == 'anonymous'
+            && statusOk()
+            && request.resource.data.uid == request.auth.uid
+            && existsAfter(sub)
+            && getAfter(sub).data.uid == request.auth.uid;
+        }
+
+        allow read: if isStaff() || (isViewer(compId) && viewerSeesRound(compId, roundId));
+        allow create, update: if (isStaff() && statusOk()) || judgeMayMark();
+        allow delete: if isStaff();
+      }
 
       // Judge email addresses: staff only.
       match /private/{docId} {
@@ -51,7 +109,10 @@ service cloud.firestore {
         }
 
         function judgeMaySave() {
+          // Judges' phones use the automatic anonymous sign in. A Google sign in
+          // (floor support) can never save a score.
           return signedIn()
+            && request.auth.token.firebase.sign_in_provider == 'anonymous'
             && wellFormed()
             && request.resource.data.uid == request.auth.uid
             && roundIsLive(request.resource.data.roundId);

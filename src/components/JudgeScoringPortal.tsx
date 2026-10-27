@@ -5,10 +5,8 @@ import { storageService } from '../services/storageService';
 import { JudgeBandStrip } from './JudgeBandStrip';
 import { JudgeFinaleTimer } from './FinaleTimer';
 import { judgesForRound, teamsForJudge, isFinaleJudge, boothLabel } from '../services/booths';
-import { isInRegion, teamRegion } from '../services/regions';
 import {
   CheckCircle2,
-  Award,
   UserCheck,
   Send,
   MessageSquare,
@@ -56,6 +54,10 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
   // Scoring Form State
   const [scores, setScores] = useState<Record<string, number>>({});
+  // Wednesday test, step 2.3: a wrong entry is refused with a message, never
+  // quietly changed, and a blank category stops the score from being sent.
+  const [entryNotes, setEntryNotes] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState('');
   const [feedbackWorked, setFeedbackWorked] = useState('');
   const [feedbackImprove, setFeedbackImprove] = useState('');
   const [submissionReceipt, setSubmissionReceipt] = useState<JudgeScoreSubmission | null>(null);
@@ -77,6 +79,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
         s.roundId === activeRound.id
     );
 
+    setEntryNotes({});
+    setFormError('');
     if (existing) {
       setScores(existing.scores);
       setFeedbackWorked(existing.feedbackWorkedWell || '');
@@ -99,7 +103,13 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     localStorage.setItem('tac_current_judge_id', id);
   };
 
+  const clearNote = (criterionId: string) => {
+    setEntryNotes(({ [criterionId]: _gone, ...rest }) => rest);
+    setFormError('');
+  };
+
   const handleScoreAdjust = (criterionId: string, delta: number, maxPoints: number) => {
+    clearNote(criterionId);
     setScores((prev) => {
       const current = prev[criterionId] ?? 0;
       const next = Math.max(0, Math.min(maxPoints, current + delta));
@@ -108,15 +118,34 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
   };
 
   const handleScoreDirect = (criterionId: string, val: number) => {
+    clearNote(criterionId);
     setScores((prev) => ({ ...prev, [criterionId]: val }));
   };
 
-  // Typed entry: keep digits only and hold the score within 0..maxPoints
+  // Typed entry: a whole number from 0 to the category's maximum. Wednesday
+  // test, Oct 21: anything else sets the category to 0 with a warning. Keeping
+  // the old value was easy to miss (typing 15 on a 10-point category left 1).
+  // Emptying the box leaves the category blank.
   const handleScoreTyped = (criterionId: string, raw: string, maxPoints: number) => {
-    const digits = raw.replace(/\D/g, '');
-    const val = digits === '' ? 0 : Math.min(maxPoints, parseInt(digits, 10));
+    const typed = raw.trim();
+    if (typed === '') {
+      clearNote(criterionId);
+      setScores(({ [criterionId]: _gone, ...rest }) => rest);
+      return;
+    }
+    const val = /^\d+$/.test(typed) ? parseInt(typed, 10) : NaN;
+    if (Number.isNaN(val) || val > maxPoints) {
+      setScores((prev) => ({ ...prev, [criterionId]: 0 }));
+      setEntryNotes((prev) => ({
+        ...prev,
+        [criterionId]: `${typed} is not a score, so this is now 0. Type a whole number from 0 to ${maxPoints}.`,
+      }));
+      return;
+    }
     handleScoreDirect(criterionId, val);
   };
+
+  const blankCategories = activeRound.rubric.criteria.filter((c) => scores[c.id] === undefined);
 
   const rawTotal = activeRound.rubric.criteria.reduce(
     (acc, c) => acc + (scores[c.id] ?? 0),
@@ -125,18 +154,20 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
   const maxPossible = activeRound.rubric.criteria.reduce((acc, c) => acc + c.maxPoints, 0);
 
-  const isWinningRegion =
-    activeRound.roundType === 'booth' &&
-    !!selectedTeam &&
-    isInRegion(selectedTeam, competition.winningRegion);
-
-  // MSP-42: the judge's total is their own score only. The Give Classic bonus
-  // is added once per team by the app, not by each judge.
+  // Steph, Oct 20: judges never see the Give Classic bonus, a school or a
+  // region. The judge's total is their own score only; staff screens add the
+  // bonus once per team.
   const finalTally = rawTotal;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentJudge || !selectedTeam) return;
+    if (blankCategories.length) {
+      setFormError(
+        `Not sent. Give a score for every category first: ${blankCategories.map((c) => c.title).join(', ')}.`
+      );
+      return;
+    }
 
     const receipt = storageService.submitJudgeScore({
       judgeId: currentJudge.id,
@@ -170,7 +201,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
     : refused
     ? { tone: 'bad', text: 'Not saved. Show this screen to staff.' }
     : cloud.enabled && sendState === 'sending'
-    ? { tone: 'wait', text: 'Saved on this phone, sending...' }
+    ? { tone: 'wait', text: 'Saved on this device, sending...' }
     : { tone: 'ok', text: `${cloud.enabled ? 'Sent to staff' : 'Saved'}: ${submissionReceipt.rawTotal}/${maxPossible}` };
 
   // MSP-22: jump from the scorecard to a criterion
@@ -272,9 +303,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                     <span className="text-xs font-semibold text-white block">
                       {team.name}
                     </span>
-                    <span className="text-[10px] text-tac-stone-400">
-                      {team.boothCategory} • {teamRegion(team) || 'School needed'}
-                    </span>
+                    <span className="text-[10px] text-tac-stone-400">{team.boothCategory}</span>
                   </div>
                   {sub ? (
                     <div className="flex items-center space-x-2">
@@ -320,17 +349,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
         <div className="flex items-center justify-center space-x-2 text-xs text-tac-stone-300 font-light">
           <span>{selectedTeam ? boothLabel(competition, selectedTeam.boothCategory) : ''}</span>
-          <span>•</span>
-          <span className="font-semibold text-tac-gold-400">{teamRegion(selectedTeam) || 'School needed'}</span>
         </div>
-
-        {/* Regional Bonus Banner if applied (MSP-35) */}
-        {isWinningRegion && (
-          <div className="mt-1 inline-flex items-center space-x-1 bg-tac-gold-950 text-tac-gold-300 border border-tac-gold-700/60 px-2.5 py-0.5 rounded-xs text-[11px]">
-            <Award className="w-3 h-3 text-tac-gold-500" />
-            <span>Give Classic bonus ({competition.winningRegion}): <strong>the app adds 5 points to your score</strong></span>
-          </div>
-        )}
 
         {/* Story F: the staff-controlled finale timer. Round 1 has none. */}
         {activeRound.roundType === 'finale' && activeRound.status === 'live' && (
@@ -420,7 +439,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
           )}
           {cloud.enabled && sendState && (
             <p role="status" className={sendState === 'failed' ? 'text-red-300 font-semibold' : 'text-green-300'}>
-              {sendState === 'sending' && 'Saved on this phone, sending to staff. It sends by itself when there is signal.'}
+              {sendState === 'sending' && 'Saved on this device, sending to staff. It sends by itself when the connection is back.'}
               {sendState === 'sent' && 'Sent to staff.'}
               {sendState === 'failed' && `Your score for ${selectedTeam.name} was not saved. Show this screen to staff.`}
             </p>
@@ -493,7 +512,8 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      value={currentScore}
+                      value={scores[criterion.id] ?? ''}
+                      placeholder="-"
                       onFocus={(e) => e.target.select()}
                       onChange={(e) => handleScoreTyped(criterion.id, e.target.value, criterion.maxPoints)}
                       onKeyDown={(e) => {
@@ -522,6 +542,12 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                   </button>
                 </div>
               </div>
+
+              {entryNotes[criterion.id] && (
+                <p role="alert" className="text-xs font-semibold text-red-300">
+                  {entryNotes[criterion.id]}
+                </p>
+              )}
 
               {/* Quick-Tap Presets Strip */}
               <div className="flex items-center space-x-1 pt-1">
@@ -618,6 +644,12 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
+            </div>
+          )}
+          {formError && (
+            <div role="alert" className="px-3.5 py-2 text-xs font-semibold border-b bg-red-950 text-red-200 border-red-700 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>{formError}</span>
             </div>
           )}
           <div className="p-3.5 flex items-center justify-between">

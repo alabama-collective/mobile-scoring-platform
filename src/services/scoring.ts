@@ -3,10 +3,12 @@ import { boothList, judgesForTeam } from './booths';
 import { isInRegion } from './regions';
 import { teamsInRound } from './finalists';
 
-// The Give Classic bonus (MSP-35). Steph, Oct 20: competitors were told each
-// round is out of 50 with a 5-point bonus, so 5 points are added to EACH
-// judge's score for a team from the winning region. A two-judge booth gets
-// +10 on its combined total, a one-judge booth +5. Round 1 only.
+// The Give Classic bonus (MSP-35). Steph, Oct 20 (final): 5 points, added
+// once to the Round 1 booth total of every team whose team lead's school is in
+// the winning region, the same whether the booth has one judge or two. It is
+// part of the booth total from the start, before any judge scores, and counts
+// in rankings, ties and booth winners. No winning region: no bonus. The
+// finale gets no bonus.
 export const GIVE_CLASSIC_BONUS = 5;
 
 // The results calculation used by Live Results AND by the scores export script
@@ -31,10 +33,8 @@ export const computeTeamSummaries = (
     const judgesTotal = teamSubs.reduce((acc, s) => acc + s.rawTotal, 0);
     const avg = subCount > 0 ? Number((judgesTotal / subCount).toFixed(2)) : 0;
 
-    // MSP-35: 5 per judge who has scored the team, for the winning region,
-    // Round 1 only (an unscored team shows 0, not just the bonus).
-    const regionalBonus =
-      round.roundType === 'booth' && isInRegion(team, comp.winningRegion) ? GIVE_CLASSIC_BONUS * subCount : 0;
+    // MSP-35: 5 once per team in the winning region, Round 1 only.
+    const regionalBonus = round.roundType === 'booth' && isInRegion(team, comp.winningRegion) ? GIVE_CLASSIC_BONUS : 0;
 
     const finalScore = judgesTotal + regionalBonus;
 

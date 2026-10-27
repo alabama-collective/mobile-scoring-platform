@@ -126,6 +126,8 @@ describe('Confirm guard (approved by Steph, Oct 14)', () => {
     fireEvent.change(screen.getByLabelText('Reason for confirming with scores missing'), { target: { value: 'Practice' } });
     expect(btn).toBeDisabled(); // the tie is still open
     fireEvent.click(screen.getByLabelText('AgroPulse Sensors'));
+    expect(btn).toBeDisabled(); // no sign-off name yet
+    fireEvent.change(screen.getByLabelText('Sign-off staff name'), { target: { value: 'Test Staff Signer' } });
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
     expect(screen.getByText(/Confirmed Final by/)).toBeInTheDocument();

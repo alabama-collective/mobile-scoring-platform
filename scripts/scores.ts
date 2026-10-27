@@ -1,10 +1,15 @@
-// Scores export and clear, for TAC staff (no developer needed).
+// Scores export, clear and reset, for TAC staff (no developer needed).
 //
 //   npm run scores:export -- --out "G:\Shared drives\TAC\Pilot results"
 //   npm run scores:clear  -- --out "G:\Shared drives\TAC\Pilot results"
+//   npm run competition:reset -- --out "G:\Shared drives\TAC\Pilot results"
 //
-// Both ask for the staff passcode each time and never save it. They sign in
-// with the staff sign in, so they work for anyone who has the passcode.
+// Clear deletes the scores and keeps booths, teams and judges. Reset (Steph,
+// Oct 20) empties the competition: no booths, teams, judges or scores. It keeps
+// the rubric and the floor support viewer list. Both export first.
+//
+// All three ask for the staff passcode each time and never save it. They sign
+// in with the staff sign in, so they work for anyone who has the passcode.
 // Add --emulator to practise against the test database on this computer.
 // Step-by-step instructions: docs/SCORES_EXPORT_AND_CLEAR.md
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
@@ -15,10 +20,12 @@ import { connectAuthEmulator, getAuth, signInWithEmailAndPassword, signOut } fro
 import {
   collection,
   connectFirestoreEmulator,
+  deleteField,
   doc,
   getDoc,
   getDocs,
   getFirestore,
+  setLogLevel,
   updateDoc,
   writeBatch,
 } from 'firebase/firestore';
@@ -79,9 +86,10 @@ const stamp = () => {
 // ---- Main ------------------------------------------------------------------
 
 const main = async () => {
-  if (command !== 'export' && command !== 'clear') {
-    fail('use "npm run scores:export" or "npm run scores:clear". See docs/SCORES_EXPORT_AND_CLEAR.md');
+  if (command !== 'export' && command !== 'clear' && command !== 'reset') {
+    fail('use "npm run scores:export", "npm run scores:clear" or "npm run competition:reset". See docs/SCORES_EXPORT_AND_CLEAR.md');
   }
+  const title = { export: 'Export scores', clear: 'Clear scores', reset: 'Reset the competition' }[command];
   const emulator = flag('--emulator');
   const outArg = option('--out');
   if (!outArg) fail('say where to save the files, for example: --out "G:\\Shared drives\\TAC\\Pilot results"');
@@ -90,10 +98,13 @@ const main = async () => {
   const config = emulator ? { ...firebaseConfig, apiKey: 'demo-key', projectId: 'demo-tac-scoring' } : firebaseConfig;
   if (!config.projectId) fail('the Firebase settings are not in src/config/firebase.ts yet.');
 
-  console.log(`\n${command === 'export' ? 'Export scores' : 'Clear scores'}${emulator ? ' (TEST DATABASE on this computer)' : ''}`);
+  console.log(`\n${title}${emulator ? ' (TEST DATABASE on this computer)' : ''}`);
   const app = initializeApp(config);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  // Firestore prints harmless internal warnings (for example "BloomFilter error"
+  // after a collection is emptied) that look alarming to staff. Show errors only.
+  setLogLevel('error');
   if (emulator) {
     connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
@@ -116,12 +127,12 @@ const main = async () => {
 
     // ---- Export (always runs, also before a clear) ----
     mkdirSync(outDir, { recursive: true });
-    const base = `${command === 'clear' ? 'before-clear_' : ''}${stamp()}`;
+    const base = `${command === 'export' ? '' : `before-${command}_`}${stamp()}`;
     const teamName = (id: string) => comp.teams.find((t) => t.id === id)?.name ?? id;
 
     const resultsRows: unknown[][] = [[
       'Round', 'Round status', 'Rank', 'Team', 'School', 'Region', 'Booth', 'Scores in', 'Judges',
-      'Judges total', 'Give Classic bonus', 'Final score', 'Results confirmed by', 'Confirmed at',
+      'Judges total', 'Give Classic bonus', 'Total (booth total in Round 1)', 'Results confirmed by', 'Confirmed at',
     ]];
     const scoreRows: unknown[][] = [[
       'Round', 'Team', 'Judge', 'Criterion', 'Points', 'Max points', 'Judge total', 'Worked well', 'Could improve', 'Submitted at', 'Updated at',
@@ -158,16 +169,35 @@ const main = async () => {
 
     if (command === 'export') return;
 
-    // ---- Clear ----
+    // ---- Clear or reset ----
+    const word = command === 'reset' ? 'RESET' : 'CLEAR';
+    const done = command === 'reset' ? 'reset' : 'cleared';
     const live = comp.rounds.filter((r) => r.status === 'live');
-    if (live.length) fail(`${live.map((r) => r.name).join(', ')} is live. Close the round first. Nothing was cleared.`);
+    if (live.length) fail(`${live.map((r) => r.name).join(', ')} is live. Close the round first. Nothing was ${done}.`);
 
-    console.log(`\nThis deletes all ${subs.length} score(s), puts every round back to draft and unlocks it,`);
-    console.log('and un-confirms results. Rubrics, judges and teams stay. The export above is your copy.');
-    const typed = await ask('Type CLEAR to continue, or anything else to stop: ');
-    if (typed !== 'CLEAR') fail('you did not type CLEAR. Nothing was cleared.');
+    if (command === 'reset') {
+      console.log(`\nThis empties the competition: it deletes all ${subs.length} score(s), ${comp.teams.length} team(s),`);
+      console.log(`${comp.judges.length} judge(s) and every booth, puts every round back to draft and unlocks it, and clears`);
+      console.log('the Give Classic region. The rubric and the floor support viewer list stay. The export above is your copy.');
+    } else {
+      console.log(`\nThis deletes all ${subs.length} score(s), puts every round back to draft and unlocks it,`);
+      console.log('and un-confirms results. Rubrics, judges and teams stay. The export above is your copy.');
+    }
+    const typed = await ask(`Type ${word} to continue, or anything else to stop: `);
+    if (typed !== word) fail(`you did not type ${word}. Nothing was ${done}.`);
 
-    const docs = subsSnap.docs;
+    // The floor support board's status records go with the scores. Before the
+    // board's database rules are loaded there are none to read, so skip them.
+    const statusDocs = (
+      await Promise.all(
+        comp.rounds.map((r) =>
+          getDocs(collection(db, 'competitions', COMPETITION_DOC_ID, 'rounds', r.id, 'status'))
+            .then((snap) => snap.docs)
+            .catch(() => [])
+        )
+      )
+    ).flat();
+    const docs = [...subsSnap.docs, ...statusDocs];
     for (let i = 0; i < docs.length; i += 400) {
       const batch = writeBatch(db);
       docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
@@ -178,12 +208,37 @@ const main = async () => {
       ...r,
       status: 'draft' as const,
       isLocked: false,
+      // Reset also removes every booth; the rubric stays.
+      ...(command === 'reset' ? { boothCategories: [], boothDetails: {} } : {}),
     }));
-    await updateDoc(compRef, { 'competition.rounds': rounds, liveRounds: {} });
+    if (command === 'reset') {
+      await updateDoc(compRef, {
+        'competition.rounds': rounds,
+        'competition.teams': [],
+        'competition.judges': [],
+        'competition.winningRegion': deleteField(),
+        'competition.bonusPointsApplied': false,
+        liveRounds: {},
+        // The floor support rules read this to keep the finale from Round 1-only viewers.
+        roundTypes: Object.fromEntries(comp.rounds.map((r) => [r.id, r.roundType])),
+      });
+      // Judge email addresses go with the judges. The viewer list is not touched.
+      await updateDoc(doc(db, 'competitions', COMPETITION_DOC_ID, 'private', 'contacts'), { judgeEmails: {} }).catch(() => undefined);
+    } else {
+      await updateDoc(compRef, { 'competition.rounds': rounds, liveRounds: {} });
+    }
 
     const left = (await getDocs(collection(db, 'competitions', COMPETITION_DOC_ID, 'submissions'))).size;
-    if (left) fail(`${left} score(s) are still there. Run the clear again, or ask for help.`);
-    console.log(`\nCleared. 0 scores left, and all ${rounds.length} round(s) are back to draft.`);
+    if (left) fail(`${left} score(s) are still there. Run the ${command} again, or ask for help.`);
+    if (command === 'reset') {
+      const after = (await getDoc(compRef)).data()!.competition as Competition;
+      if (after.teams.length || after.judges.length || after.rounds.some((r) => (r.boothCategories ?? []).length))
+        fail('some booths, teams or judges are still there. Run the reset again, or ask for help.');
+      console.log(`\nReset. The competition is empty: 0 booths, 0 teams, 0 judges, 0 scores.`);
+      console.log(`All ${rounds.length} round(s) are back to draft with their rubrics. The floor support viewer list is unchanged.`);
+    } else {
+      console.log(`\nCleared. 0 scores left, and all ${rounds.length} round(s) are back to draft.`);
+    }
   } finally {
     await signOut(auth).catch(() => undefined);
   }
@@ -191,7 +246,7 @@ const main = async () => {
 
 main()
   .then(() => {
-    console.log('\nDone. Remember: these files are the record. Keep them on the TAC shared drive.\n');
+    console.log('\nDone. Remember: these files are the record. Keep them in the MSP Pilot results folder.\n');
     process.exit(0);
   })
   .catch((e) => fail(e instanceof Error ? e.message : String(e)));

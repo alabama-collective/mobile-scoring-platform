@@ -47,6 +47,8 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     const quick10Buttons = screen.getAllByRole('button', { name: '10' });
     expect(quick10Buttons.length).toBeGreaterThan(0);
     fireEvent.click(quick10Buttons[0]); // Category 1 = 10 pts
+    // Every category needs a score before it can be sent (Wednesday test 2.3)
+    screen.getAllByRole('textbox', { name: /^Score for / }).slice(1).forEach((box) => fireEvent.change(box, { target: { value: '8' } }));
 
     // Fill feedback
     const workedWellInput = screen.getByPlaceholderText(/Specific strength, persuasive market data/i);
@@ -101,7 +103,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     fireEvent.click(reviewConfirmBtn);
 
     // Verify Finalize Modal
-    expect(screen.getByText(/Confirm & Lock Final Results \(MSP-34\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Confirm & Lock Final Results/i)).toBeInTheDocument();
     // The confirm guard (story A): only 1 score is in, so Confirm is locked
     // until staff give a reason.
     const confirmAnyway = screen.getByRole('button', { name: /Confirm anyway, with this reason/i });
@@ -109,12 +111,17 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     fireEvent.change(screen.getByLabelText('Reason for confirming with scores missing'), {
       target: { value: 'Test run: only one judge scored.' },
     });
+    // The sign-off name starts empty, so Confirm stays locked until staff type one
+    expect(screen.getByLabelText('Sign-off staff name')).toHaveValue('');
+    expect(confirmAnyway).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Sign-off staff name'), { target: { value: 'Test Staff Signer' } });
+    expect(confirmAnyway).not.toBeDisabled();
     fireEvent.click(confirmAnyway);
 
     // Verify Finalized badge appears
     await waitFor(() => {
       expect(screen.getByText(/Confirmed Final by/i)).toBeInTheDocument();
-      expect(screen.getAllByText(/Avery Quinn/i).length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByText('Test Staff Signer')).toBeInTheDocument();
     });
 
     // 11. Test Regional Bonus Panel (MSP-35)
@@ -126,7 +133,7 @@ describe('End-to-End User Facing Browser Interaction Test Suite', () => {
     fireEvent.change(regionSelect, { target: { value: 'South Region' } });
 
     expect(screen.getByText(/Bonus Active:/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/\+5 pts per judge to south region/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/\+5 pts to (each )?south region team/i).length).toBeGreaterThanOrEqual(2);
 
     // Verify on Live Results tab that +5 bonus is reflected in leaderboard
     fireEvent.click(screen.getByRole('button', { name: /Live Results/i }));

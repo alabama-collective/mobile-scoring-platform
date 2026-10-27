@@ -57,7 +57,8 @@ describe('Story F: finale timer', () => {
     act(() => vi.advanceTimersByTime(120000));
     expect(screen.getByRole('timer').textContent).toBe('Time is up. Submit your score.');
 
-    fireEvent.click(screen.getAllByRole('button', { name: '8' })[0]);
+    // Every category needs a score before it can be sent (Wednesday test 2.3)
+    screen.getAllByRole('textbox', { name: /^Score for / }).forEach((box) => fireEvent.change(box, { target: { value: '8' } }));
     fireEvent.click(screen.getByRole('button', { name: /Submit Score/ }));
     expect(storageService.getAllSubmissions().filter((s) => s.roundId === finale.id)).toHaveLength(1);
     expect(screen.getByRole('timer').textContent).toBe('Time is up.');

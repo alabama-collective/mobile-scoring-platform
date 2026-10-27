@@ -76,6 +76,14 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({ competition, onUpdateCom
   const [message, setMessage] = useState('');
   const refresh = () => onUpdateCompetition(storageService.getCompetition());
 
+  // Wednesday test, step 1.5: a team needs a booth, or no judge will ever score it.
+  const boothMissing = (name: string, booth: string): string | null => {
+    if (booth) return null;
+    return booths.length
+      ? `Pick a booth for ${name}. A team needs a booth so its judges can score it.`
+      : `Add a booth first (Booths, in Competition Rounds), then add ${name}.`;
+  };
+
   const nameTaken = (name: string, exceptId?: string) =>
     competition.teams.some((t) => t.id !== exceptId && t.name.trim().toLowerCase() === name.trim().toLowerCase());
 
@@ -85,6 +93,11 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({ competition, onUpdateCom
     if (!name) return;
     if (nameTaken(name)) {
       setMessage(`There is already a team called ${name}.`);
+      return;
+    }
+    const noBooth = boothMissing(name, draft.boothCategory);
+    if (noBooth) {
+      setMessage(noBooth);
       return;
     }
     storageService.addTeam({
@@ -116,6 +129,11 @@ export const TeamEditor: React.FC<TeamEditorProps> = ({ competition, onUpdateCom
     if (!name) return;
     if (nameTaken(name, editingId)) {
       setMessage(`There is already a team called ${name}.`);
+      return;
+    }
+    const noBooth = boothMissing(name, edit.boothCategory);
+    if (noBooth) {
+      setMessage(noBooth);
       return;
     }
     storageService.updateTeam(editingId, {
