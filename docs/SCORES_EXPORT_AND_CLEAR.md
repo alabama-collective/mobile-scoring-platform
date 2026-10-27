@@ -85,6 +85,33 @@ Use this to start again from an empty competition, for example before a walkthro
 6. You should see `Reset. The competition is empty: 0 booths, 0 teams, 0 judges, 0 scores.`
 7. Check the app: no booths, teams or judges, each round shows **Draft**, and the rubric is still there.
 
+## Upload booths, teams and judges from the sheet
+
+This loads the Booths, Teams and Round 1 Judges tabs of the bulk upload Google Sheet. It checks the whole sheet first and lists every problem. Nothing is uploaded unless the sheet has no problems. It only uploads into an empty competition, so **run the reset first**. Finale judges, the floor support list, the rubrics and the Give Classic region are not touched.
+
+1. In the Google Sheet, choose **File**, **Download**, **Microsoft Excel (.xlsx)**. It saves to your Downloads folder.
+2. Open a terminal in the project folder (setup step 4).
+3. **Check the sheet first** (no passcode needed, nothing is uploaded). Type this, ending with a space, then drag the downloaded file into the window and press Enter:
+
+   ```
+   npm run competition:upload -- --check --file 
+   ```
+
+4. If it lists problems, fix them in the Google Sheet, download it again, and repeat step 3. Each problem names the tab and row, for example `Teams, row 9: the team is Track 2, but Booth 2 is a START booth.`
+5. When it says `The sheet has no problems`, run it again **without** `--check`, again dragging in the file:
+
+   ```
+   npm run competition:upload -- --file 
+   ```
+
+6. Type the staff passcode when asked.
+7. It lists each booth with its teams and judges and asks you to type `UPLOAD`. Type it in capitals and press Enter. Anything else stops it, and nothing is uploaded.
+8. You should see `Uploaded. The app now has ... booths, ... teams and ... Round 1 judges.`, then `Done.`
+9. **Delete the downloaded .xlsx file.** It has judges' emails.
+10. Refresh the app and check the booths, teams and judges. Set the Give Classic region if it is known.
+
+The sheet is matched by its column headers, so extra columns such as Check are skipped. The school must be spelled as on the app's school list, and the Region column must agree with it.
+
 ---
 
 ## If it says "Stopped"
@@ -97,6 +124,10 @@ Use this to start again from an empty competition, for example before a walkthro
 | `you did not type RESET. Nothing was reset.` | Run it again and type `RESET` in capitals. |
 | `... is live. Close the round first. Nothing was reset.` | Close the live round in the app, then run the reset again. |
 | `say where to save the files` | Add `--out "your shared drive folder"` to the end of the command. |
+| `the sheet has problems. Nothing was uploaded.` | Fix each problem listed above it in the Google Sheet, download it again, and run it again. |
+| `the app already has ... booth(s), ... team(s) and ... Round 1 judge(s)` | Run the reset first, then the upload again. |
+| `you did not type UPLOAD. Nothing was uploaded.` | Run it again and type `UPLOAD` in capitals. |
+| `say which sheet to upload` or `that is not an .xlsx file` | Download the sheet as Microsoft Excel (.xlsx) and drag that file in after `--file `. |
 | `... score(s) are still there` or `some booths, teams or judges are still there` | Run it again. If it happens twice, contact the maintainers. |
 
 ---

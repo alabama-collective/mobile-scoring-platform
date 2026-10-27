@@ -12,7 +12,8 @@
     "dev:cloud": "npx -y firebase-tools@13 emulators:exec --only auth,firestore --project demo-tac-scoring \"vite --mode emulator\"",
     "scores:export": "tsx scripts/scores.ts export",
     "scores:clear": "tsx scripts/scores.ts clear",
-    "competition:reset": "tsx scripts/scores.ts reset"
+    "competition:reset": "tsx scripts/scores.ts reset",
+    "competition:upload": "tsx scripts/upload.ts"
   },
   "dependencies": {
     "firebase": "^13.0.0",

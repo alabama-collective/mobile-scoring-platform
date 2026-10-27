@@ -11,9 +11,12 @@ Save only to the **MSP Pilot results** folder in the TAC-PM Google Drive. The co
 | **Save the scores** (safe any time) | `npm run scores:export -- --out "G:\Shared drives\TAC\Pilot results"` | nothing more | `Saved ... score(s)`, three file names, `Done.` |
 | **Delete the scores**, keep booths, teams and judges | `npm run scores:clear -- --out "G:\Shared drives\TAC\Pilot results"` | `CLEAR` | `Cleared. 0 scores left` |
 | **Empty the competition**: no booths, teams, judges or scores | `npm run competition:reset -- --out "G:\Shared drives\TAC\Pilot results"` | `RESET` | `Reset. The competition is empty` |
-| Add teams from a file | Coming Monday, Oct 26 | | |
+| **Check the upload sheet** (nothing is uploaded) | `npm run competition:upload -- --check --file ` then drag in the downloaded .xlsx | nothing | `The sheet has no problems`, or a numbered list of problems to fix |
+| **Add booths, teams and Round 1 judges** from the sheet, after a reset | `npm run competition:upload -- --file ` then drag in the downloaded .xlsx | passcode, then `UPLOAD` | `Uploaded. The app now has ...` |
 
 **Before clear or reset:** close every live round in the app (Coordinator Admin, select the round, **Close Round**). Both save an export first, with file names starting `before-clear_` or `before-reset_`. Type the word in capitals. Anything else stops it, and nothing is deleted.
+
+**Upload:** in the Google Sheet, choose File, Download, Microsoft Excel (.xlsx). Run the check first and fix every problem it lists in the Google Sheet, then download again. The upload only runs into an empty competition, so reset first. Type `UPLOAD` in capitals. Afterwards, delete the downloaded file: it has judges' emails.
 
 **Reset keeps** the rubrics and the floor support viewer list. **Clear keeps** booths, teams, judges and rubrics.
 
