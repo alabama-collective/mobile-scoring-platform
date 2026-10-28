@@ -110,7 +110,7 @@ This loads the Booths, Teams and Round 1 Judges tabs of the bulk upload Google S
 9. **Delete the downloaded .xlsx file.** It has judges' emails.
 10. Refresh the app and check the booths, teams and judges. Set the Give Classic region if it is known.
 
-The sheet is matched by its column headers, so extra columns such as Check are skipped. The school must be spelled as on the app's school list, and the Region column must agree with it.
+The sheet is matched by its column headers, so extra columns such as Check are skipped. Words in brackets in a header do not count, so "Judge name (as shown in the app)" is read as Judge name. If there is no Location column on Booths, or no Email column on Round 1 Judges, the check says so under "Worth a look". The track can be START (or Track 1) or Track 2. The school must be spelled as on the app's school list, and the Region column must agree with it.
 
 ---
 

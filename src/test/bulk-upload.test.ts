@@ -107,6 +107,32 @@ describe('checking the sheet', () => {
     expect(plan.problems).toContain('There is no "Round 1 Judges" tab in the file.');
     expect(plan.problems).toContain('The "Booths" tab needs a header row with these columns: "Booth name", "Track", "Category".');
   });
+
+  // Steph, Oct 27: what the check caught in the real sheet.
+  it('accepts "Track 1" for START and headers with words in brackets', () => {
+    const b = booths();
+    b[0][3] = 'Location (level and bay)';
+    b[1][1] = 'Track 1';
+    const t = teams();
+    t[2][1] = 'Track 1';
+    const j = judges();
+    j[0][0] = 'Judge name (as shown in the app)';
+    const plan = planUpload(file({ Booths: b, Teams: t, 'Round 1 Judges': j }), 1);
+    expect(plan.problems).toEqual([]);
+    expect(plan.booths[0]).toMatchObject({ track: 'START', details: { location: 'Level 1, Bays 1-2' } });
+    expect(plan.judges.map((x) => x.name)).toEqual(['Test Judge A1', 'Test Judge A2', 'Test Judge B1']);
+  });
+
+  it('warns when the Location or Email column is not found, instead of skipping it silently', () => {
+    const b = booths();
+    b[0][3] = 'Where';
+    const j = judges();
+    j[0][1] = 'Contact';
+    const plan = planUpload(file({ Booths: b, 'Round 1 Judges': j }), 1);
+    expect(plan.problems).toEqual([]);
+    expect(plan.notes).toContain('The "Booths" tab has no Location column, so no locations (bay numbers) will be uploaded.');
+    expect(plan.notes).toContain('The "Round 1 Judges" tab has no Email column, so no judge emails will be uploaded.');
+  });
 });
 
 describe('putting it in the competition', () => {
