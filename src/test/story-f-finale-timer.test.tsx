@@ -41,7 +41,7 @@ describe('Story F: finale timer', () => {
     expect(getFinaleTimer()).toEqual({ status: 'idle', remainingMs: 180000 });
   });
 
-  it('a finale judge sees the countdown, then "Time is up. Submit your score." and can still submit', () => {
+  it('a finale judge sees the countdown, then "Time is up." (no prompt to submit) and can still submit', () => {
     allTeamsInFinale();
     const finale = storageService.getCompetition().rounds[1];
     storageService.setRoundStatus(finale.id, 'live');
@@ -55,7 +55,7 @@ describe('Story F: finale timer', () => {
     act(() => vi.advanceTimersByTime(65000));
     expect(screen.getByRole('timer').textContent).toContain('1:55');
     act(() => vi.advanceTimersByTime(120000));
-    expect(screen.getByRole('timer').textContent).toBe('Time is up. Submit your score.');
+    expect(screen.getByRole('timer').textContent).toBe('Time is up.'); // staff may still time Q&A after the pitch
 
     // Every category needs a score before it can be sent (Wednesday test 2.3)
     screen.getAllByRole('textbox', { name: /^Score for / }).forEach((box) => fireEvent.change(box, { target: { value: '8' } }));
