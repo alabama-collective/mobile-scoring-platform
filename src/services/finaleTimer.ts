@@ -2,8 +2,8 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 
 // Steph's story F (Oct 14, fixed at 3 minutes on Oct 16): a finale timer that
 // only staff control (Start, Stop, Reset). Every finale judge's screen shows
-// it within a second or two. At zero judges see "Time is up. Submit your
-// score." and can still submit. Round 1 has no timer.
+// it within a second or two. At zero judges see "Time is up." and can still
+// submit. Round 1 has no timer.
 //
 // With the shared database the timer is one small field on the competition
 // record, which judges' phones already listen to. Without it (tests, or no

@@ -56,13 +56,15 @@ export const FinaleTimerPanel: React.FC = () => {
 };
 
 // Story F: what a finale judge sees, under the team name. Display only.
-export const JudgeFinaleTimer: React.FC<{ submitted: boolean }> = ({ submitted }) => {
+// At zero it only says "Time is up.": staff may time the pitch, reset, then
+// time Q&A, so it must not tell judges to submit yet (Steph, Oct 27).
+export const JudgeFinaleTimer: React.FC = () => {
   const { status, remainingMs, timeUp } = useFinaleTimer();
   if (status === 'idle') return null;
   if (timeUp) {
     return (
       <div role="timer" className="mt-1 rounded-xs border border-red-700 bg-red-950/70 px-3 py-1.5 text-sm font-bold text-red-200">
-        {submitted ? 'Time is up.' : 'Time is up. Submit your score.'}
+        Time is up.
       </div>
     );
   }

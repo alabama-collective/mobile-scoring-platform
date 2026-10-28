@@ -353,7 +353,7 @@ export const JudgeScoringPortal: React.FC<JudgeScoringPortalProps> = ({
 
         {/* Story F: the staff-controlled finale timer. Round 1 has none. */}
         {activeRound.roundType === 'finale' && activeRound.status === 'live' && (
-          <JudgeFinaleTimer submitted={!!submissionReceipt} />
+          <JudgeFinaleTimer />
         )}
 
         {/* Horizontal Quick-Select Team Strip with Submission Status */}
